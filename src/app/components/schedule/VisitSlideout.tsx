@@ -44,6 +44,9 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [saveBlocked, setSaveBlocked] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  const dismissPanel = () => { setSaveBlocked(false); setConfirming(false); };
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
@@ -175,11 +178,20 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
           {/* Panel header */}
           <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-gray-100">
             <div>
-            <h3 className="text-lg font-bold text-gray-900">This change can't be saved</h3>
-            <p className="text-sm text-gray-500 mt-0.5"><strong className="text-gray-700">David Bukowski</strong> cannot be assigned to this visit due to the following issues.</p>
-          </div>
+              {confirming ? (
+                <>
+                  <h3 className="text-lg font-bold text-gray-900">Are you sure?</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">You are about to assign <strong className="text-gray-700">David Bukowski</strong> to <strong className="text-gray-700">Arthur Barrington</strong> despite the conflicts listed below. This action will be recorded.</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-bold text-gray-900">This change can't be saved</h3>
+                  <p className="text-sm text-gray-500 mt-0.5"><strong className="text-gray-700">David Bukowski</strong> cannot be assigned to this visit due to the following issues.</p>
+                </>
+              )}
+            </div>
             <button
-              onClick={() => setSaveBlocked(false)}
+              onClick={dismissPanel}
               className="text-gray-400 hover:text-gray-600 cursor-pointer"
               aria-label="Dismiss"
             >
@@ -189,31 +201,55 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
 
           {/* Panel content */}
           <div className="px-8 py-5 space-y-4 overflow-y-auto max-h-[40vh]">
-            <div className="bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-4">
-              <div className="flex items-center gap-3 mb-4">
-                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                <span className="text-base font-bold text-amber-900">Conflicts</span>
+            {confirming ? (
+              <div className="bg-red-50 border border-red-200 rounded-[8px] px-4 py-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <span className="text-base font-bold text-red-900">Overriding the following conflicts</span>
+                </div>
+                <ul className="space-y-4">
+                  {[...FOOTER_BLOCKING, ...FOOTER_CONFLICTS].map((conflict, i) => {
+                    const reason = conflict.tags.length > 1
+                      ? conflict.reason.replace('Restriction', 'Restrictions')
+                      : conflict.reason;
+                    return (
+                      <li key={i} className="flex flex-col gap-1">
+                        <div className="flex flex-wrap gap-2">
+                          {conflict.tags.map((tag, j) => <FooterTag key={j}>{tag}</FooterTag>)}
+                        </div>
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          <span className="font-semibold">{conflict.category}</span>: {reason}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-              <ul className="space-y-4">
-                {[...FOOTER_BLOCKING, ...FOOTER_CONFLICTS].map((conflict, i) => {
-                  const reason = conflict.tags.length > 1
-                    ? conflict.reason.replace('Restriction', 'Restrictions')
-                    : conflict.reason;
-                  return (
-                    <li key={i} className="flex flex-col gap-1">
-                      <div className="flex flex-wrap gap-2">
-                        {conflict.tags.map((tag, j) => (
-                          <FooterTag key={j}>{tag}</FooterTag>
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-700 leading-relaxed">
-                        <span className="font-semibold">{conflict.category}</span>: {reason}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <span className="text-base font-bold text-amber-900">Conflicts</span>
+                </div>
+                <ul className="space-y-4">
+                  {[...FOOTER_BLOCKING, ...FOOTER_CONFLICTS].map((conflict, i) => {
+                    const reason = conflict.tags.length > 1
+                      ? conflict.reason.replace('Restriction', 'Restrictions')
+                      : conflict.reason;
+                    return (
+                      <li key={i} className="flex flex-col gap-1">
+                        <div className="flex flex-wrap gap-2">
+                          {conflict.tags.map((tag, j) => <FooterTag key={j}>{tag}</FooterTag>)}
+                        </div>
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          <span className="font-semibold">{conflict.category}</span>: {reason}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Panel footer */}
@@ -225,19 +261,38 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
               Cancel visit
             </button>
             <div className="flex items-center gap-3">
-              <button
-                onClick={onClose}
-                className="text-gray-600 hover:text-gray-800 px-6 py-2.5 rounded-full cursor-pointer font-semibold"
-                style={{ backgroundColor: 'rgb(237, 236, 241)' }}
-              >
-                Close and discard changes
-              </button>
-              <button
-                onClick={() => setSaveBlocked(false)}
-                className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2.5 rounded-full transition-colors cursor-pointer font-semibold"
-              >
-                Continue editing
-              </button>
+              {confirming ? (
+                <>
+                  <button
+                    onClick={() => setConfirming(false)}
+                    className="text-gray-600 hover:text-gray-800 px-6 py-2.5 rounded-full cursor-pointer font-semibold"
+                    style={{ backgroundColor: 'rgb(237, 236, 241)' }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2.5 rounded-full transition-colors cursor-pointer font-semibold"
+                  >
+                    Confirm Assignment
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={dismissPanel}
+                    className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-6 py-2.5 rounded-full cursor-pointer font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setConfirming(true)}
+                    className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2.5 rounded-full cursor-pointer font-semibold transition-colors"
+                  >
+                    Override and Assign
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
