@@ -1,12 +1,18 @@
 import { Heart } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
 import customerPhoto from '../../imports/david_f.jpg';
 
 export function CustomerInfo() {
+  const { pathname } = useLocation();
+
   const inactiveTabClass =
     'px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
 
   const activeTabClass =
     'px-4 py-3 text-sm whitespace-nowrap border-b-2 bg-purple-50 text-[rgb(154,38,214)] border-[rgb(154,38,214)]';
+
+  const tabClass = (path: string) =>
+    pathname === path ? activeTabClass : inactiveTabClass;
 
   return (
     <div className="bg-white border-b border-gray-200">
@@ -65,9 +71,9 @@ export function CustomerInfo() {
             <a href="#" className={inactiveTabClass}>Timeline</a>
             <a href="#" className={inactiveTabClass}>Documents</a>
             <a href="#" className={inactiveTabClass}>About Me</a>
-            <a href="#" className={inactiveTabClass}>Details</a>
+            <Link to="/customers/details" className={tabClass('/customers/details')}>Details</Link>
             <a href="#" className={inactiveTabClass}>Checklists</a>
-            <span className={activeTabClass}>Rostering</span>
+            <Link to="/customers" className={pathname === '/customers' || pathname === '/' ? activeTabClass : inactiveTabClass}>Rostering</Link>
             <a href="#" className={inactiveTabClass}>Communications</a>
             <a href="#" className={inactiveTabClass}>Medical History</a>
             <a href="#" className={inactiveTabClass}>Customer File</a>

@@ -119,7 +119,7 @@ const CareTypeTag = ({ type }: { type: 'personal-care' | 'companionship' | 'live
 
   return (
     <span 
-      className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-medium capitalize whitespace-nowrap leading-[1.4] align-middle [&_svg]:!w-3 [&_svg]:!h-3 [&_svg]:!text-current"
+      className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-sm font-medium capitalize whitespace-nowrap leading-[1.4] align-middle [&_svg]:!w-3 [&_svg]:!h-3 [&_svg]:!text-current"
       style={{
         backgroundColor: config.bgColor,
         color: config.textColor,
@@ -213,7 +213,7 @@ const AreaTag = ({ area }: { area: 'area-1' | 'area-2' | 'area-3' | 'area-4' | '
 
   return (
     <span 
-      className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-medium capitalize whitespace-nowrap leading-[1.4] align-middle [&_svg]:!w-3 [&_svg]:!h-3 [&_svg]:!text-current"
+      className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-sm font-medium capitalize whitespace-nowrap leading-[1.4] align-middle [&_svg]:!w-3 [&_svg]:!h-3 [&_svg]:!text-current"
       style={{
         backgroundColor: config.bgColor,
         color: config.textColor,

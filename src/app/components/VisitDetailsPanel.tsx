@@ -5,7 +5,6 @@ import {
   Edit2,
   ChevronDown,
   Info,
-  Pencil,
   Trash2,
   CheckCircle2,
 } from "lucide-react";

@@ -24,7 +24,7 @@ export function Header() {
             icon={<Users className="w-4 h-4" />} 
             label="Customers" 
             to="/customers"
-            active={location.pathname === '/' || location.pathname === '/customers'} 
+            active={['/', '/customers', '/customers/details'].includes(location.pathname)}
           />
           <NavItem 
             icon={<UserCheck className="w-4 h-4" />} 

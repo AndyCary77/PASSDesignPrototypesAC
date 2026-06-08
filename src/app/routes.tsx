@@ -6,6 +6,7 @@ import { CustomerInfo } from './components/layout/CustomerInfo';
 import { EmployeeInfo } from './components/layout/EmployeeInfo';
 import { RosteringLayout } from './components/rostering/RosteringLayout';
 import { EmployeeDetailsPage } from './components/employee/EmployeeDetailsPage';
+import { CustomerDetailsPage } from './components/customer/CustomerDetailsPage';
 
 function CustomerLayout() {
   return (
@@ -17,6 +18,18 @@ function CustomerLayout() {
           <RosteringLayout />
         </main>
       </DndProvider>
+    </div>
+  );
+}
+
+function CustomerDetailsLayout() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      <CustomerInfo />
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+        <CustomerDetailsPage />
+      </main>
     </div>
   );
 }
@@ -41,6 +54,10 @@ export const router = createBrowserRouter([
   {
     path: "/customers",
     Component: CustomerLayout,
+  },
+  {
+    path: "/customers/details",
+    Component: CustomerDetailsLayout,
   },
   {
     path: "/employees",

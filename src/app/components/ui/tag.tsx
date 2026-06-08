@@ -24,19 +24,19 @@ export function Tag({ label, value, onRemove, removable = false, variant = 'defa
   
   return (
     <div 
-      className="inline-flex items-center gap-2 text-gray-800 px-4 py-1.5 rounded-full text-base"
+      className="inline-flex items-center gap-1.5 text-gray-800 px-3 py-1 rounded-full text-sm"
       style={{ backgroundColor: getBackgroundColor() }}
     >
-      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-      <span className="font-medium">{label}</span>
-      {value && <span className="text-gray-700">{value}</span>}
+      <Icon className="w-3 h-3 flex-shrink-0" />
+      <span className="font-medium text-sm">{label}</span>
+      {value && <span className="text-sm text-gray-700">{value}</span>}
       {removable && onRemove && (
         <button 
           onClick={onRemove}
           className="hover:text-gray-600 transition-colors"
           aria-label="Remove tag"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3 h-3" />
         </button>
       )}
     </div>

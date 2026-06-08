@@ -1,5 +1,7 @@
-import { Edit, Pencil } from 'lucide-react';
+import { Edit, Info } from 'lucide-react';
+import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
 // ─── Day circle ──────────────────────────────────────────────────────────────
 
@@ -58,26 +60,35 @@ function VisitCareSection({
 }) {
   return (
     <div className="py-4 border-b border-gray-100 last:border-b-0">
-      <div className="flex items-start justify-between gap-3 mb-1">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900">{title}</p>
-          <p className="text-xs text-gray-400 mt-0.5 leading-snug">{description}</p>
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center gap-1">
+          <p className="text-base font-semibold text-gray-900">{title}</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="text-gray-400 hover:text-gray-600 transition-colors" aria-label={`About ${title}`}>
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-xs leading-snug">
+              {description}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <button
           className="flex-shrink-0 p-1.5 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors"
           style={{ backgroundColor: 'rgb(220, 217, 228)' }}
           aria-label={`Edit ${title}`}
         >
-          <Pencil className="w-3.5 h-3.5" />
+          <PencilSolidIcon className="w-3.5 h-3.5" />
         </button>
       </div>
-      <div className="flex flex-wrap gap-1.5 mt-2">
+      <div className="flex flex-wrap gap-1.5">
         {items.length > 0 ? (
           items.map((item, i) => (
             <Tag key={i} label={item.label} value={item.value} variant={item.variant} />
           ))
         ) : (
-          <span className="text-xs text-gray-400 italic">None specified</span>
+          <span className="text-sm text-gray-400 italic">None specified</span>
         )}
       </div>
     </div>
@@ -91,6 +102,7 @@ interface VisitCareRequirements {
   preferred: CareReqItem[];
   preferredEmployees: CareReqItem[];
   excluded: CareReqItem[];
+  visitEnvironment: CareReqItem[];
 }
 
 interface VisitData {
@@ -187,8 +199,8 @@ function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData
 
         {/* RIGHT — care requirements (per-visit overrides) */}
         <div className="w-[340px] flex-shrink-0 px-6 pt-4 pb-2">
-          <p className="text-sm font-semibold text-gray-900 mb-0.5">Care requirements</p>
-          <p className="text-xs text-gray-400 mb-1 leading-snug">
+          <p className="text-base font-semibold text-gray-900 mb-0.5">Care requirements</p>
+          <p className="text-sm text-gray-500 mb-1 leading-snug">
             Inherited from customer defaults — adjust per visit as needed.
           </p>
 
@@ -212,6 +224,11 @@ function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData
             description="These careworkers cannot be scheduled for this visit."
             items={data.careRequirements.excluded}
           />
+          <VisitCareSection
+            title="Home & visit environment"
+            description="Environmental details used to match careworkers with compatible restrictions."
+            items={data.careRequirements.visitEnvironment}
+          />
         </div>
       </div>
     </div>
@@ -230,6 +247,11 @@ const defaultCareRequirements: VisitCareRequirements = {
   ],
   preferredEmployees: [{ label: 'Claire Restall', variant: 'preferred' }],
   excluded: [{ label: 'John Smith', variant: 'excluded' }],
+  visitEnvironment: [
+    { label: 'Other pets' },
+    { label: 'Smoker' },
+    { label: 'Stairs' },
+  ],
 };
 
 export function ServiceAgreementPage() {

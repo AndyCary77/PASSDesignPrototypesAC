@@ -1,7 +1,5 @@
-import {
-  Pencil,
-} from "lucide-react";
 import { Tag } from "../ui/tag";
+import { PencilSolidIcon } from "../icons/PencilSolidIcon";
 
 export function CareRequirementsPage() {
   return (
@@ -43,6 +41,17 @@ export function CareRequirementsPage() {
         ]}
         testId="exludedCareworkers"
       />
+
+      {/* Visit Environment */}
+      <CareRequirementSection
+        title="Home & Visit Environment"
+        items={[
+          { label: "Other pets" },
+          { label: "Smoker" },
+          { label: "Stairs" },
+        ]}
+        testId="visitEnvironment"
+      />
     </div>
   );
 }
@@ -70,6 +79,8 @@ function CareRequirementSection({
         return "These careworkers will be prioritised when scheduling visits for this customer.";
       case "exludedCareworkers":
         return "These careworkers cannot be scheduled for this customer.";
+      case "visitEnvironment":
+        return "Environmental details about this customer used to match careworkers with compatible restrictions and preferences.";
       default:
         return "";
     }
@@ -100,7 +111,7 @@ function CareRequirementSection({
           data-testid={`${testId}-edit-btn`}
           aria-label="Edit"
         >
-          <Pencil className="w-4 h-4" />
+          <PencilSolidIcon className="w-4 h-4" />
         </button>
       </div>
     </div>

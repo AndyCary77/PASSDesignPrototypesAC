@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Edit2, ChevronDown, MoreVertical, Pencil, Trash2, Info } from 'lucide-react';
+import { X, Calendar, Edit2, ChevronDown, MoreVertical, Trash2, Info } from 'lucide-react';
+import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { VisitNoteIcon } from '../icons/VisitNoteIcon';
 
 interface Employee {
@@ -310,7 +311,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                             setDeletionInfo(null); // Clear deletion info when editing
                           }}
                         >
-                          <Pencil className="w-4 h-4" />
+                          <PencilSolidIcon className="w-4 h-4" />
                         </button>
                         <button
                           className="h-8 w-8 text-blue-900 hover:text-red-600 hover:bg-red-100 rounded-full p-1 transition-colors flex items-center justify-center cursor-pointer"

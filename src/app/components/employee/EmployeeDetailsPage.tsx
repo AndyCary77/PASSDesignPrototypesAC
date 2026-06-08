@@ -1,4 +1,5 @@
-import { Pencil, Clock, Calendar, Image, Crop, Trash2, Lock, ChevronDown } from 'lucide-react';
+import { Clock, Calendar, Image, Crop, Trash2, Lock, ChevronDown } from 'lucide-react';
+import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import davidPhoto from '../../imports/david_b.jpg';
 
@@ -23,7 +24,7 @@ export function EmployeeDetailsPage() {
                   ACTIVE
                 </span>
                 <button className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                  <Pencil className="w-3 h-3" /> Update
+                  <PencilSolidIcon className="w-3 h-3" /> Update
                 </button>
                 <button className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1">
                   <Clock className="w-3 h-3" /> History
@@ -235,6 +236,25 @@ export function EmployeeDetailsPage() {
           </div>
         </div>
 
+        {/* Tags */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="font-semibold text-gray-900 mb-2">Tags</h4>
+          <p className="text-sm text-gray-500 mb-4">Classify this careworker for filtering and reporting.</p>
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search and add tags..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm pr-8"
+              />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Tag label="Staff type" value="Field based" removable onRemove={() => {}} />
+            </div>
+          </div>
+        </div>
+
         {/* Skills Matching Profile Card - Replaces Tags */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h4 className="font-semibold text-gray-900 mb-2">Roster matching profile</h4>
@@ -257,15 +277,21 @@ export function EmployeeDetailsPage() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
-                  <Tag 
-                    label="Training" 
+                  <Tag
+                    label="Training"
                     value="Peg Feeding"
                     removable={true}
                     onRemove={() => console.log('Remove tag')}
                   />
-                  <Tag 
-                    label="Area" 
+                  <Tag
+                    label="Area"
                     value="Tamworth & Lichfield"
+                    removable={true}
+                    onRemove={() => console.log('Remove tag')}
+                  />
+                  <Tag
+                    label="Area"
+                    value="Walsall"
                     removable={true}
                     onRemove={() => console.log('Remove tag')}
                   />
@@ -289,9 +315,13 @@ export function EmployeeDetailsPage() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <Tag 
-                    label="Allergy"
-                    value="Pets"
+                  <Tag
+                    label="Dogs"
+                    removable={true}
+                    onRemove={() => console.log('Remove tag')}
+                  />
+                  <Tag
+                    label="Other pets"
                     removable={true}
                     onRemove={() => console.log('Remove tag')}
                   />
