@@ -44,7 +44,7 @@ export function CareRequirementsPage() {
 
       {/* Visit Environment */}
       <CareRequirementSection
-        title="Home & Visit Environment"
+        title="Environment"
         items={[
           { label: "Other pets" },
           { label: "Smoker" },

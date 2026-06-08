@@ -225,7 +225,7 @@ function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData
             items={data.careRequirements.excluded}
           />
           <VisitCareSection
-            title="Home & visit environment"
+            title="Environment"
             description="Environmental details used to match careworkers with compatible restrictions."
             items={data.careRequirements.visitEnvironment}
           />

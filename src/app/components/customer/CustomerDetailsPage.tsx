@@ -327,7 +327,7 @@ export function CustomerDetailsPage() {
 
             {/* Visit environment */}
             <div className="py-3">
-              <p className="text-sm font-semibold text-gray-900 mb-2">Home & visit environment</p>
+              <p className="text-sm font-semibold text-gray-900 mb-2">Environment</p>
               <div className="flex flex-wrap gap-2">
                 <Tag label="Other pets" />
                 <Tag label="Smoker" />
