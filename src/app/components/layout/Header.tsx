@@ -33,7 +33,7 @@ export function Header() {
             active={location.pathname === '/employees'} 
           />
           <NavItem icon={<Briefcase className="w-4 h-4" />} label="Bookings" to="/bookings" />
-          <NavItem icon={<Calendar className="w-4 h-4" />} label="Schedule" to="/schedule" />
+          <NavItem icon={<Calendar className="w-4 h-4" />} label="Schedule" to="/schedule" active={location.pathname === '/schedule'} />
           <NavItem icon={<PoundSterling className="w-4 h-4" />} label="Finance" to="/finance" />
           <NavItem icon={<BarChart2 className="w-4 h-4" />} label="Reporting" to="/reporting" />
           <NavItem icon={<AlertTriangle className="w-4 h-4" />} label="Alerts" to="/alerts" />
