@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Calendar, ChevronDown, EllipsisVertical, CheckCircle2, Coffee, Utensils, Pill, PhoneCall } from 'lucide-react';
+import { X, Calendar, ChevronDown, EllipsisVertical, CheckCircle2, Coffee, Utensils, Pill, PhoneCall, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router';
 import { Tag } from '../ui/tag';
 import { VisitNoteIcon } from '../icons/VisitNoteIcon';
@@ -9,12 +9,45 @@ import customerPhoto from '../../imports/david_f.jpg';
 
 const TABS = ['Assigned Today', 'Recurring Employees', 'Care Required', 'History', 'Customer Details'];
 
-export function VisitSlideout({ onClose }: { onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState('Care Required');
+const FOOTER_BLOCKING = [
+  {
+    tags: ['Medical Condition – PEG Feeding'],
+    category: 'Mandatory Requirement',
+    reason: "not in David Bukowski's Skills or Work Criteria",
+  },
+];
+
+const FOOTER_CONFLICTS = [
+  {
+    tags: ['Dog', 'Smoker'],
+    category: 'Environment',
+    reason: "conflicts with David Bukowski's Restriction",
+  },
+];
+
+function FooterTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="inline-flex items-center self-start px-4 py-1 rounded-full text-sm font-medium whitespace-nowrap"
+      style={{ backgroundColor: 'rgb(220, 217, 228)', color: '#374151' }}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWarning, footerConflicts }: {
+  onClose: () => void;
+  initialTab?: string;
+  footerWarning?: string;
+  footerConflicts?: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [saveBlocked, setSaveBlocked] = useState(false);
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
-      <div className="bg-white w-3/4 max-w-[1250px] h-full shadow-2xl flex flex-col overflow-hidden">
+      <div className="bg-white w-3/4 max-w-[1250px] h-full shadow-2xl flex flex-col overflow-hidden relative">
 
         {/* Visit Header */}
         <div className="border-b border-gray-200">
@@ -109,17 +142,104 @@ export function VisitSlideout({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
+        {/* Footer warning — simple bar */}
+        {footerWarning && (
+          <div className="border-t border-amber-200 bg-amber-50 px-8 py-3 flex items-center gap-3">
+            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <p className="text-sm text-amber-800">{footerWarning}</p>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="border-t border-gray-200 flex items-center justify-between bg-white px-8 py-6">
           <button
-            className="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-full cursor-pointer font-semibold"
+            className="text-gray-600 hover:text-gray-800 px-6 py-2.5 rounded-full cursor-pointer font-semibold"
             style={{ backgroundColor: 'rgb(237, 236, 241)' }}
           >
             Cancel visit
           </button>
-          <button className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2 rounded-full transition-colors cursor-pointer font-semibold">
+          <button
+            onClick={() => { if (footerConflicts) setSaveBlocked(true); }}
+            className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2.5 rounded-full transition-colors cursor-pointer font-semibold"
+          >
             Save
           </button>
+        </div>
+
+        {/* Slide-up conflicts panel */}
+        <div
+          className={`absolute bottom-0 left-0 right-0 bg-white shadow-[0_-8px_32px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-in-out ${
+            saveBlocked ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-gray-100">
+            <div>
+            <h3 className="text-lg font-bold text-gray-900">This change can't be saved</h3>
+            <p className="text-sm text-gray-500 mt-0.5"><strong className="text-gray-700">David Bukowski</strong> cannot be assigned to this visit due to the following issues.</p>
+          </div>
+            <button
+              onClick={() => setSaveBlocked(false)}
+              className="text-gray-400 hover:text-gray-600 cursor-pointer"
+              aria-label="Dismiss"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Panel content */}
+          <div className="px-8 py-5 space-y-4 overflow-y-auto max-h-[40vh]">
+            <div className="bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-4">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                <span className="text-base font-bold text-amber-900">Conflicts</span>
+              </div>
+              <ul className="space-y-4">
+                {[...FOOTER_BLOCKING, ...FOOTER_CONFLICTS].map((conflict, i) => {
+                  const reason = conflict.tags.length > 1
+                    ? conflict.reason.replace('Restriction', 'Restrictions')
+                    : conflict.reason;
+                  return (
+                    <li key={i} className="flex flex-col gap-1">
+                      <div className="flex flex-wrap gap-2">
+                        {conflict.tags.map((tag, j) => (
+                          <FooterTag key={j}>{tag}</FooterTag>
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-700 leading-relaxed">
+                        <span className="font-semibold">{conflict.category}</span>: {reason}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+
+          {/* Panel footer */}
+          <div className="border-t border-gray-200 flex items-center justify-between px-8 py-6">
+            <button
+              className="text-gray-600 hover:text-gray-800 px-6 py-2.5 rounded-full cursor-pointer font-semibold"
+              style={{ backgroundColor: 'rgb(237, 236, 241)' }}
+            >
+              Cancel visit
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="text-gray-600 hover:text-gray-800 px-6 py-2.5 rounded-full cursor-pointer font-semibold"
+                style={{ backgroundColor: 'rgb(237, 236, 241)' }}
+              >
+                Close and discard changes
+              </button>
+              <button
+                onClick={() => setSaveBlocked(false)}
+                className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2.5 rounded-full transition-colors cursor-pointer font-semibold"
+              >
+                Continue editing
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -128,65 +248,41 @@ export function VisitSlideout({ onClose }: { onClose: () => void }) {
 
 function AssignedTodayContent() {
   return (
-    <div className="space-y-6">
-      <div className="text-sm">
-        <span className="font-medium text-base">1/1 employee assigned</span>
-        <span className="text-gray-600 text-sm ml-2">(Adrianna Janowski today only)</span>
+    <div className="space-y-4">
+      <div>
+        <span className="font-semibold text-base">1/1 employee assigned</span>
+        <span className="text-gray-500 text-sm ml-2">(Adrianna Janowski today only)</span>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-teal-800 font-semibold">AJ</span>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-end gap-4">
-              <div className="w-[180px]">
-                <div className="text-gray-500 text-sm">Mrs</div>
-                <div className="font-medium">Adrianna Janowski</div>
-              </div>
-              <div className="flex flex-col">
-                <div className="text-gray-500 text-sm">Type</div>
-                <div>Fixed hours</div>
-              </div>
-            </div>
-          </div>
-          <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
-            <EllipsisVertical className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+      <EmployeeCard title="Mrs" name="Adrianna Janowski" type="Fixed hours" photo="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" />
 
-        <div className="mt-4">
-          <div className="mb-3 text-gray-700">Shadow employee assigned</div>
-          <div className="bg-gray-50/50 rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-4">
-              <div
-                className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0"
-                style={{
-                  backgroundImage: `url(${davidPhoto})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              />
-              <div className="flex-1">
-                <div className="flex items-end gap-4">
-                  <div className="w-[180px]">
-                    <div className="text-gray-500 text-sm">Mr</div>
-                    <div className="font-medium">David Bukowski</div>
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="text-gray-500 text-sm">Type</div>
-                    <div>Fixed hours</div>
-                  </div>
-                </div>
-              </div>
-              <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
-                <EllipsisVertical className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
+      <p className="text-sm text-gray-600">Shadow employee assigned</p>
+
+      <EmployeeCard title="Mr" name="David Bukowski" type="Fixed hours" photo={davidPhoto} />
+    </div>
+  );
+}
+
+function EmployeeCard({ title, name, type, photo }: { title: string; name: string; type: string; photo: string }) {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4 flex items-center gap-4">
+      <div
+        className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0"
+        style={{ backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      />
+      <div className="flex-1 flex items-end gap-8">
+        <div className="w-[180px]">
+          <div className="text-gray-500 text-sm">{title}</div>
+          <div className="font-semibold">{name}</div>
+        </div>
+        <div>
+          <div className="text-gray-500 text-sm">Type</div>
+          <div>{type}</div>
         </div>
       </div>
+      <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
+        <EllipsisVertical className="w-5 h-5" aria-hidden="true" />
+      </button>
     </div>
   );
 }
