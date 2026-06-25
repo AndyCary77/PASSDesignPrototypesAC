@@ -1,7 +1,15 @@
-import { User, Heart, FileText } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
 import davidPhoto from '../../imports/david_b.jpg';
 
+const activeTabClass =
+  'px-4 py-3 text-sm bg-purple-50 text-[rgb(154,38,214)] hover:bg-purple-100 whitespace-nowrap border-b-2 border-[rgb(154,38,214)] transition-colors';
+const inactiveTabClass =
+  'px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
+
 export function EmployeeInfo() {
+  const { pathname } = useLocation();
+  const isRecords = pathname === '/employees/records';
+
   return (
     <div className="bg-white border-b border-gray-200">
       <div className="px-4 m-[0px]">
@@ -46,22 +54,22 @@ export function EmployeeInfo() {
         {/* Navigation Tabs */}
         <div className="border-t border-gray-200 -mx-4 px-4">
           <nav className="flex gap-1 overflow-x-auto">
-            <a href="#" className="px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors">
+            <a href="#" className={inactiveTabClass}>
               Dashboard
             </a>
-            <a href="#" className="px-4 py-3 text-sm bg-purple-50 text-[rgb(154,38,214)] hover:bg-purple-100 whitespace-nowrap border-b-2 border-[rgb(154,38,214)] transition-colors">
+            <Link to="/employees" className={isRecords ? inactiveTabClass : activeTabClass}>
               Details
-            </a>
-            <a href="#" className="px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors">
+            </Link>
+            <a href="#" className={inactiveTabClass}>
               Checklists
             </a>
-            <a href="#" className="px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors">
+            <Link to="/employees/records" className={isRecords ? activeTabClass : inactiveTabClass}>
               Records
-            </a>
-            <a href="#" className="px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors">
+            </Link>
+            <a href="#" className={inactiveTabClass}>
               Timeline
             </a>
-            <a href="#" className="px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors">
+            <a href="#" className={inactiveTabClass}>
               Roster
             </a>
           </nav>

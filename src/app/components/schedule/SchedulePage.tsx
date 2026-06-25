@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ClipboardList, AlertTriangle, Users, X } from 'lucide-react';
+import { ClipboardList, AlertTriangle, Users, CalendarClock, X } from 'lucide-react';
 import { VisitSlideout } from './VisitSlideout';
+import { ScheduleTimeline } from './ScheduleTimeline';
 
 export function SchedulePage() {
   const [slideoutOpen, setSlideoutOpen] = useState(false);
@@ -8,6 +9,7 @@ export function SchedulePage() {
   const [slideoutFooterWarning, setSlideoutFooterWarning] = useState<string | undefined>();
   const [slideoutFooterConflicts, setSlideoutFooterConflicts] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   const openSlideout = (tab: string, options?: { footerWarning?: string; footerConflicts?: boolean }) => {
     setSlideoutTab(tab);
@@ -49,6 +51,14 @@ export function SchedulePage() {
             description="View the employees assigned to this visit with conflicts flagged in the footer."
             onClick={() => openSlideout('Assigned Today', { footerConflicts: true })}
           />
+          <ScenarioTile
+            icon={<CalendarClock className="w-8 h-8" />}
+            iconColor="text-amber-600"
+            iconBg="bg-amber-100"
+            title="Timeline — Carer Restriction Warnings"
+            description="Preview the daily timeline schedule with warning icons flagged against carer rows for employees who have restrictions added."
+            onClick={() => setTimelineOpen(true)}
+          />
         </div>
       </div>
 
@@ -62,6 +72,8 @@ export function SchedulePage() {
       )}
 
       {modalOpen && <AssignmentWarningModal onClose={() => setModalOpen(false)} />}
+
+      {timelineOpen && <ScheduleTimeline onClose={() => setTimelineOpen(false)} />}
     </>
   );
 }

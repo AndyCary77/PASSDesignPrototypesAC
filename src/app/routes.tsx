@@ -6,6 +6,7 @@ import { CustomerInfo } from './components/layout/CustomerInfo';
 import { EmployeeInfo } from './components/layout/EmployeeInfo';
 import { RosteringLayout } from './components/rostering/RosteringLayout';
 import { EmployeeDetailsPage } from './components/employee/EmployeeDetailsPage';
+import { EmployeeRecordsPage } from './components/employee/EmployeeRecordsPage';
 import { CustomerDetailsPage } from './components/customer/CustomerDetailsPage';
 import { SchedulePage } from './components/schedule/SchedulePage';
 
@@ -58,6 +59,18 @@ function EmployeeLayout() {
   );
 }
 
+function EmployeeRecordsLayout() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      <EmployeeInfo />
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+        <EmployeeRecordsPage />
+      </main>
+    </div>
+  );
+}
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -74,6 +87,10 @@ export const router = createBrowserRouter([
   {
     path: "/employees",
     Component: EmployeeLayout,
+  },
+  {
+    path: "/employees/records",
+    Component: EmployeeRecordsLayout,
   },
   {
     path: "/schedule",
