@@ -5,7 +5,7 @@ import davidPhoto from '../../imports/david_b.jpg';
 
 export function EmployeeDetailsPage() {
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 gap-6 max-w-[1280px] mx-auto">
       {/* Left Column */}
       <div className="space-y-6">
         {/* Main Details Card */}
@@ -72,7 +72,25 @@ export function EmployeeDetailsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
-                <option>Male</option>
+                <option value="">- Select -</option>
+                <option selected>Male</option>
+                <option>Female</option>
+                <option>Indeterminate (unable to be classified as either male or female)</option>
+                <option>Not Known (not recorded)</option>
+              </select>
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+                <option value="">- Select -</option>
+                <option>Male (including trans man)</option>
+                <option>Female (including trans woman)</option>
+                <option>Non-binary</option>
+                <option>Other (not listed)</option>
+                <option>Not Known (not recorded)</option>
+                <option>Not Stated (person asked but declined to provide a response)</option>
               </select>
             </div>
 

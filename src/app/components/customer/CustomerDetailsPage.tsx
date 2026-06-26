@@ -6,7 +6,7 @@ import customerPhoto from '../../imports/david_f.jpg';
 
 export function CustomerDetailsPage() {
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 gap-6 max-w-[1280px] mx-auto">
 
       {/* ── Left column ───────────────────────────────────────────────── */}
       <div className="space-y-6">
@@ -58,11 +58,72 @@ export function CustomerDetailsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
-                <option>Not specified</option>
+                <option value="">- Select -</option>
                 <option selected>Male</option>
                 <option>Female</option>
+                <option>Indeterminate (unable to be classified as either male or female)</option>
+                <option>Not Known (not recorded)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+                <option value="">- Select -</option>
+                <option>Male (including trans man)</option>
+                <option>Female (including trans woman)</option>
+                <option>Non-binary</option>
+                <option>Other (not listed)</option>
+                <option>Not Known (not recorded)</option>
+                <option>Not Stated (person asked but declined to provide a response)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sexual orientation</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+                <option value="">- Select -</option>
+                <option>Heterosexual</option>
+                <option>Male Homosexual</option>
+                <option>Female Homosexual</option>
+                <option>Bisexual</option>
+                <option>Sexually attracted to neither gender</option>
+                <option>Sexual orientation undecided</option>
+                <option>Sexual orientation unknown</option>
+                <option>Sexual orientation not given – patient/service user refused</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Pregnancy status</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+                <option value="">- Select -</option>
+                <option>Yes</option>
+                <option>No</option>
+                <option>Unknown</option>
+                <option>Not stated (person asked but declined to provide a response)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Marital status</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+                <option value="">- Select -</option>
+                <option>Single</option>
+                <option>Married/Civil Partner</option>
+                <option>Separated</option>
+                <option>Divorced/Person whose Civil Partnership has been dissolved</option>
+                <option>Widowed/Surviving Civil Partner</option>
+                <option>Not disclosed</option>
+                <option>Not known</option>
+                <option>Not applicable</option>
+                <option disabled style={{ color: '#9ca3af' }}>─ Legacy values (pre-October 2006) ─</option>
+                <option>Single (Retired 1 October 2006)</option>
+                <option>Married/separated (Retired 1 October 2006)</option>
+                <option>Divorced (Retired 1 October 2006)</option>
+                <option>Widowed (Retired 1 October 2006)</option>
               </select>
             </div>
 
@@ -175,6 +236,18 @@ export function CustomerDetailsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
               <input type="text" defaultValue="United Kingdom" className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" readOnly />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-2" style={{ backgroundColor: '#B7DDA8' }}>
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#2D5F1E]">
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span className="text-sm font-semibold text-[#2D5F1E]">Verified address</span>
+              </div>
+              <p className="text-sm text-gray-700">All fields currently match the address lookup database.<br />If more detail is required for employees, please use the access details field below.</p>
             </div>
 
             <div>
@@ -441,6 +514,20 @@ export function CustomerDetailsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">NHS number</label>
               <input type="text" defaultValue="488 754 3816" className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" readOnly />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">NHS number status</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
+                <option value="">- Select -</option>
+                <option selected>Number present and verified</option>
+                <option>Number present but not traced</option>
+                <option>Trace required</option>
+                <option>Trace attempted – No match or multiple match found</option>
+                <option>Trace needs to be resolved (NHS number or patient detail conflict)</option>
+                <option>Trace in progress</option>
+                <option>Number not present and trace not required</option>
+                <option>Trace postponed (baby under six weeks old)</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Practice name</label>
