@@ -1,9 +1,100 @@
-import { Clock, Calendar, Image, Crop, Trash2, Lock, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Clock, Calendar, Image, Crop, Trash2, Lock, ChevronDown, Check, X } from 'lucide-react';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import davidPhoto from '../../imports/david_b.jpg';
 
+function TagSelectInput({
+  options,
+  value,
+  onChange,
+  multi = false,
+  placeholder = '- Select -',
+}: {
+  options: string[];
+  value: string | string[];
+  onChange: (v: string | string[]) => void;
+  multi?: boolean;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = multi ? (value as string[]) : (value ? [value as string] : []);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const toggle = (opt: string) => {
+    if (multi) {
+      const arr = value as string[];
+      onChange(arr.includes(opt) ? arr.filter(v => v !== opt) : [...arr, opt]);
+    } else {
+      onChange(opt);
+      setOpen(false);
+    }
+  };
+
+  const remove = (opt: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (multi) onChange((value as string[]).filter(v => v !== opt));
+    else onChange('');
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <div
+        className="min-h-[38px] w-full flex flex-wrap items-center gap-1.5 px-2 py-1 border border-gray-300 rounded-md text-sm bg-white cursor-pointer pr-8"
+        onClick={() => setOpen(!open)}
+      >
+        {selected.length === 0 && <span className="text-gray-400 px-1">{placeholder}</span>}
+        {selected.map(s => (
+          <span
+            key={s}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium text-gray-800"
+            style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+          >
+            {s}
+            <button
+              onClick={(e) => remove(s, e)}
+              className="hover:opacity-60 leading-none text-gray-600"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      {open && (
+        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 max-h-56 overflow-y-auto">
+          {options.map(opt => (
+            <div
+              key={opt}
+              className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50"
+              onClick={() => toggle(opt)}
+            >
+              {multi && (
+                <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selected.includes(opt) ? 'border-purple-600 bg-purple-600' : 'border-gray-300'}`}>
+                  {selected.includes(opt) && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                </div>
+              )}
+              <span className={selected.includes(opt) && !multi ? 'font-medium text-purple-700' : ''}>{opt}</span>
+              {selected.includes(opt) && !multi && <Check className="w-3.5 h-3.5 text-purple-600 ml-auto" strokeWidth={2.5} />}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EmployeeDetailsPage() {
+  const [staffType, setStaffType] = useState<string[]>(['Field based']);
+  const [careSettings, setCareSettings] = useState<string[]>(['Domiciliary', 'Live-in']);
   return (
     <div className="grid grid-cols-2 gap-6 max-w-[1280px] mx-auto">
       {/* Left Column */}
@@ -37,9 +128,12 @@ export function EmployeeDetailsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title <span className="text-red-500">*</span>
               </label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
-                <option>Mr</option>
-              </select>
+              <div className="relative">
+                <select className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-sm bg-white pr-8">
+                  <option>Mr</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* First Name */}
@@ -71,27 +165,33 @@ export function EmployeeDetailsPage() {
             {/* Sex */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
-                <option value="">- Select -</option>
-                <option selected>Male</option>
-                <option>Female</option>
-                <option>Indeterminate (unable to be classified as either male or female)</option>
-                <option>Not Known (not recorded)</option>
-              </select>
+              <div className="relative">
+                <select className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-sm bg-white pr-8">
+                  <option value="">- Select -</option>
+                  <option selected>Male</option>
+                  <option>Female</option>
+                  <option>Indeterminate (unable to be classified as either male or female)</option>
+                  <option>Not Known (not recorded)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Gender */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white">
-                <option value="">- Select -</option>
-                <option>Male (including trans man)</option>
-                <option>Female (including trans woman)</option>
-                <option>Non-binary</option>
-                <option>Other (not listed)</option>
-                <option>Not Known (not recorded)</option>
-                <option>Not Stated (person asked but declined to provide a response)</option>
-              </select>
+              <div className="relative">
+                <select className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-sm bg-white pr-8">
+                  <option value="">- Select -</option>
+                  <option>Male (including trans man)</option>
+                  <option>Female (including trans woman)</option>
+                  <option>Non-binary</option>
+                  <option>Other (not listed)</option>
+                  <option>Not Known (not recorded)</option>
+                  <option>Not Stated (person asked but declined to provide a response)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* DOB */}
@@ -267,9 +367,6 @@ export function EmployeeDetailsPage() {
               />
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Tag label="Staff type" value="Field based" removable onRemove={() => {}} />
-            </div>
           </div>
         </div>
 
@@ -282,18 +379,42 @@ export function EmployeeDetailsPage() {
             {/* Capabilities */}
             <div className="pt-0 pb-6">
               <h6 className="text-base font-semibold text-gray-900 mb-1">Skills & work criteria</h6>
-              <p className="text-sm text-gray-500 mb-3">Add tags this careworker possesses to match them with relevant customer care requirements. <strong>Medical conditions added will show as Training.</strong></p>
-              
+              <p className="text-sm text-gray-500 mb-3">Matching criteria used by the scheduling engine to assign this careworker to visits.</p>
+
+              <div className="space-y-3 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Staff type <span className="text-red-500">*</span></label>
+                  <TagSelectInput
+                    options={['Field based', 'Office based', 'Bank / Agency']}
+                    value={staffType}
+                    onChange={v => setStaffType(v as string[])}
+                    multi
+                    placeholder="- Select -"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Care setting <span className="text-red-500">*</span></label>
+                  <TagSelectInput
+                    options={['Domiciliary', 'Live-in', 'Supported living']}
+                    value={careSettings}
+                    onChange={v => setCareSettings(v as string[])}
+                    multi
+                    placeholder="- Select -"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Search and add capabilities..." 
+                  <input
+                    type="text"
+                    placeholder="Search and add capabilities..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm pr-8"
                   />
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
-                
+                <p className="-mt-1.5 text-sm text-gray-500">Medical conditions added will show as Training.</p>
+
                 <div className="flex flex-wrap gap-2">
                   <Tag
                     label="Training"
@@ -492,9 +613,12 @@ export function EmployeeDetailsPage() {
             <tbody>
               <tr className="border-b border-gray-200">
                 <td className="px-4 py-2">
-                  <select className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-gray-50" disabled>
-                    <option>CARAS</option>
-                  </select>
+                  <div className="relative">
+                    <select className="w-full appearance-none px-2 py-1 border border-gray-300 rounded text-sm bg-gray-50 pr-7" disabled>
+                      <option>CARAS</option>
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                  </div>
                 </td>
                 <td className="px-4 py-2">
                   <input 
