@@ -468,6 +468,32 @@ export function EmployeeDetailsPage() {
               </div>
             </div>
 
+            {/* Disfavoured Careworkers */}
+            <div className="px-[0px] pt-[0px] pb-[24px]">
+              <h6 className="text-base font-semibold text-gray-900">Disfavoured careworkers</h6>
+              <p className="text-sm text-gray-500 mb-3">Careworkers listed here will not be suggested as a pairing for double-up visits with this careworker.</p>
+
+              <div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search and add careworkers..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm pr-8"
+                  />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Tag
+                    label="Kevin Marsh"
+                    variant="excluded"
+                    removable={true}
+                    onRemove={() => console.log('Remove tag')}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Preferred Customers */}
             <div className="px-[0px] pt-[0px] pb-[24px]">
               <h6 className="text-base font-semibold text-gray-900">Preferred customers</h6>
