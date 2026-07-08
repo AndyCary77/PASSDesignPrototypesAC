@@ -204,7 +204,11 @@ export function VisitEditSlideout({
   const untilTime = addTime(startTime, durationHours, durationMins);
 
   const [visible, setVisible] = useState(false);
-  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const handleClose = () => {
     setVisible(false);
