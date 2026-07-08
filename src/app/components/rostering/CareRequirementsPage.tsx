@@ -106,7 +106,7 @@ function CareRequirementSection({
           )}
         </div>
         <button
-          className="flex-shrink-0 p-2 text-gray-600 hover:text-gray-900 rounded-full border border-gray-200 transition-colors"
+          className="flex-shrink-0 p-2 text-gray-600 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
           style={{ backgroundColor: "rgb(220, 217, 228)" }}
           data-testid={`${testId}-edit-btn`}
           aria-label="Edit"

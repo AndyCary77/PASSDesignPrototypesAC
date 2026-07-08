@@ -1,7 +1,9 @@
-import { Edit, Info } from 'lucide-react';
+import { useState } from 'react';
+import { Info } from 'lucide-react';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { VisitEditSlideout } from './VisitEditSlideout';
 
 // ─── Day circle ──────────────────────────────────────────────────────────────
 
@@ -35,8 +37,8 @@ function WeekBadge({ label, sub }: { label: string; sub?: string }) {
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start py-2.5 border-b border-gray-100 last:border-b-0">
-      <span className="w-[180px] flex-shrink-0 text-sm text-gray-500">{label}</span>
-      <div className="flex-1 text-sm text-gray-900">{children}</div>
+      <span className="w-[180px] flex-shrink-0 text-base text-gray-900">{label}</span>
+      <div className="flex-1 text-base font-medium text-gray-900">{children}</div>
     </div>
   );
 }
@@ -62,10 +64,10 @@ function VisitCareSection({
     <div className="py-4 border-b border-gray-100 last:border-b-0">
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-1">
-          <p className="text-base font-semibold text-gray-900">{title}</p>
+          <p className="text-base font-medium text-gray-900">{title}</p>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors" aria-label={`About ${title}`}>
+              <button className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" aria-label={`About ${title}`}>
                 <Info className="w-3.5 h-3.5" />
               </button>
             </TooltipTrigger>
@@ -74,13 +76,6 @@ function VisitCareSection({
             </TooltipContent>
           </Tooltip>
         </div>
-        <button
-          className="flex-shrink-0 p-1.5 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors"
-          style={{ backgroundColor: 'rgb(220, 217, 228)' }}
-          aria-label={`Edit ${title}`}
-        >
-          <PencilSolidIcon className="w-3.5 h-3.5" />
-        </button>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {items.length > 0 ? (
@@ -111,7 +106,9 @@ interface VisitData {
   endDate: string;
   careType: string;
   startTime: string;
+  earliestStart?: string;
   endTime: string;
+  latestEnd?: string;
   duration: string;
   careworkers: number;
   funder: string;
@@ -127,7 +124,7 @@ const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 // ─── Visit card ───────────────────────────────────────────────────────────────
 
-function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData }) {
+function VisitCard({ visitNumber, data, onEdit }: { visitNumber: number; data: VisitData; onEdit: () => void }) {
   return (
     <div>
       {/* Visit header row */}
@@ -136,10 +133,10 @@ function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Visit status</label>
           <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
-            <button className="px-3 py-1.5 text-sm bg-white text-gray-600 hover:bg-gray-50">
+            <button className="px-3 py-1.5 text-sm bg-white text-gray-600 hover:bg-gray-50 cursor-pointer">
               Inactive
             </button>
-            <button className="px-3 py-1.5 text-sm bg-[rgb(154,38,214)] text-white">
+            <button className="px-3 py-1.5 text-sm bg-[rgb(154,38,214)] text-white cursor-pointer">
               Active
             </button>
           </div>
@@ -152,18 +149,30 @@ function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData
         {/* LEFT — visit details */}
         <div className="flex-1 px-6 pt-4 pb-2 relative min-w-0">
           <button
-            className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            onClick={onEdit}
+            className="absolute top-4 right-4 flex-shrink-0 p-2 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
+            style={{ backgroundColor: 'rgb(220, 217, 228)' }}
             aria-label="Edit visit"
           >
-            <Edit className="w-4 h-4" />
+            <PencilSolidIcon className="w-4 h-4" />
           </button>
 
           <FieldRow label="Visit title">{data.title}</FieldRow>
           <FieldRow label="Start date">{data.startDate}</FieldRow>
           <FieldRow label="End date">{data.endDate}</FieldRow>
           <FieldRow label="Care type">{data.careType}</FieldRow>
-          <FieldRow label="Start time">{data.startTime}</FieldRow>
-          <FieldRow label="End time">{data.endTime}</FieldRow>
+          <FieldRow label="Start time">
+            <div>{data.startTime}</div>
+            {data.earliestStart && (
+              <div className="text-sm text-gray-500 mt-0.5">Earliest: {data.earliestStart}</div>
+            )}
+          </FieldRow>
+          <FieldRow label="End time">
+            <div>{data.endTime}</div>
+            {data.latestEnd && (
+              <div className="text-sm text-gray-500 mt-0.5">Latest: {data.latestEnd}</div>
+            )}
+          </FieldRow>
           <FieldRow label="Duration">{data.duration}</FieldRow>
           <FieldRow label="Careworkers">{data.careworkers}</FieldRow>
 
@@ -199,9 +208,19 @@ function VisitCard({ visitNumber, data }: { visitNumber: number; data: VisitData
 
         {/* RIGHT — care requirements (per-visit overrides) */}
         <div className="w-[340px] flex-shrink-0 px-6 pt-4 pb-2">
-          <p className="text-base font-semibold text-gray-900 mb-0.5">Care requirements</p>
+          <div className="flex items-start justify-between gap-3 mb-0.5">
+            <p className="text-base font-semibold text-gray-900">Care requirements</p>
+            <button
+              className="flex-shrink-0 p-2 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
+              style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+              aria-label="Edit care requirements"
+            >
+              <PencilSolidIcon className="w-4 h-4" />
+            </button>
+          </div>
           <p className="text-sm text-gray-500 mb-1 leading-snug">
-            Inherited from customer defaults — adjust per visit as needed.
+            Inherited from customer defaults — <br></br>
+            adjust per visit as needed.
           </p>
 
           <VisitCareSection
@@ -254,9 +273,63 @@ const defaultCareRequirements: VisitCareRequirements = {
   ],
 };
 
+const VISIT_1_DATA: VisitData = {
+  title: 'Friday visit',
+  startDate: '21/11/2025',
+  endDate: 'Ongoing',
+  careType: 'Companionship',
+  startTime: '11:00',
+  earliestStart: '10:30',
+  endTime: '12:00',
+  latestEnd: '12:30',
+  duration: '1 hour',
+  careworkers: 1,
+  funder: 'Mr Arthur Barrington',
+  chargeRateSheet: 'North Northumberland',
+  depositStatus: '-',
+  payRateSheet: '-',
+  cadenceType: 'BiWeekly',
+  weeks: [
+    { currentWeek: true, activeDays: [4] },
+    { activeDays: [4] },
+  ],
+  careRequirements: defaultCareRequirements,
+};
+
+const VISIT_2_DATA: VisitData = {
+  title: 'Lunch visit',
+  startDate: '11/03/2026',
+  endDate: 'Ongoing',
+  careType: 'Personal care',
+  startTime: '13:00',
+  endTime: '13:30',
+  duration: '30 minutes',
+  careworkers: 1,
+  funder: 'Mr Arthur Barrington',
+  chargeRateSheet: 'North Northumberland',
+  depositStatus: '-',
+  payRateSheet: '-',
+  cadenceType: 'BiWeekly',
+  weeks: [
+    { currentWeek: true, activeDays: [0, 2] },
+    { activeDays: [0, 2] },
+  ],
+  careRequirements: defaultCareRequirements,
+};
+
 export function ServiceAgreementPage() {
+  const [editingVisit, setEditingVisit] = useState<{ number: number; data: VisitData } | null>(null);
+
   return (
     <div>
+      {editingVisit && (
+        <VisitEditSlideout
+          visitNumber={editingVisit.number}
+          data={editingVisit.data}
+          onClose={() => setEditingVisit(null)}
+        />
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-5">
         <span className="text-sm text-gray-600">Displaying 2/2 visits</span>
@@ -269,59 +342,24 @@ export function ServiceAgreementPage() {
       <div className="space-y-6">
         <VisitCard
           visitNumber={1}
-          data={{
-            title: 'Friday visit',
-            startDate: '21/11/2025',
-            endDate: 'Ongoing',
-            careType: 'Companionship',
-            startTime: '11:00',
-            endTime: '12:00',
-            duration: '1 hour',
-            careworkers: 1,
-            funder: 'Mr Arthur Barrington',
-            chargeRateSheet: 'North Northumberland',
-            depositStatus: '-',
-            payRateSheet: '-',
-            cadenceType: 'BiWeekly',
-            weeks: [
-              { currentWeek: true, activeDays: [4] },
-              { activeDays: [4] },
-            ],
-            careRequirements: defaultCareRequirements,
-          }}
+          data={VISIT_1_DATA}
+          onEdit={() => setEditingVisit({ number: 1, data: VISIT_1_DATA })}
         />
 
         <VisitCard
           visitNumber={2}
-          data={{
-            title: 'Lunch visit',
-            startDate: '11/03/2026',
-            endDate: 'Ongoing',
-            careType: 'Personal care',
-            startTime: '13:00',
-            endTime: '13:30',
-            duration: '30 minutes',
-            careworkers: 1,
-            funder: 'Mr Arthur Barrington',
-            chargeRateSheet: 'North Northumberland',
-            depositStatus: '-',
-            payRateSheet: '-',
-            cadenceType: 'BiWeekly',
-            weeks: [
-              { currentWeek: true, activeDays: [0, 2] },
-              { activeDays: [0, 2] },
-            ],
-            careRequirements: defaultCareRequirements,
-          }}
+          data={VISIT_2_DATA}
+          onEdit={() => setEditingVisit({ number: 2, data: VISIT_2_DATA })}
         />
 
         {/* Weekly Schedule */}
         <div className="bg-white rounded-lg border border-gray-200 relative">
           <button
-            className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            className="absolute top-4 right-4 flex-shrink-0 p-1.5 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
+            style={{ backgroundColor: 'rgb(220, 217, 228)' }}
             aria-label="Edit weekly schedule"
           >
-            <Edit className="w-4 h-4" />
+            <PencilSolidIcon className="w-3.5 h-3.5" />
           </button>
           <div className="px-6 pt-4 pb-2">
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Weekly schedule</h3>
