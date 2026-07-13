@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, Filter, X, Calendar } from 'lucide-react';
-import { Document } from '../data/mock-documents';
+import { Document } from '../../data/mock-documents';
 
 interface DocumentFiltersProps {
   searchQuery: string;

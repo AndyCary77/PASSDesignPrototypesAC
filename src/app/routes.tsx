@@ -8,13 +8,21 @@ import { RosteringLayout } from './components/rostering/RosteringLayout';
 import { EmployeeDetailsPage } from './components/employee/EmployeeDetailsPage';
 import { EmployeeRecordsPage } from './components/employee/EmployeeRecordsPage';
 import { CustomerDetailsPage } from './components/customer/CustomerDetailsPage';
+import { CareNotes } from './components/carenotes/CareNotes';
+import { DocumentsPage } from './components/documents/DocumentsPage';
+import { CareManagementPage } from './components/caremanagement/CareManagementPage';
+import { CareManagementProvider } from './components/caremanagement/CareManagementContext';
+import { CareManagementSubnav } from './components/caremanagement/CareManagementSubnav';
+import { MARChart } from './components/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 
 function CustomerLayout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <CustomerInfo />
+      <div className="sticky top-0 z-40">
+        <Header />
+        <CustomerInfo />
+      </div>
       <DndProvider backend={HTML5Backend}>
         <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
           <RosteringLayout />
@@ -27,10 +35,71 @@ function CustomerLayout() {
 function CustomerDetailsLayout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <CustomerInfo />
+      <div className="sticky top-0 z-40">
+        <Header />
+        <CustomerInfo />
+      </div>
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
         <CustomerDetailsPage />
+      </main>
+    </div>
+  );
+}
+
+function CareManagementLayout() {
+  return (
+    <CareManagementProvider>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="sticky top-0 z-40">
+          <Header />
+          <CustomerInfo />
+          <CareManagementSubnav />
+        </div>
+        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+          <CareManagementPage />
+        </main>
+      </div>
+    </CareManagementProvider>
+  );
+}
+
+function CareNotesLayout() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="sticky top-0 z-40">
+        <Header />
+        <CustomerInfo />
+      </div>
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+        <CareNotes />
+      </main>
+    </div>
+  );
+}
+
+function DocumentsLayout() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="sticky top-0 z-40">
+        <Header />
+        <CustomerInfo />
+      </div>
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+        <DocumentsPage />
+      </main>
+    </div>
+  );
+}
+
+function MARChartLayout() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="sticky top-0 z-40">
+        <Header />
+        <CustomerInfo />
+      </div>
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+        <MARChart />
       </main>
     </div>
   );
@@ -39,7 +108,9 @@ function CustomerDetailsLayout() {
 function ScheduleLayout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+      <div className="sticky top-0 z-40">
+        <Header />
+      </div>
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
         <SchedulePage />
       </main>
@@ -50,8 +121,10 @@ function ScheduleLayout() {
 function EmployeeLayout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <EmployeeInfo />
+      <div className="sticky top-0 z-40">
+        <Header />
+        <EmployeeInfo />
+      </div>
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
         <EmployeeDetailsPage />
       </main>
@@ -62,8 +135,10 @@ function EmployeeLayout() {
 function EmployeeRecordsLayout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <EmployeeInfo />
+      <div className="sticky top-0 z-40">
+        <Header />
+        <EmployeeInfo />
+      </div>
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
         <EmployeeRecordsPage />
       </main>
@@ -83,6 +158,22 @@ export const router = createBrowserRouter([
   {
     path: "/customers/details",
     Component: CustomerDetailsLayout,
+  },
+  {
+    path: "/customers/caremanagement",
+    Component: CareManagementLayout,
+  },
+  {
+    path: "/customers/carenotes",
+    Component: CareNotesLayout,
+  },
+  {
+    path: "/customers/documents",
+    Component: DocumentsLayout,
+  },
+  {
+    path: "/customers/marchart",
+    Component: MARChartLayout,
   },
   {
     path: "/employees",

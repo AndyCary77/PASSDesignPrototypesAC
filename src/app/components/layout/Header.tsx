@@ -1,22 +1,24 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router';
 import logo from "figma:asset/a8dcce14c232a2c900b6362fb6c2b322188e1200.png";
-import { 
-  Users, UserCheck, Calendar, Briefcase, PoundSterling, BarChart2, 
-  AlertTriangle, MessageSquare, Clock, HelpCircle, 
+import {
+  Users, UserCheck, Calendar, Briefcase, PoundSterling, BarChart2,
+  AlertTriangle, MessageSquare, Clock, HelpCircle,
   Settings, MoreHorizontal, User, CheckCircle
 } from 'lucide-react';
+import { useScrolled } from '../../hooks/useScrolled';
 
 export function Header() {
   const location = useLocation();
-  
+  const scrolled = useScrolled();
+
   return (
-    <header className="flex flex-col w-full text-white">
+    <header className={`flex flex-col w-full text-white transition-transform duration-300 ${scrolled ? '-translate-y-full' : 'translate-y-0'}`}>
       {/* Top System Bar */}
       <div className="bg-[#6d1b98] h-12 flex items-center justify-between px-4 text-xs font-medium">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Logo Placeholder */}
-          <img src={logo} alt="PASS Logo" className="h-8 w-auto" />
+          <img src={logo} alt="PASS Logo" className="h-8 w-auto shrink-0" />
         </div>
         
         <nav className="flex items-center gap-6 h-full">
