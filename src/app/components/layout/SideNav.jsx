@@ -138,7 +138,7 @@ const NAV_LINKS = {
 export default function SideNav({
   onSelectItem,
   appName = 'PASS for Care',
-  officeName = 'roster office',
+  officeName = 'Office Name',
   officeAddress = 'A1, East Wing, Cody Technology Park, Ively Road, Farnborough, GU14 0LX',
   defaultCollapsed = true,
 }) {

@@ -6,7 +6,7 @@
    (Icons/PASS side nav/*.svg) exactly. */
 
 .side-nav {
-  width: 280px;
+  width: 250px;
   height: 100vh;
   position: sticky;
   top: 0;
@@ -68,7 +68,7 @@
   padding: 0;
   border: 1px solid #f4f4f4;
   background: none;
-  color: #7e8ba3;
+  color: #5c6b80;
   cursor: pointer;
   border-radius: 50%;
   transition: background 0.12s, color 0.12s;
@@ -109,7 +109,7 @@
   border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  color: #7e8ba3;
+  color: #5c6b80;
   transition: background 0.12s, color 0.12s;
 }
 .side-nav.collapsed .side-nav-item {
@@ -133,7 +133,7 @@
   width: 22px;
   height: 22px;
   flex-shrink: 0;
-  color: #7e8ba3;
+  color: #5c6b80;
 }
 .side-nav-item.active .side-nav-item-icon { color: inherit; }
 .side-nav-item-icon svg { width: 22px; height: 22px; }

@@ -3,9 +3,9 @@ import davidPhoto from '../../imports/david_b.jpg';
 import { useScrolled } from '../../hooks/useScrolled';
 
 const activeTabClass =
-  'px-4 py-3 text-sm bg-purple-50 text-[rgb(154,38,214)] hover:bg-purple-100 whitespace-nowrap border-b-2 border-[rgb(154,38,214)] transition-colors';
+  'px-4 py-3 text-sm font-medium bg-purple-50 text-[rgb(154,38,214)] hover:bg-purple-100 whitespace-nowrap border-b-2 border-[rgb(154,38,214)] transition-colors';
 const inactiveTabClass =
-  'px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
+  'px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
 
 export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: boolean }) {
   const { pathname } = useLocation();
@@ -28,7 +28,7 @@ export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: bo
               <h2 className="text-gray-900 font-semibold">Mr David Buckowski</h2>
               <span
                 className="text-xs px-2 py-0.5 rounded font-medium"
-                style={{ backgroundColor: '#B7DDA8', color: '#2D5F1E' }}
+                style={{ backgroundColor: '#D4EBC3', color: '#2D5F1E' }}
               >
                 ACTIVE
               </span>

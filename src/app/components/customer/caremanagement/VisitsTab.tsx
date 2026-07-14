@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, Users, HandHelping } from 'lucide-react';
+import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2 } from 'lucide-react';
+import { CalendarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
 import { VISITS, TASKS, OUTCOMES, TASK_CATEGORIES } from './types';
-import { OutcomeBadge, TaskBadge, ActiveBadge, StatusToggle, inputClass, labelClass, CATEGORY_CONFIG } from './shared';
+import { OutcomeBadge, TaskBadge, ActiveBadge, labelClass, CATEGORY_CONFIG } from './shared';
 
 const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start py-2.5 border-b border-gray-100 last:border-b-0">
+      <span className="w-44 flex-shrink-0 text-sm text-gray-500">{label}</span>
+      <div className="flex-1 text-sm font-medium text-gray-900">{children}</div>
+    </div>
+  );
+}
 
 function DayPill({ label, active }: { label: string; active: boolean }) {
   return (
@@ -35,25 +45,23 @@ function VisitCard({ visit, onSelect }: { visit: typeof VISITS[0]; onSelect: () 
       <div className="flex items-center justify-between px-5 py-3 bg-sky-50 border-b border-sky-100">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-sky-200 flex items-center justify-center flex-shrink-0">
-            <HandHelping className="w-4 h-4 text-sky-600" />
+            <CalendarSolidIcon className="w-5 h-5 text-sky-600" />
           </div>
           <span className="text-base font-semibold text-sky-700">{visit.title}</span>
+          <ArrowRight className="w-4 h-4 text-sky-700 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
         </div>
-        <div className="flex items-center gap-3">
-          <ActiveBadge status={visit.status} />
-          <span className="text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">→</span>
-        </div>
+        <ActiveBadge status={visit.status} />
       </div>
 
       <div className="px-5 py-4 grid grid-cols-[200px_1fr_1fr] gap-6">
         {/* Left: schedule details */}
         <div className="space-y-1 text-sm text-gray-600">
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+            <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
             <span>{visit.startDate}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+            <Repeat2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
             <span>Ongoing</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -61,7 +69,7 @@ function VisitCard({ visit, onSelect }: { visit: typeof VISITS[0]; onSelect: () 
             <span className="font-medium text-gray-700">{visit.visitType}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+            <CalendarDays className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
             <span>{cadenceLabel} — {weeksLabel}</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -85,106 +93,53 @@ function VisitCard({ visit, onSelect }: { visit: typeof VISITS[0]; onSelect: () 
 }
 
 function VisitEditForm({ visit }: { visit: typeof VISITS[0] }) {
-  const visitTypes = ['Care visit', 'Social visit', 'Domestic visit', 'Night visit'];
+  const cadenceLabel = visit.cadence === 'Alternate week' ? 'BiWeekly' : visit.cadence;
 
   return (
     <div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-5 space-y-5">
-          {/* Title + Status */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className={labelClass}>Visit title <span className="text-red-500">*</span></label>
-              <input type="text" defaultValue={visit.title} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Status</label>
-              <StatusToggle value={visit.status} />
-            </div>
-          </div>
 
-          {/* Visit type + Employees + Scheduled times */}
-          <div className="grid grid-cols-3 gap-6">
-            <div>
-              <label className={labelClass}>Visit type</label>
-              <div className="relative">
-                <select defaultValue={visit.visitType} className={`${inputClass} appearance-none pr-8 cursor-pointer`}>
-                  {visitTypes.map(t => <option key={t}>{t}</option>)}
-                </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▼</div>
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>No. employees required</label>
-              <div className="relative">
-                <input type="number" defaultValue={visit.numEmployees} min={1} className={`${inputClass} pr-8`} />
-                <Users className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-            <div>
-              <label className={labelClass}>Scheduled times</label>
-              <p className="text-sm text-gray-700 py-2.5">
-                at {visit.startTime} for {visit.duration} until {visit.endTime}
-              </p>
-            </div>
-          </div>
-
-          {/* Preferred employees */}
+          {/* Read-only visit summary */}
           <div>
-            <label className={labelClass}>Preferred employees (in order of preference)</label>
-            <input type="text" placeholder="Start typing to search employees..." className={inputClass} />
-          </div>
-
-          {/* Care Groups */}
-          <div>
-            <label className={labelClass}>Care groups</label>
-            <input type="text" placeholder="Start typing to select a care group" className={inputClass} />
-          </div>
-
-          {/* Visit schedule */}
-          <div>
-            <label className={labelClass}>Visit schedule</label>
-            <div className="border border-gray-200 rounded-lg p-4 space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-500 mb-1 block">Begins on</label>
-                  <div className="relative">
-                    <input type="text" defaultValue={visit.startDate} className={`${inputClass} pr-10`} />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900">{visit.title}</h3>
+              <ActiveBadge status={visit.status} />
+            </div>
+            <div>
+              <FieldRow label="Visit type">{visit.visitType}</FieldRow>
+              <FieldRow label="Careworkers required">{visit.numEmployees}</FieldRow>
+              <FieldRow label="Time">
+                {visit.startTime} – {visit.endTime} ({visit.duration})
+              </FieldRow>
+              <FieldRow label="Start date">
+                <div className="flex items-center gap-1.5">
+                  <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
+                  <span>{visit.startDate}</span>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer mt-5">
-                  <input type="checkbox" className="rounded border-gray-300 accent-[rgb(154,38,214)]" />
-                  End?
-                </label>
-                <div className="flex-1">
-                  <label className="text-xs text-gray-500 mb-1 block">Every</label>
-                  <div className="relative">
-                    <select defaultValue={visit.cadence} className={`${inputClass} appearance-none pr-8 cursor-pointer`}>
-                      <option>Week</option>
-                      <option>Alternate week</option>
-                      <option>Every 3 weeks</option>
-                      <option>Every 4 weeks</option>
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▼</div>
-                  </div>
+              </FieldRow>
+              <FieldRow label="End date">
+                <div className="flex items-center gap-1.5">
+                  <Repeat2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <span>Ongoing</span>
                 </div>
-              </div>
-
-              {/* Day-of-week grid (one row per week) */}
-              <div className="space-y-2">
-                {visit.weeks.map((week, wi) => (
-                  <div key={wi} className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 w-14 shrink-0">Week {wi + 1}</span>
-                    <div className="flex gap-1.5">
-                      {DAYS_ABBR.map((day, di) => (
-                        <DayPill key={day} label={day.slice(0, 3)} active={week.activeDays.includes(di)} />
-                      ))}
+              </FieldRow>
+              <FieldRow label="Cadence">
+                <div className="space-y-2">
+                  <div>{cadenceLabel}</div>
+                  {visit.weeks.map((week, wi) => (
+                    <div key={wi} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 w-14 shrink-0">Week {wi + 1}</span>
+                      <div className="flex gap-1.5">
+                        {DAYS_ABBR.map((day, di) => (
+                          <DayPill key={day} label={day.slice(0, 3)} active={week.activeDays.includes(di)} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </FieldRow>
             </div>
           </div>
 
@@ -237,7 +192,7 @@ function VisitEditForm({ visit }: { visit: typeof VISITS[0] }) {
                     <div className={`flex items-center gap-3 px-4 py-2 ${bg} ${border} border-b`}>
                       <span className="text-xs text-gray-400 w-5">{idx + 1}.</span>
                       <span className={`text-sm font-semibold ${text}`}>{task.title}</span>
-                      <span className="ml-1 text-xs px-1.5 py-0.5 rounded bg-green-500 text-white">Active</span>
+                      <ActiveBadge status="active" />
                       <div className="ml-auto flex gap-1">
                         {['↑', '↓'].map(arrow => (
                           <button key={arrow} className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer">

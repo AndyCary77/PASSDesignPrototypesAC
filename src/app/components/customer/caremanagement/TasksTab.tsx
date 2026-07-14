@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, CalendarClock, ArrowRight, Repeat2 } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
 import { TASKS, OUTCOMES, VISITS } from './types';
@@ -18,14 +18,12 @@ function TaskCard({ task, onSelect }: { task: typeof TASKS[0]; onSelect: () => v
       <div className={`flex items-center justify-between px-5 py-3 border-b ${bg} ${border}`}>
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${circleBg}`}>
-            <Icon className={`w-4 h-4 ${text}`} />
+            <Icon className={`w-5 h-5 ${text}`} />
           </div>
           <span className={`text-base font-semibold ${text}`}>{task.title}</span>
+          <ArrowRight className={`w-4 h-4 ${text} opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200`} />
         </div>
-        <div className="flex items-center gap-3">
-          <ActiveBadge status={task.status} />
-          <span className="text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">→</span>
-        </div>
+        <ActiveBadge status={task.status} />
       </div>
 
       <div className="px-5 py-4 grid grid-cols-[1fr_auto_1fr_1fr] gap-6 items-start">
@@ -37,11 +35,11 @@ function TaskCard({ task, onSelect }: { task: typeof TASKS[0]; onSelect: () => v
         {/* Dates */}
         <div className="text-sm text-gray-600 space-y-1 min-w-[120px]">
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+            <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
             <span>{task.startDate}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+            <Repeat2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
             <span>Ongoing</span>
           </div>
         </div>

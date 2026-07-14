@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Star } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { StarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
 import { OUTCOMES, TASKS, VISITS, TASK_CATEGORIES } from './types';
@@ -17,17 +18,15 @@ function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSel
       onClick={onSelect}
       className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-purple-300 hover:shadow-md transition-all group"
     >
-      <div className="flex items-center justify-between px-5 py-3 bg-amber-50 border-b border-amber-100">
+      <div className="flex items-center justify-between px-5 py-3 border-b" style={{ backgroundColor: '#feefdc', borderColor: '#fcd9a8' }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center flex-shrink-0">
-            <Star className="w-4 h-4 text-amber-600 fill-amber-600" />
+          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#fcdfb0' }}>
+            <StarSolidIcon className="w-5 h-5 text-amber-700" />
           </div>
-          <span className="text-base font-semibold text-amber-700">{outcome.title}</span>
+          <span className="text-base font-semibold text-amber-800">{outcome.title}</span>
+          <ArrowRight className="w-4 h-4 text-amber-800 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
         </div>
-        <div className="flex items-center gap-3">
-          <ActiveBadge status={outcome.status} />
-          <span className="text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">→</span>
-        </div>
+        <ActiveBadge status={outcome.status} />
       </div>
 
       <div className="px-5 py-4 space-y-3">
@@ -86,10 +85,16 @@ function OutcomeEditForm({ outcome }: { outcome: typeof OUTCOMES[0] }) {
             <div>
               <label className={labelClass}>Outcome type</label>
               <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-                <button className={`flex-1 py-2.5 text-sm font-medium transition-colors ${outcome.type === 'template' ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-400 hover:bg-gray-50'}`}>
+                <button
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${outcome.type === 'template' ? 'text-amber-800' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+                  style={outcome.type === 'template' ? { backgroundColor: '#feefdc' } : undefined}
+                >
                   Template
                 </button>
-                <button className={`flex-1 py-2.5 text-sm font-medium transition-colors ${outcome.type === 'custom' ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-400 hover:bg-gray-50'}`}>
+                <button
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${outcome.type === 'custom' ? 'text-amber-800' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+                  style={outcome.type === 'custom' ? { backgroundColor: '#feefdc' } : undefined}
+                >
                   Custom
                 </button>
               </div>

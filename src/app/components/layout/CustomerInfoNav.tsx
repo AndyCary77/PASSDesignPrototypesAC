@@ -8,10 +8,10 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
   const scrolled = useScrolled();
 
   const inactiveTabClass =
-    'px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
+    'px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
 
   const activeTabClass =
-    'px-4 py-3 text-sm whitespace-nowrap border-b-2 bg-purple-50 text-[rgb(154,38,214)] border-[rgb(154,38,214)]';
+    'px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 bg-purple-50 text-[rgb(154,38,214)] border-[rgb(154,38,214)]';
 
   const tabClass = (path: string) =>
     pathname === path ? activeTabClass : inactiveTabClass;
@@ -39,7 +39,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
               </span>
               <span
                 className="text-xs px-2 py-0.5 rounded font-semibold"
-                style={{ backgroundColor: '#B7DDA8', color: '#2D5F1E' }}
+                style={{ backgroundColor: '#D4EBC3', color: '#2D5F1E' }}
               >
                 ACTIVE
               </span>

@@ -110,7 +110,7 @@ export function EmployeeDetailsPage() {
               <div className="flex items-center gap-3">
                 <span 
                   className="text-xs px-2 py-1 rounded font-medium"
-                  style={{ backgroundColor: '#B7DDA8', color: '#2D5F1E' }}
+                  style={{ backgroundColor: '#D4EBC3', color: '#2D5F1E' }}
                 >
                   ACTIVE
                 </span>
