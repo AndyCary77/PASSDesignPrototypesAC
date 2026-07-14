@@ -26,7 +26,7 @@ function IsolationShell({ children }: { children: React.ReactNode }) {
           back past the show threshold and causing oscillation. */}
       <div className="min-h-[300vh] max-w-[1600px] w-full mx-auto px-4 py-8 space-y-4">
         {Array.from({ length: 30 }).map((_, i) => (
-          <div key={i} className="h-16 bg-white rounded-lg border border-gray-200 opacity-40" />
+          <div key={i} className="h-16 bg-gray-200 rounded-lg" />
         ))}
       </div>
     </div>
