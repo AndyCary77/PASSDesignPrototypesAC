@@ -15,14 +15,19 @@ function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSel
   return (
     <div
       onClick={onSelect}
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all"
+      className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-purple-300 hover:shadow-md transition-all group"
     >
       <div className="flex items-center justify-between px-5 py-3 bg-amber-50 border-b border-amber-100">
         <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />
+          <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center flex-shrink-0">
+            <Star className="w-4 h-4 text-amber-600 fill-amber-600" />
+          </div>
           <span className="text-base font-semibold text-amber-700">{outcome.title}</span>
         </div>
-        <ActiveBadge status={outcome.status} />
+        <div className="flex items-center gap-3">
+          <ActiveBadge status={outcome.status} />
+          <span className="text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">→</span>
+        </div>
       </div>
 
       <div className="px-5 py-4 space-y-3">
@@ -62,6 +67,7 @@ function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSel
             <p className="text-sm text-gray-400 italic">None</p>
           )}
         </div>
+
       </div>
     </div>
   );

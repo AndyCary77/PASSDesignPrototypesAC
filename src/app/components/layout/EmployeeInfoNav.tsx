@@ -7,14 +7,14 @@ const activeTabClass =
 const inactiveTabClass =
   'px-4 py-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
 
-export function EmployeeInfo() {
+export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: boolean }) {
   const { pathname } = useLocation();
   const scrolled = useScrolled();
   const isRecords = pathname === '/employees/records';
 
   return (
-    <div className={`bg-white border-b border-gray-200 transition-[margin] duration-300 ${scrolled ? '-mt-12' : 'mt-0'}`}>
-      <div className="px-4">
+    <div className={`bg-white border-b border-gray-200 transition-[margin] duration-300 ${scrolled && withSlideOffset ? '-mt-12' : 'mt-0'}`}>
+      <div className="px-6">
         <div className={`flex gap-4 transition-all duration-300 ${scrolled ? 'py-1.5 items-center' : 'py-4 items-start'}`}>
           {/* Avatar */}
           <div
@@ -57,7 +57,7 @@ export function EmployeeInfo() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="border-t border-gray-200 -mx-4 px-4">
+        <div className="border-t border-gray-200 -mx-6 px-6">
           <nav className="flex gap-1 overflow-x-auto">
             <a href="#" className={inactiveTabClass}>Dashboard</a>
             <Link to="/employees" className={isRecords ? inactiveTabClass : activeTabClass}>Details</Link>

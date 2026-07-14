@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-import { Header } from './layout/TopNavBar';
 
 const SCREENS = [
   {
@@ -30,7 +29,13 @@ const SCREENS = [
 
 const COMPONENTS = [
   {
-    title: 'Layout',
+    title: 'Layout — New',
+    items: [
+      { label: 'Side Nav + Top Nav', to: '/components/new-nav' },
+    ],
+  },
+  {
+    title: 'Layout — Legacy',
     items: [
       { label: 'Top Nav Bar', to: '/components/top-nav-bar' },
       { label: 'Customer Info Nav', to: '/components/customer-info-nav' },
@@ -42,14 +47,10 @@ const COMPONENTS = [
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-8 py-12">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">
-          Roster &amp; Schedule — Prototypes
-        </h1>
+    <div className="max-w-[1600px] w-full mx-auto px-8 py-12">
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        Roster &amp; Schedule — Prototypes
+      </h1>
         <div className="flex gap-6 items-start">
           <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex-1 max-w-2xl">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-6">Screens</h2>
@@ -97,7 +98,6 @@ export function LandingPage() {
             </div>
           </div>
         </div>
-      </main>
     </div>
   );
 }

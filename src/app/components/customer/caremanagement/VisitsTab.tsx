@@ -30,14 +30,19 @@ function VisitCard({ visit, onSelect }: { visit: typeof VISITS[0]; onSelect: () 
   return (
     <div
       onClick={onSelect}
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all"
+      className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-purple-300 hover:shadow-md transition-all group"
     >
       <div className="flex items-center justify-between px-5 py-3 bg-sky-50 border-b border-sky-100">
         <div className="flex items-center gap-2">
-          <HandHelping className="w-4 h-4 text-sky-500 flex-shrink-0" />
+          <div className="w-8 h-8 rounded-full bg-sky-200 flex items-center justify-center flex-shrink-0">
+            <HandHelping className="w-4 h-4 text-sky-600" />
+          </div>
           <span className="text-base font-semibold text-sky-700">{visit.title}</span>
         </div>
-        <ActiveBadge status={visit.status} />
+        <div className="flex items-center gap-3">
+          <ActiveBadge status={visit.status} />
+          <span className="text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">→</span>
+        </div>
       </div>
 
       <div className="px-5 py-4 grid grid-cols-[200px_1fr_1fr] gap-6">

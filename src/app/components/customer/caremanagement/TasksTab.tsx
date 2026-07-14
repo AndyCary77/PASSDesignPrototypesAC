@@ -8,19 +8,24 @@ import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, inputClass, labelC
 function TaskCard({ task, onSelect }: { task: typeof TASKS[0]; onSelect: () => void }) {
   const outcomes = OUTCOMES.filter(o => task.outcomeIds.includes(o.id));
   const visits = VISITS.filter(v => task.visitIds.includes(v.id));
-  const { bg, text, border, Icon } = CATEGORY_CONFIG[task.category];
+  const { bg, text, border, circleBg, Icon } = CATEGORY_CONFIG[task.category];
 
   return (
     <div
       onClick={onSelect}
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all"
+      className="bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:border-purple-300 hover:shadow-md transition-all group"
     >
       <div className={`flex items-center justify-between px-5 py-3 border-b ${bg} ${border}`}>
         <div className="flex items-center gap-2">
-          <Icon className={`w-4 h-4 flex-shrink-0 ${text}`} />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${circleBg}`}>
+            <Icon className={`w-4 h-4 ${text}`} />
+          </div>
           <span className={`text-base font-semibold ${text}`}>{task.title}</span>
         </div>
-        <ActiveBadge status={task.status} />
+        <div className="flex items-center gap-3">
+          <ActiveBadge status={task.status} />
+          <span className="text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">→</span>
+        </div>
       </div>
 
       <div className="px-5 py-4 grid grid-cols-[1fr_auto_1fr_1fr] gap-6 items-start">

@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Header } from './components/layout/TopNavBar';
+import { Header } from './components/layout/TopNavBarLegacy';
 import { CustomerInfo } from './components/layout/CustomerInfoNav';
 import { EmployeeInfo } from './components/layout/EmployeeInfoNav';
 import { RosteringLayout } from './components/customer/rostering/RosteringLayout';
@@ -16,14 +16,33 @@ import { CareManagementSubnav } from './components/customer/caremanagement/CareM
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 import { LandingPage } from './components/LandingPage';
+import SideNav from './components/layout/SideNav';
+import TopNav from './components/layout/TopNav';
 
+// ─── Shared shell ──────────────────────────────────────────────────────────────
+
+function AppShell({ infoBar, children }: { infoBar?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <SideNav />
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="sticky top-0 z-40">
+          <TopNav appName="Office Name" />
+          {infoBar}
+        </div>
+        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// Legacy isolation shell — for component demos only
 function IsolationShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-gray-50 flex flex-col">
       <div className="sticky top-0 z-40">{children}</div>
-      {/* min-h-[300vh] ensures scroll range always far exceeds header height,
-          preventing the page-height shrink on header hide from snapping scrollY
-          back past the show threshold and causing oscillation. */}
       <div className="min-h-[300vh] max-w-[1600px] w-full mx-auto px-4 py-8 space-y-4">
         {Array.from({ length: 30 }).map((_, i) => (
           <div key={i} className="h-16 bg-gray-200 rounded-lg" />
@@ -33,140 +52,90 @@ function IsolationShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── Page layouts ──────────────────────────────────────────────────────────────
+
 function CustomerLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <CustomerInfo />
-      </div>
+    <AppShell infoBar={<CustomerInfo />}>
       <DndProvider backend={HTML5Backend}>
-        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-          <RosteringLayout />
-        </main>
+        <RosteringLayout />
       </DndProvider>
-    </div>
+    </AppShell>
   );
 }
 
 function CustomerDetailsLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <CustomerInfo />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <CustomerDetailsPage />
-      </main>
-    </div>
+    <AppShell infoBar={<CustomerInfo />}>
+      <CustomerDetailsPage />
+    </AppShell>
   );
 }
 
 function CareManagementLayout() {
   return (
     <CareManagementProvider>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <div className="sticky top-0 z-40">
-          <Header />
-          <CustomerInfo />
-          <CareManagementSubnav />
-        </div>
-        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-          <CareManagementPage />
-        </main>
-      </div>
+      <AppShell infoBar={<><CustomerInfo /><CareManagementSubnav /></>}>
+        <CareManagementPage />
+      </AppShell>
     </CareManagementProvider>
   );
 }
 
 function CareNotesLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <CustomerInfo />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <CareNotes />
-      </main>
-    </div>
+    <AppShell infoBar={<CustomerInfo />}>
+      <CareNotes />
+    </AppShell>
   );
 }
 
 function DocumentsLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <CustomerInfo />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <DocumentsPage />
-      </main>
-    </div>
+    <AppShell infoBar={<CustomerInfo />}>
+      <DocumentsPage />
+    </AppShell>
   );
 }
 
 function MARChartLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <CustomerInfo />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <MARChart />
-      </main>
-    </div>
+    <AppShell infoBar={<CustomerInfo />}>
+      <MARChart />
+    </AppShell>
   );
 }
 
 function ScheduleLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <SchedulePage />
-      </main>
-    </div>
+    <AppShell>
+      <SchedulePage />
+    </AppShell>
   );
 }
 
 function EmployeeLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <EmployeeInfo />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <EmployeeDetailsPage />
-      </main>
-    </div>
+    <AppShell infoBar={<EmployeeInfo />}>
+      <EmployeeDetailsPage />
+    </AppShell>
   );
 }
 
 function EmployeeRecordsLayout() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-40">
-        <Header />
-        <EmployeeInfo />
-      </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
-        <EmployeeRecordsPage />
-      </main>
-    </div>
+    <AppShell infoBar={<EmployeeInfo />}>
+      <EmployeeRecordsPage />
+    </AppShell>
   );
 }
+
+// ─── Routes ────────────────────────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: LandingPage,
+    Component: () => <AppShell><LandingPage /></AppShell>,
   },
   {
     path: "/customers",
@@ -204,23 +173,40 @@ export const router = createBrowserRouter([
     path: "/schedule",
     Component: ScheduleLayout,
   },
+  // ─── Component isolation demos ───────────────────────────────────────────────
+  {
+    path: "/components/new-nav",
+    Component: () => (
+      <div className="flex min-h-screen bg-gray-50">
+        <SideNav />
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopNav appName="Office Name" />
+          <div className="px-4 py-8 space-y-4 min-h-[300vh]">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded-lg max-w-[1600px] mx-auto w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+  },
   {
     path: "/components/top-nav-bar",
     Component: () => <IsolationShell><Header /></IsolationShell>,
   },
   {
     path: "/components/customer-info-nav",
-    Component: () => <IsolationShell><Header /><CustomerInfo /></IsolationShell>,
+    Component: () => <IsolationShell><Header /><CustomerInfo withSlideOffset /></IsolationShell>,
   },
   {
     path: "/components/employee-info-nav",
-    Component: () => <IsolationShell><Header /><EmployeeInfo /></IsolationShell>,
+    Component: () => <IsolationShell><Header /><EmployeeInfo withSlideOffset /></IsolationShell>,
   },
   {
     path: "/components/care-management-subnav",
     Component: () => (
       <CareManagementProvider>
-        <IsolationShell><Header /><CustomerInfo /><CareManagementSubnav /></IsolationShell>
+        <IsolationShell><Header /><CustomerInfo withSlideOffset /><CareManagementSubnav /></IsolationShell>
       </CareManagementProvider>
     ),
   },

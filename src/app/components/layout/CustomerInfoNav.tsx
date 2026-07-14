@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router';
 import customerPhoto from '../../imports/david_f.jpg';
 import { useScrolled } from '../../hooks/useScrolled';
 
-export function CustomerInfo() {
+export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: boolean }) {
   const { pathname } = useLocation();
   const scrolled = useScrolled();
 
@@ -17,8 +17,8 @@ export function CustomerInfo() {
     pathname === path ? activeTabClass : inactiveTabClass;
 
   return (
-    <div className={`bg-white border-b border-gray-200 transition-[margin] duration-300 ${scrolled ? '-mt-12' : 'mt-0'}`}>
-      <div className="px-4">
+    <div className={`bg-white border-b border-gray-200 transition-[margin] duration-300 ${scrolled && withSlideOffset ? '-mt-12' : 'mt-0'}`}>
+      <div className="px-6">
         <div className={`flex gap-4 transition-all duration-300 ${scrolled ? 'py-1.5 items-center' : 'py-4 items-start'}`}>
           {/* Avatar */}
           <div
@@ -30,15 +30,15 @@ export function CustomerInfo() {
             {/* Name and Badges */}
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-gray-900 font-semibold">Mr Arthur Barrington</h2>
-              <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded inline-flex items-center gap-1">
+              <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded inline-flex items-center gap-1">
                 <Heart size={12} fill="currentColor" />
                 <span>DNACPR</span>
               </span>
-              <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">
+              <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
                 <span>HIGH RISK</span>
               </span>
               <span
-                className="text-xs px-2 py-0.5 rounded font-medium"
+                className="text-xs px-2 py-0.5 rounded font-semibold"
                 style={{ backgroundColor: '#B7DDA8', color: '#2D5F1E' }}
               >
                 ACTIVE
@@ -71,7 +71,7 @@ export function CustomerInfo() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="border-t border-gray-200 -mx-4 px-4">
+        <div className="border-t border-gray-200 -mx-6 px-6">
           <nav className="flex gap-1 overflow-x-auto">
             <a href="#" className={inactiveTabClass}>Dashboard</a>
             <Link to="/customers/caremanagement" className={tabClass('/customers/caremanagement')}>Care Management</Link>

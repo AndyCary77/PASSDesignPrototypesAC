@@ -5,14 +5,14 @@ export const inputClass = 'w-full bg-white border border-gray-200 rounded-lg px-
 export const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
 
 export const CATEGORY_CONFIG: Record<TaskCategory, {
-  bg: string; text: string; border: string; headerBg: string; Icon: React.ComponentType<{ className?: string }>;
+  bg: string; text: string; border: string; headerBg: string; circleBg: string; Icon: React.ComponentType<{ className?: string }>;
 }> = {
-  General:           { bg: 'bg-yellow-50',  text: 'text-yellow-800',  border: 'border-yellow-200', headerBg: 'bg-yellow-50',  Icon: CheckSquare },
-  Nutrition:         { bg: 'bg-green-50',   text: 'text-green-800',   border: 'border-green-200',  headerBg: 'bg-green-50',   Icon: Utensils },
-  Medications:       { bg: 'bg-blue-50',    text: 'text-blue-800',    border: 'border-blue-200',   headerBg: 'bg-blue-50',    Icon: Pill },
-  Hydration:         { bg: 'bg-cyan-50',    text: 'text-cyan-800',    border: 'border-cyan-200',   headerBg: 'bg-cyan-50',    Icon: Droplets },
-  'Outcome Tracking':{ bg: 'bg-orange-50',  text: 'text-orange-800',  border: 'border-orange-200', headerBg: 'bg-orange-50',  Icon: Star },
-  Observations:      { bg: 'bg-purple-50',  text: 'text-purple-800',  border: 'border-purple-200', headerBg: 'bg-purple-50',  Icon: Eye },
+  General:           { bg: 'bg-yellow-50',  text: 'text-yellow-800',  border: 'border-yellow-200', headerBg: 'bg-yellow-50',  circleBg: 'bg-yellow-200',  Icon: CheckSquare },
+  Nutrition:         { bg: 'bg-green-50',   text: 'text-green-800',   border: 'border-green-200',  headerBg: 'bg-green-50',   circleBg: 'bg-green-200',   Icon: Utensils },
+  Medications:       { bg: 'bg-blue-50',    text: 'text-blue-800',    border: 'border-blue-200',   headerBg: 'bg-blue-50',    circleBg: 'bg-blue-200',    Icon: Pill },
+  Hydration:         { bg: 'bg-cyan-50',    text: 'text-cyan-800',    border: 'border-cyan-200',   headerBg: 'bg-cyan-50',    circleBg: 'bg-cyan-200',    Icon: Droplets },
+  'Outcome Tracking':{ bg: 'bg-orange-50',  text: 'text-orange-800',  border: 'border-orange-200', headerBg: 'bg-orange-50',  circleBg: 'bg-orange-200',  Icon: Star },
+  Observations:      { bg: 'bg-purple-50',  text: 'text-purple-800',  border: 'border-purple-200', headerBg: 'bg-purple-50',  circleBg: 'bg-purple-200',  Icon: Eye },
 };
 
 export function TaskBadge({ title, category }: { title: string; category: TaskCategory }) {
@@ -45,9 +45,16 @@ export function OutcomeBadge({ title }: { title: string }) {
 }
 
 export function ActiveBadge({ status }: { status: 'active' | 'inactive' }) {
-  return (
-    <span className={`text-xs font-semibold px-2.5 py-1 rounded ${status === 'active' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
-      {status === 'active' ? 'Active' : 'Inactive'}
+  return status === 'active' ? (
+    <span
+      className="text-xs font-semibold px-2 py-0.5 rounded uppercase"
+      style={{ backgroundColor: '#B7DDA8', color: '#2D5F1E' }}
+    >
+      Active
+    </span>
+  ) : (
+    <span className="text-xs font-semibold px-2 py-0.5 rounded uppercase bg-gray-100 text-gray-500">
+      Inactive
     </span>
   );
 }
@@ -55,10 +62,15 @@ export function ActiveBadge({ status }: { status: 'active' | 'inactive' }) {
 export function StatusToggle({ value }: { value: 'active' | 'inactive' }) {
   return (
     <div className="flex rounded-lg border border-gray-200 overflow-hidden w-full">
-      <button className={`flex-1 py-2.5 text-sm font-medium transition-colors ${value === 'active' ? 'bg-green-500 text-white' : 'bg-white text-gray-400 hover:bg-gray-50'}`}>
+      <button
+        className={`flex-1 py-2.5 text-sm font-semibold uppercase transition-colors ${value === 'active' ? '' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+        style={value === 'active' ? { backgroundColor: '#B7DDA8', color: '#2D5F1E' } : undefined}
+      >
         Active
       </button>
-      <button className={`flex-1 py-2.5 text-sm font-medium transition-colors ${value === 'inactive' ? 'bg-gray-300 text-gray-700' : 'bg-white text-gray-400 hover:bg-gray-50'}`}>
+      <button
+        className={`flex-1 py-2.5 text-sm font-semibold uppercase transition-colors ${value === 'inactive' ? 'bg-gray-100 text-gray-500' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+      >
         Inactive
       </button>
     </div>
