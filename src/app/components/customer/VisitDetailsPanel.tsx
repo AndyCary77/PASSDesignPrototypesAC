@@ -9,8 +9,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { VisitNoteIcon } from "./icons/VisitNoteIcon";
-import { Button } from "./ui/button";
+import { VisitNoteIcon } from "../icons/VisitNoteIcon";
 
 // Custom SVG Icons
 const CustomAlertIcon = ({

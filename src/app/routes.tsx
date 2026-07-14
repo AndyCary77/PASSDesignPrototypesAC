@@ -1,19 +1,19 @@
 import { createBrowserRouter } from "react-router";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Header } from './components/layout/Header';
-import { CustomerInfo } from './components/layout/CustomerInfo';
-import { EmployeeInfo } from './components/layout/EmployeeInfo';
-import { RosteringLayout } from './components/rostering/RosteringLayout';
+import { Header } from './components/layout/TopNavBar';
+import { CustomerInfo } from './components/layout/CustomerInfoNav';
+import { EmployeeInfo } from './components/layout/EmployeeInfoNav';
+import { RosteringLayout } from './components/customer/rostering/RosteringLayout';
 import { EmployeeDetailsPage } from './components/employee/EmployeeDetailsPage';
 import { EmployeeRecordsPage } from './components/employee/EmployeeRecordsPage';
 import { CustomerDetailsPage } from './components/customer/CustomerDetailsPage';
-import { CareNotes } from './components/carenotes/CareNotes';
-import { DocumentsPage } from './components/documents/DocumentsPage';
-import { CareManagementPage } from './components/caremanagement/CareManagementPage';
-import { CareManagementProvider } from './components/caremanagement/CareManagementContext';
-import { CareManagementSubnav } from './components/caremanagement/CareManagementSubnav';
-import { MARChart } from './components/mar/MARChart';
+import { CareNotes } from './components/customer/carenotes/CareNotes';
+import { DocumentsPage } from './components/customer/documents/DocumentsPage';
+import { CareManagementPage } from './components/customer/caremanagement/CareManagementPage';
+import { CareManagementProvider } from './components/customer/caremanagement/CareManagementContext';
+import { CareManagementSubnav } from './components/customer/caremanagement/CareManagementSubnav';
+import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 
 function CustomerLayout() {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { MOCK_DOCUMENTS } from '../../data/mock-documents';
+import { MOCK_DOCUMENTS } from '../../../data/mock-documents';
 import { DocumentTabs } from './DocumentTabs';
 import { DocumentFilters } from './DocumentFilters';
 import { DocumentList } from './DocumentList';

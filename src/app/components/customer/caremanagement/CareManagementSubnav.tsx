@@ -1,7 +1,7 @@
 import { ArrowLeft, Printer } from 'lucide-react';
-import { Button } from '../buttons/Button';
+import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
-import { useScrolled } from '../../hooks/useScrolled';
+import { useScrolled } from '../../../hooks/useScrolled';
 
 type Tab = 'outcomes' | 'tasks' | 'visits' | 'caregroups';
 

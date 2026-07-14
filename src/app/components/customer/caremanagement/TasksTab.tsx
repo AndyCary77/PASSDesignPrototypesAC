@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Calendar } from 'lucide-react';
-import { Button } from '../buttons/Button';
+import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
 import { TASKS, OUTCOMES, VISITS } from './types';
 import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, inputClass, labelClass, CATEGORY_CONFIG } from './shared';

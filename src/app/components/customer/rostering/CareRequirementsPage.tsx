@@ -1,5 +1,5 @@
-import { Tag } from "../ui/tag";
-import { PencilSolidIcon } from "../icons/PencilSolidIcon";
+import { Tag } from "../../ui/tag";
+import { PencilSolidIcon } from "../../icons/PencilSolidIcon";
 
 export function CareRequirementsPage() {
   return (

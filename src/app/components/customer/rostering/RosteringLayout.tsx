@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { HandCoins, CheckCircle2, FileEdit, Users } from 'lucide-react';
 import { CareRequirementsPage } from './CareRequirementsPage';
-import { ServiceAgreementPage } from '../customer/ServiceAgreementPage';
+import { ServiceAgreementPage } from '../ServiceAgreementPage';
 
 type RosteringSection = 'funders' | 'care-requirements' | 'service-agreement' | 'funder-allocation';
 

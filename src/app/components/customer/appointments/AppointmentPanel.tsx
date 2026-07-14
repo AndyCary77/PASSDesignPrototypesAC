@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Edit2, ChevronDown, MoreVertical, Trash2, Info } from 'lucide-react';
-import { PencilSolidIcon } from '../icons/PencilSolidIcon';
-import { VisitNoteIcon } from '../icons/VisitNoteIcon';
+import { PencilSolidIcon } from '../../icons/PencilSolidIcon';
+import { VisitNoteIcon } from '../../icons/VisitNoteIcon';
 
 interface Employee {
   id: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check, X, ChevronRight, AlertCircle, CalendarX } from 'lucide-react';
-import { Document } from '../../data/mock-documents';
+import { Document } from '../../../data/mock-documents';
 
 interface DocumentListProps {
   documents: Document[];
