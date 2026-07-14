@@ -15,6 +15,23 @@ import { CareManagementProvider } from './components/customer/caremanagement/Car
 import { CareManagementSubnav } from './components/customer/caremanagement/CareManagementSubnav';
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
+import { LandingPage } from './components/LandingPage';
+
+function IsolationShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-gray-50 flex flex-col">
+      <div className="sticky top-0 z-40">{children}</div>
+      {/* min-h-[300vh] ensures scroll range always far exceeds header height,
+          preventing the page-height shrink on header hide from snapping scrollY
+          back past the show threshold and causing oscillation. */}
+      <div className="min-h-[300vh] max-w-[1600px] w-full mx-auto px-4 py-8 space-y-4">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div key={i} className="h-16 bg-white rounded-lg border border-gray-200 opacity-40" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function CustomerLayout() {
   return (
@@ -149,7 +166,7 @@ function EmployeeRecordsLayout() {
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: CustomerLayout,
+    Component: LandingPage,
   },
   {
     path: "/customers",
@@ -186,5 +203,25 @@ export const router = createBrowserRouter([
   {
     path: "/schedule",
     Component: ScheduleLayout,
+  },
+  {
+    path: "/components/top-nav-bar",
+    Component: () => <IsolationShell><Header /></IsolationShell>,
+  },
+  {
+    path: "/components/customer-info-nav",
+    Component: () => <IsolationShell><Header /><CustomerInfo /></IsolationShell>,
+  },
+  {
+    path: "/components/employee-info-nav",
+    Component: () => <IsolationShell><Header /><EmployeeInfo /></IsolationShell>,
+  },
+  {
+    path: "/components/care-management-subnav",
+    Component: () => (
+      <CareManagementProvider>
+        <IsolationShell><Header /><CustomerInfo /><CareManagementSubnav /></IsolationShell>
+      </CareManagementProvider>
+    ),
   },
 ]);

@@ -17,8 +17,9 @@ export function Header() {
       {/* Top System Bar */}
       <div className="bg-[#6d1b98] h-12 flex items-center justify-between px-4 text-xs font-medium">
         <div className="flex items-center gap-2 shrink-0">
-          {/* Logo Placeholder */}
-          <img src={logo} alt="PASS Logo" className="h-8 w-auto shrink-0" />
+          <Link to="/">
+            <img src={logo} alt="PASS Logo" className="h-8 w-auto shrink-0" />
+          </Link>
         </div>
         
         <nav className="flex items-center gap-6 h-full">
