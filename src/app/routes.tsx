@@ -16,6 +16,7 @@ import { CareManagementSubnav } from './components/customer/caremanagement/CareM
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 import { LandingPage } from './components/LandingPage';
+import { CustomersListPage } from './components/customer/CustomersListPage';
 import SideNav from './components/layout/SideNav';
 import TopNav from './components/layout/TopNav';
 
@@ -136,6 +137,10 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: () => <AppShell><LandingPage /></AppShell>,
+  },
+  {
+    path: "/customers/list",
+    Component: () => <AppShell><CustomersListPage /></AppShell>,
   },
   {
     path: "/customers",

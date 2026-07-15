@@ -31,22 +31,22 @@ function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSel
 
       <div className="px-5 py-4 space-y-3">
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What I can do</p>
+          <p className="text-sm font-semibold text-gray-900 mb-1">What I can do</p>
           <p className="text-sm text-gray-700 leading-relaxed">{preview}</p>
         </div>
 
         {outcome.aims && (
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Aims</p>
+            <p className="text-sm font-semibold text-gray-900 mb-1">Aims</p>
             <p className="text-sm text-gray-700">{outcome.aims}</p>
           </div>
         )}
         {!outcome.aims && (
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Aims</p>
+          <p className="text-sm font-semibold text-gray-900">Aims</p>
         )}
 
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Tasks</p>
+          <p className="text-sm font-semibold text-gray-900 mb-2">Tasks</p>
           {tasks.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {tasks.map(t => <TaskBadge key={t.id} title={t.title} category={t.category} />)}
@@ -57,7 +57,7 @@ function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSel
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Visits</p>
+          <p className="text-sm font-semibold text-gray-900 mb-2">Visits</p>
           {visits.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {visits.map(v => <VisitBadge key={v.id} title={v.title} />)}
@@ -147,7 +147,7 @@ function OutcomeEditForm({ outcome }: { outcome: typeof OUTCOMES[0] }) {
                   const { Icon } = CATEGORY_CONFIG[cat];
                   return (
                     <div key={cat} className="p-4">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{cat}</p>
+                      <p className="text-sm font-semibold text-gray-900 mb-3">{cat}</p>
                       <div className="space-y-2">
                         {catTasks.length === 0 && (
                           <p className="text-xs text-gray-300 italic">None</p>

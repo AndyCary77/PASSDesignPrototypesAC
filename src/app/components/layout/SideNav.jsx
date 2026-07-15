@@ -130,6 +130,13 @@ const NAV_ITEMS = [
 ]
 
 const NAV_LINKS = {
+  customers: '/customers/list',
+  employees: '/employees',
+  schedule: '/schedule',
+}
+
+// Broader path prefix used only for active-item highlighting
+const NAV_ACTIVE_PATHS = {
   customers: '/customers',
   employees: '/employees',
   schedule: '/schedule',
@@ -147,7 +154,7 @@ export default function SideNav({
   const { pathname } = useLocation()
 
   // Derive activeItem from the current route
-  const activeItem = Object.entries(NAV_LINKS).find(([, path]) => pathname.startsWith(path))?.[0]
+  const activeItem = Object.entries(NAV_ACTIVE_PATHS).find(([, path]) => pathname.startsWith(path))?.[0]
 
   const [tip, setTip] = useState(null) // { text, top, left } | null
 

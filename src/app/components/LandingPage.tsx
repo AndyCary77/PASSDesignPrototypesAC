@@ -4,6 +4,7 @@ const SCREENS = [
   {
     title: 'Customer Profile',
     items: [
+      { label: 'Customers List', to: '/customers/list' },
       { label: 'Rostering — Care Requirements & Service Agreement', to: '/customers' },
       { label: 'Care Management — Outcomes, Tasks, Visits & Care Groups', to: '/customers/caremanagement' },
       { label: 'Care Notes', to: '/customers/carenotes' },

@@ -1,5 +1,15 @@
 export type TaskCategory = 'General' | 'Nutrition' | 'Medications' | 'Hydration' | 'Outcome Tracking' | 'Observations';
 
+export interface MedicationDetails {
+  supportRequired?: string;
+  dosage?: string;
+  form?: string;
+  route?: string;
+  controlCategory?: string;
+  location?: string;
+  prn?: boolean;
+}
+
 export interface CareTask {
   id: string;
   title: string;
@@ -9,6 +19,7 @@ export interface CareTask {
   outcomeIds: string[];
   visitIds: string[];
   status: 'active' | 'inactive';
+  medicationDetails?: MedicationDetails;
 }
 
 export interface Outcome {
@@ -44,6 +55,30 @@ export const TASK_CATEGORIES: TaskCategory[] = [
 
 export const TASKS: CareTask[] = [
   {
+    id: 't10', title: 'Hydromol Ointment', category: 'Medications',
+    description: 'Apply to both lower legs twice a day. This ointment is used as a moisturiser. Common side effects may include temporary skin irritation — stop use and report to the office if redness or swelling occurs.',
+    startDate: '20/03/2026', outcomeIds: ['o5'], visitIds: ['v1', 'v2'], status: 'active',
+    medicationDetails: {
+      form: 'Ointment',
+      route: 'Cutaneous',
+      dosage: 'Apply a small amount to both lower legs',
+      controlCategory: 'N/A',
+      location: 'Bathroom',
+      supportRequired: 'Administer',
+      prn: false,
+    },
+  },
+  {
+    id: 't6', title: 'Lunch', category: 'Nutrition',
+    description: 'Please make me some lunch. I will let you know what I would like to eat.',
+    startDate: '11/03/2026', outcomeIds: ['o2'], visitIds: ['v2'], status: 'active',
+  },
+  {
+    id: 't9', title: 'Snack Plate', category: 'Nutrition',
+    description: 'Please ask me if I would like a snack plate left out for me and what I would like.',
+    startDate: '11/03/2026', outcomeIds: ['o1'], visitIds: ['v2'], status: 'active',
+  },
+  {
     id: 't1', title: 'Companionship', category: 'General',
     description: 'I would like my carer to sit and have a chat with me if I do not want to go for a walk or shopping',
     startDate: '21/11/2025', outcomeIds: ['o3', 'o4'], visitIds: ['v1', 'v2'], status: 'active',
@@ -69,11 +104,6 @@ export const TASKS: CareTask[] = [
     startDate: '21/11/2025', outcomeIds: ['o4'], visitIds: ['v1'], status: 'active',
   },
   {
-    id: 't6', title: 'Lunch', category: 'Nutrition',
-    description: 'Please make me some lunch. I will let you know what I would like to eat.',
-    startDate: '11/03/2026', outcomeIds: ['o2'], visitIds: ['v2'], status: 'active',
-  },
-  {
     id: 't7', title: 'Lunchtime', category: 'General',
     description: 'Please plan with me what I am going to have my my lunch. Remind me if I have already got a ready meal out of the freezer that I do not need to get another one out',
     startDate: '11/03/2026', outcomeIds: ['o2', 'o3', 'o4'], visitIds: ['v1'], status: 'active',
@@ -82,11 +112,6 @@ export const TASKS: CareTask[] = [
     id: 't8', title: 'Please ask me if I have taken my medication', category: 'General',
     description: 'Please ask me if I have taken my medication and document my response. Bluebird care are not responsible for my medication. Family will check the care notes',
     startDate: '25/11/2025', outcomeIds: ['o3', 'o4'], visitIds: ['v1'], status: 'active',
-  },
-  {
-    id: 't9', title: 'Snack Plate', category: 'Nutrition',
-    description: 'Please ask me if I would like a snack plate left out for me and what I would like.',
-    startDate: '11/03/2026', outcomeIds: ['o1'], visitIds: ['v2'], status: 'active',
   },
 ];
 
@@ -131,6 +156,16 @@ export const OUTCOMES: Outcome[] = [
     visitIds: ['v1', 'v2'],
     status: 'active',
   },
+  {
+    id: 'o5',
+    title: 'Management of Medical Conditions and Medication',
+    type: 'template',
+    whatICanDo: 'Please support this individual with their prescribed medication as directed. Ensure medications are administered at the correct time, in the correct dose, and via the correct route. Document all medication administration in the care notes. Report any refusals, side effects, or concerns to the office immediately.',
+    aims: 'Ensure safe and consistent medication administration to support ongoing health management and reduce risk of deterioration.',
+    taskIds: ['t10'],
+    visitIds: ['v1', 'v2'],
+    status: 'active',
+  },
 ];
 
 export const VISITS: CareVisit[] = [
@@ -146,7 +181,7 @@ export const VISITS: CareVisit[] = [
     cadence: 'Alternate week',
     weeks: [{ activeDays: [4] }, { activeDays: [4] }],
     outcomeIds: ['o2', 'o3', 'o4'],
-    taskIds: ['t1', 't3', 't4', 't5', 't7', 't8'],
+    taskIds: ['t1', 't3', 't4', 't5', 't7', 't8', 't10'],
     status: 'active',
   },
   {
@@ -161,7 +196,7 @@ export const VISITS: CareVisit[] = [
     cadence: 'Alternate week',
     weeks: [{ activeDays: [0, 2] }, { activeDays: [0, 2] }],
     outcomeIds: ['o1', 'o2', 'o3', 'o4'],
-    taskIds: ['t1', 't2', 't4', 't6', 't9'],
+    taskIds: ['t1', 't2', 't4', 't6', 't9', 't10'],
     status: 'active',
   },
 ];

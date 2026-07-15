@@ -10,7 +10,7 @@ const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start py-2.5 border-b border-gray-100 last:border-b-0">
+    <div className="flex items-start py-2.5 border-b border-gray-200 last:border-b-0">
       <span className="w-44 flex-shrink-0 text-sm text-gray-500">{label}</span>
       <div className="flex-1 text-sm font-medium text-gray-900">{children}</div>
     </div>
@@ -107,39 +107,43 @@ function VisitEditForm({ visit }: { visit: typeof VISITS[0] }) {
               <h3 className="text-base font-semibold text-gray-900">{visit.title}</h3>
               <ActiveBadge status={visit.status} />
             </div>
-            <div>
-              <FieldRow label="Visit type">{visit.visitType}</FieldRow>
-              <FieldRow label="Careworkers required">{visit.numEmployees}</FieldRow>
-              <FieldRow label="Time">
-                {visit.startTime} – {visit.endTime} ({visit.duration})
-              </FieldRow>
-              <FieldRow label="Start date">
-                <div className="flex items-center gap-1.5">
-                  <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
-                  <span>{visit.startDate}</span>
-                </div>
-              </FieldRow>
-              <FieldRow label="End date">
-                <div className="flex items-center gap-1.5">
-                  <Repeat2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                  <span>Ongoing</span>
-                </div>
-              </FieldRow>
-              <FieldRow label="Cadence">
-                <div className="space-y-2">
-                  <div>{cadenceLabel}</div>
-                  {visit.weeks.map((week, wi) => (
-                    <div key={wi} className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-14 shrink-0">Week {wi + 1}</span>
-                      <div className="flex gap-1.5">
-                        {DAYS_ABBR.map((day, di) => (
-                          <DayPill key={day} label={day.slice(0, 3)} active={week.activeDays.includes(di)} />
-                        ))}
+            <div className="grid grid-cols-2 gap-x-8">
+              <div>
+                <FieldRow label="Visit type">{visit.visitType}</FieldRow>
+                <FieldRow label="Careworkers required">{visit.numEmployees}</FieldRow>
+                <FieldRow label="Time">
+                  {visit.startTime} – {visit.endTime} ({visit.duration})
+                </FieldRow>
+              </div>
+              <div>
+                <FieldRow label="Start date">
+                  <div className="flex items-center gap-1.5">
+                    <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
+                    <span>{visit.startDate}</span>
+                  </div>
+                </FieldRow>
+                <FieldRow label="End date">
+                  <div className="flex items-center gap-1.5">
+                    <Repeat2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>Ongoing</span>
+                  </div>
+                </FieldRow>
+                <FieldRow label="Cadence">
+                  <div className="space-y-2">
+                    <div>{cadenceLabel}</div>
+                    {visit.weeks.map((week, wi) => (
+                      <div key={wi} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 w-14 shrink-0">Week {wi + 1}</span>
+                        <div className="flex gap-1.5">
+                          {DAYS_ABBR.map((day, di) => (
+                            <DayPill key={day} label={day.slice(0, 3)} active={week.activeDays.includes(di)} />
+                          ))}
+                        </div>
                       </div>
-                    </div>
                   ))}
                 </div>
               </FieldRow>
+              </div>
             </div>
           </div>
 
@@ -153,7 +157,7 @@ function VisitEditForm({ visit }: { visit: typeof VISITS[0] }) {
                   const { Icon } = CATEGORY_CONFIG[cat];
                   return (
                     <div key={cat} className="p-4">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{cat}</p>
+                      <p className="text-sm font-semibold text-gray-900 mb-3">{cat}</p>
                       <div className="space-y-2">
                         {catTasks.length === 0 && <p className="text-xs text-gray-300 italic">None</p>}
                         {catTasks.map(task => {
