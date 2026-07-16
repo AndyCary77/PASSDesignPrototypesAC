@@ -26,7 +26,7 @@ export function Header() {
           <NavItem 
             icon={<Users className="w-4 h-4" />} 
             label="Customers" 
-            to="/customers"
+            to="/customers/list"
             active={['/', '/customers', '/customers/details'].includes(location.pathname)}
           />
           <NavItem 

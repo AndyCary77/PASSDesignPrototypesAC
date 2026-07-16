@@ -17,6 +17,10 @@ import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 import { LandingPage } from './components/LandingPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
+import { AboutMePage, AboutMeSubnav } from './components/customer/AboutMePage';
+import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './components/customer/CareBridgePage';
+import { CustomerProvider, useCustomer } from './data/CustomerContext';
+import { EnquiryEmptyState } from './components/customer/EnquiryEmptyState';
 import SideNav from './components/layout/SideNav';
 import TopNav from './components/layout/TopNav';
 
@@ -31,7 +35,7 @@ function AppShell({ infoBar, children }: { infoBar?: React.ReactNode; children: 
           <TopNav appName="Office Name" />
           {infoBar}
         </div>
-        <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6">
+        <main className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-6">
           {children}
         </main>
       </div>
@@ -55,55 +59,98 @@ function IsolationShell({ children }: { children: React.ReactNode }) {
 
 // ─── Page layouts ──────────────────────────────────────────────────────────────
 
+// Renders the tab content for an established customer, or an "assessment stage"
+// empty state for a new (post-enquiry) customer who has no care plan yet.
+function Gated({ tabLabel, children }: { tabLabel: string; children: React.ReactNode }) {
+  const customer = useCustomer();
+  return customer.hasCarePlan ? <>{children}</> : <EnquiryEmptyState tabLabel={tabLabel} />;
+}
+
 function CustomerLayout() {
   return (
-    <AppShell infoBar={<CustomerInfo />}>
-      <DndProvider backend={HTML5Backend}>
-        <RosteringLayout />
-      </DndProvider>
-    </AppShell>
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <Gated tabLabel="rostering">
+          <DndProvider backend={HTML5Backend}>
+            <RosteringLayout />
+          </DndProvider>
+        </Gated>
+      </AppShell>
+    </CustomerProvider>
   );
 }
 
 function CustomerDetailsLayout() {
   return (
-    <AppShell infoBar={<CustomerInfo />}>
-      <CustomerDetailsPage />
-    </AppShell>
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <Gated tabLabel="details"><CustomerDetailsPage /></Gated>
+      </AppShell>
+    </CustomerProvider>
   );
 }
 
 function CareManagementLayout() {
   return (
-    <CareManagementProvider>
-      <AppShell infoBar={<><CustomerInfo /><CareManagementSubnav /></>}>
-        <CareManagementPage />
-      </AppShell>
-    </CareManagementProvider>
+    <CustomerProvider>
+      <CareManagementProvider>
+        <AppShell infoBar={<><CustomerInfo /><CareManagementSubnav /></>}>
+          <Gated tabLabel="care management"><CareManagementPage /></Gated>
+        </AppShell>
+      </CareManagementProvider>
+    </CustomerProvider>
   );
 }
 
 function CareNotesLayout() {
   return (
-    <AppShell infoBar={<CustomerInfo />}>
-      <CareNotes />
-    </AppShell>
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <Gated tabLabel="care notes"><CareNotes /></Gated>
+      </AppShell>
+    </CustomerProvider>
   );
 }
 
 function DocumentsLayout() {
   return (
-    <AppShell infoBar={<CustomerInfo />}>
-      <DocumentsPage />
-    </AppShell>
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <Gated tabLabel="documents"><DocumentsPage /></Gated>
+      </AppShell>
+    </CustomerProvider>
   );
 }
 
 function MARChartLayout() {
   return (
-    <AppShell infoBar={<CustomerInfo />}>
-      <MARChart />
-    </AppShell>
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <Gated tabLabel="MAR chart"><MARChart /></Gated>
+      </AppShell>
+    </CustomerProvider>
+  );
+}
+
+function AboutMeLayout() {
+  return (
+    <CustomerProvider>
+      <AppShell infoBar={<><CustomerInfo /><AboutMeSubnav /></>}>
+        <Gated tabLabel="About Me"><AboutMePage /></Gated>
+      </AppShell>
+    </CustomerProvider>
+  );
+}
+
+function CareBridgeLayout() {
+  return (
+    <CustomerProvider>
+      <CareBridgeProvider>
+        <AppShell infoBar={<><CustomerInfo /><CareBridgeSubnav /></>}>
+          <CareBridgePage />
+        </AppShell>
+      </CareBridgeProvider>
+    </CustomerProvider>
   );
 }
 
@@ -143,27 +190,35 @@ export const router = createBrowserRouter([
     Component: () => <AppShell><CustomersListPage /></AppShell>,
   },
   {
-    path: "/customers",
+    path: "/customers/:customerId",
     Component: CustomerLayout,
   },
   {
-    path: "/customers/details",
+    path: "/customers/:customerId/carebridge",
+    Component: CareBridgeLayout,
+  },
+  {
+    path: "/customers/:customerId/aboutme",
+    Component: AboutMeLayout,
+  },
+  {
+    path: "/customers/:customerId/details",
     Component: CustomerDetailsLayout,
   },
   {
-    path: "/customers/caremanagement",
+    path: "/customers/:customerId/caremanagement",
     Component: CareManagementLayout,
   },
   {
-    path: "/customers/carenotes",
+    path: "/customers/:customerId/carenotes",
     Component: CareNotesLayout,
   },
   {
-    path: "/customers/documents",
+    path: "/customers/:customerId/documents",
     Component: DocumentsLayout,
   },
   {
-    path: "/customers/marchart",
+    path: "/customers/:customerId/marchart",
     Component: MARChartLayout,
   },
   {

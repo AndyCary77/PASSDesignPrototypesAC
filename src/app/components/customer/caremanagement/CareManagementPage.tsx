@@ -8,7 +8,7 @@ export function CareManagementPage() {
   const { activeTab } = useCareManagement();
 
   return (
-    <div className="min-h-screen">
+    <div className="max-w-5xl mx-auto">
       {activeTab === 'outcomes'   && <OutcomesTab />}
       {activeTab === 'tasks'      && <TasksTab />}
       {activeTab === 'visits'     && <VisitsTab />}

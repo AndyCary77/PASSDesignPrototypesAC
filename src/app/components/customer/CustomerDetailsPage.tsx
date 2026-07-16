@@ -3,8 +3,10 @@ import { Link } from 'react-router';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import customerPhoto from '../../imports/david_f.jpg';
+import { useCustomer } from '../../data/CustomerContext';
 
 export function CustomerDetailsPage() {
+  const customer = useCustomer();
   return (
     <div className="grid grid-cols-2 gap-6 max-w-[1280px] mx-auto">
 
@@ -351,7 +353,7 @@ export function CustomerDetailsPage() {
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-semibold text-gray-900">Care requirements</h4>
             <Link
-              to="/customers"
+              to={`/customers/${customer.id}`}
               className="text-sm text-[rgb(154,38,214)] hover:underline flex items-center gap-1"
             >
               Edit in Rostering <ArrowRight className="w-3.5 h-3.5" />

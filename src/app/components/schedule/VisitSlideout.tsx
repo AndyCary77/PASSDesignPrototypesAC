@@ -436,7 +436,7 @@ function CareRequiredContent() {
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Care Requirements</p>
         <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200 relative">
           <Link
-            to="/customers"
+            to="/customers/list"
             className="absolute top-3 right-3 p-2 text-gray-600 hover:text-gray-900 rounded-full border border-gray-200 transition-colors"
             style={{ backgroundColor: 'rgb(220, 217, 228)' }}
             aria-label="Edit care requirements"
