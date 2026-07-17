@@ -1,0 +1,248 @@
+/* ── Summary card ────────────────────────────────────────────── */
+.summary-card {
+  background: #fff;
+  padding: 16px 24px 20px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--ui-purple-5-languid-lavendar);
+}
+
+.period-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.period-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--greyscale-6-grey-50);
+  text-align: left;
+}
+
+.period-selector-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.period-selector .summary-label {
+  margin-bottom: 2px;
+}
+
+.period-dropdown {
+  margin-top: 12px;
+  border-top: 1px solid var(--ui-purple-5-languid-lavendar);
+  animation: expandDown 0.2s ease-out;
+}
+
+@keyframes expandDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.period-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 11px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ui-purple-5-languid-lavendar);
+  cursor: pointer;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--greyscale-6-grey-50);
+  text-align: left;
+}
+
+.period-option:last-child { border-bottom: none; }
+.period-option:hover { color: #333; }
+.period-option.active {
+  color: var(--brand-purple-6-purple-4);
+  font-weight: 600;
+}
+
+.summary-label {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  color: var(--greyscale-6-grey-50);
+  margin-bottom: 2px;
+}
+
+.summary-date {
+  font-family: Barlow, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-divider {
+  height: 1px;
+  background: var(--ui-purple-6-lavendar-grey);
+  margin: 14px 0;
+}
+
+.summary-stats {
+  display: flex;
+  align-items: stretch;
+}
+
+.summary-stat {
+  flex: 1;
+}
+
+.summary-stat-sep {
+  width: 1px;
+  background: var(--ui-purple-5-languid-lavendar);
+  flex-shrink: 0;
+  margin: 0 0;
+}
+
+.summary-stat-label {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  color: var(--greyscale-6-grey-50);
+  margin-bottom: 4px;
+}
+
+.summary-stat-value {
+  font-family: Barlow, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.summary-stat-value.pay {
+  color: var(--brand-purple-3-purple-2);
+}
+
+/* ── Filter pills ────────────────────────────────────────────── */
+.filter-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--ui-purple-5-languid-lavendar);
+  padding: 8px 16px;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  justify-content: left;
+}
+
+.filter-pill {
+  height: 33px;
+  padding: 0 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  background: #e6e6e6;
+  color: #8e8e92;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  background: #d8d8d8;
+}
+
+.filter-pill.active {
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+}
+
+/* ── Visit list ──────────────────────────────────────────────── */
+.visit-list {
+  flex: 1;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.visit-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
+  box-sizing: border-box;
+}
+
+.visit-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.visit-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.visit-name {
+  font-family: Barlow, sans-serif;
+  font-size: 16px;
+  color: #333;
+}
+
+.visit-datetime {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  color: #737373;
+}
+
+.visit-pay {
+  font-family: Barlow, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--brand-purple-3-purple-2);
+}
+
+.visit-miles {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  color: #737373;
+}
+
+.visit-rate {
+  font-family: Barlow, sans-serif;
+  font-size: 12px;
+  color: #a0a0a8;
+}
+
+.visit-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: Barlow, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.visit-status-complete {
+  background: var(--rag-green-green-lightest);
+  color: var(--rag-green-green-3-aa);
+}
+
+.visit-status-cancelled {
+  background: var(--greyscale-13-grey-90);
+  color: var(--greyscale-4-grey-40);
+}
+
+.visit-status-missed {
+  background: var(--rag-red-action-med-pastel);
+  color: var(--rag-red-red-overdue-text);
+}
+
+/* Account screen CSS moved to Styles/mobile-account.css — Account is now
+   its own prototype (mobile/account), no longer hosted here. */

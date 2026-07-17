@@ -30,6 +30,20 @@ const SCREENS = [
   },
 ];
 
+// The mobile prototypes are standalone HTML apps (their own React roots),
+// not react-router routes — so these are real page navigations, not <Link>s.
+const MOBILE = [
+  {
+    title: 'Mobile App',
+    items: [
+      { label: 'Account', to: '/src/app/components/mobile/account/' },
+      { label: 'Messaging', to: '/src/app/components/mobile/messaging/' },
+      { label: 'Mileage Pay', to: '/src/app/components/mobile/mileage-pay/' },
+      { label: 'Notifications', to: '/src/app/components/mobile/notifications/' },
+    ],
+  },
+];
+
 const COMPONENTS = [
   {
     title: 'Layout — New',
@@ -52,7 +66,7 @@ export function LandingPage() {
   return (
     <div className="max-w-[1600px] w-full mx-auto px-8 py-12">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">
-        Roster &amp; Schedule — Prototypes
+        PASS UX — Prototypes
       </h1>
         <div className="flex gap-6 items-start">
           <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex-1 max-w-2xl">
@@ -70,6 +84,29 @@ export function LandingPage() {
                         >
                           {item.label}
                         </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[10px] border border-gray-200 p-8 w-72">
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-6">Mobile</h2>
+            <div className="space-y-8">
+              {MOBILE.map(section => (
+                <div key={section.title}>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">{section.title}</p>
+                  <ul className="space-y-1.5">
+                    {section.items.map(item => (
+                      <li key={item.to}>
+                        <a
+                          href={item.to}
+                          className="text-sm text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
+                        >
+                          {item.label}
+                        </a>
                       </li>
                     ))}
                   </ul>
