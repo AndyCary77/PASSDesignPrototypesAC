@@ -1,7 +1,13 @@
 import { Tag } from "../../ui/tag";
 import { PencilSolidIcon } from "../../icons/PencilSolidIcon";
+import { useCustomer } from "../../../data/CustomerContext";
+import { TabEmptyState } from "../TabEmptyState";
 
 export function CareRequirementsPage() {
+  const customer = useCustomer();
+  if (customer.id !== 'arthur-barrington') {
+    return <TabEmptyState label="care requirements" />;
+  }
   return (
     <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
       {/* Mandatory Care Requirements */}

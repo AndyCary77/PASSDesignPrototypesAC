@@ -4,6 +4,7 @@ import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { VisitEditSlideout } from './VisitEditSlideout';
+import { useCustomer } from '../../data/CustomerContext';
 
 // ─── Day circle ──────────────────────────────────────────────────────────────
 
@@ -317,7 +318,60 @@ const VISIT_2_DATA: VisitData = {
   careRequirements: defaultCareRequirements,
 };
 
+// New enquiry customer — visits created to plan the rota, but care requirements,
+// funder and rates aren't set up yet (that happens as the plan is built).
+const emptyCareRequirements: VisitCareRequirements = {
+  mandatory: [],
+  preferred: [],
+  preferredEmployees: [],
+  excluded: [],
+  visitEnvironment: [],
+};
+
+const EDITH_VISIT_1_DATA: VisitData = {
+  title: 'Morning call',
+  startDate: '13/07/2026',
+  endDate: 'Ongoing',
+  careType: 'Personal care',
+  startTime: '08:00',
+  endTime: '08:45',
+  duration: '45 minutes',
+  careworkers: 1,
+  funder: 'To be confirmed',
+  chargeRateSheet: '-',
+  depositStatus: '-',
+  payRateSheet: '-',
+  cadenceType: 'Weekly',
+  weeks: [{ currentWeek: true, activeDays: [0, 1, 2, 3, 4, 5, 6] }],
+  careRequirements: emptyCareRequirements,
+};
+
+const EDITH_VISIT_2_DATA: VisitData = {
+  title: 'Lunch call',
+  startDate: '13/07/2026',
+  endDate: 'Ongoing',
+  careType: 'Meal preparation',
+  startTime: '12:30',
+  endTime: '13:00',
+  duration: '30 minutes',
+  careworkers: 1,
+  funder: 'To be confirmed',
+  chargeRateSheet: '-',
+  depositStatus: '-',
+  payRateSheet: '-',
+  cadenceType: 'Weekly',
+  weeks: [{ currentWeek: true, activeDays: [0, 1, 2, 3, 4, 5, 6] }],
+  careRequirements: emptyCareRequirements,
+};
+
+const SERVICE_AGREEMENT_DATA: Record<string, VisitData[]> = {
+  'arthur-barrington': [VISIT_1_DATA, VISIT_2_DATA],
+  'edith-caldwell': [EDITH_VISIT_1_DATA, EDITH_VISIT_2_DATA],
+};
+
 export function ServiceAgreementPage() {
+  const customer = useCustomer();
+  const visits = SERVICE_AGREEMENT_DATA[customer.id] ?? [];
   const [editingVisit, setEditingVisit] = useState<{ number: number; data: VisitData } | null>(null);
 
   return (
@@ -332,7 +386,7 @@ export function ServiceAgreementPage() {
 
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-5">
-        <span className="text-sm text-gray-600">Displaying 2/2 visits</span>
+        <span className="text-sm text-gray-600">Displaying {visits.length}/{visits.length} visits</span>
         <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
           <input type="checkbox" className="rounded border-gray-300" defaultChecked />
           <span>Hide inactive</span>
@@ -340,17 +394,14 @@ export function ServiceAgreementPage() {
       </div>
 
       <div className="space-y-6">
-        <VisitCard
-          visitNumber={1}
-          data={VISIT_1_DATA}
-          onEdit={() => setEditingVisit({ number: 1, data: VISIT_1_DATA })}
-        />
-
-        <VisitCard
-          visitNumber={2}
-          data={VISIT_2_DATA}
-          onEdit={() => setEditingVisit({ number: 2, data: VISIT_2_DATA })}
-        />
+        {visits.map((visit, i) => (
+          <VisitCard
+            key={i}
+            visitNumber={i + 1}
+            data={visit}
+            onEdit={() => setEditingVisit({ number: i + 1, data: visit })}
+          />
+        ))}
 
         {/* Weekly Schedule */}
         <div className="bg-white rounded-lg border border-gray-200 relative">

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { FileText, Target, ListChecks, Sparkles, Send, Mic, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
+import { FileText, Target, ListChecks, Sparkles, Send, Mic, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
@@ -187,7 +187,7 @@ const EDITH_CHAT: ChatMessage[] = [
 interface CareBridgeData {
   recordingMeta: string;
   planTitle: string;
-  edits: number;
+  edits: { document: number; outcomes: number; tasks: number };
   transcript: TranscriptLine[];
   sections: AssessmentSection[];
   outcomes: OutcomeSuggestion[];
@@ -199,7 +199,7 @@ const CAREBRIDGE_DATA: Record<string, CareBridgeData> = {
   'arthur-barrington': {
     recordingMeta: '14 Oct 2025 · 10:02–10:41 · 39 min',
     planTitle: 'Customer Care & Support Plan',
-    edits: 4,
+    edits: { document: 4, outcomes: 2, tasks: 3 },
     transcript: TRANSCRIPT,
     sections: ASSESSMENT_SECTIONS,
     outcomes: SUGGESTED_OUTCOMES,
@@ -209,7 +209,7 @@ const CAREBRIDGE_DATA: Record<string, CareBridgeData> = {
   'edith-caldwell': {
     recordingMeta: '7 Jul 2026 · 14:00–14:38 · 38 min',
     planTitle: 'Customer Care & Support Plan',
-    edits: 2,
+    edits: { document: 2, outcomes: 1, tasks: 1 },
     transcript: EDITH_TRANSCRIPT,
     sections: EDITH_SECTIONS,
     outcomes: EDITH_OUTCOMES,
@@ -243,14 +243,46 @@ function EditableBlock({ text }: { text: string }) {
   );
 }
 
-function GroupHeader({ Icon, title, count, accent }: { Icon: React.ComponentType<{ className?: string }>; title: string; count: number; accent: string }) {
+function AccordionSection({
+  Icon,
+  title,
+  count,
+  accent,
+  edits,
+  defaultOpen = true,
+  children,
+}: {
+  Icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  count: number;
+  accent: string;
+  edits?: number;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="flex items-center gap-2.5 mb-3">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent}`}>
-        <Icon className="w-4 h-4" />
-      </div>
-      <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-      <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{count}</span>
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2.5 bg-white border border-gray-200 rounded-[10px] shadow-sm px-4 py-3 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
+      >
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+        <span className="text-xs font-semibold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">{count}</span>
+        <div className="ml-auto flex items-center gap-2.5">
+          {edits !== undefined && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+              <Pencil className="w-3 h-3" /> {edits} edits
+            </span>
+          )}
+          <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${open ? '' : '-rotate-90'}`} />
+        </div>
+      </button>
+      {open && <div className="mt-3">{children}</div>}
     </div>
   );
 }
@@ -271,20 +303,11 @@ function SummaryView({ data, hasCarePlan }: { data: CareBridgeData; hasCarePlan:
       </div>
 
       {/* Assessment Document — one continuous panel, subsections split by a simple border */}
-      <div>
-        <GroupHeader Icon={FileText} title="Assessment Document" count={data.sections.length} accent="bg-slate-100 text-slate-600" />
+      <AccordionSection Icon={FileText} title="Assessment Document" count={data.sections.length} accent="bg-slate-100 text-slate-600" edits={data.edits.document}>
         <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm overflow-hidden">
-          {/* Panel header — document + edit/recording indicators */}
-          <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-gray-200 bg-gray-50">
+          {/* Panel header */}
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 bg-gray-50">
             <span className="text-sm font-semibold text-gray-900">{data.planTitle}</span>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1">
-                <Pencil className="w-3 h-3" /> {data.edits} edits
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-2.5 py-1">
-                <Mic className="w-3 h-3" /> 1 recording
-              </span>
-            </div>
           </div>
           {/* Subsections */}
           <div className="divide-y divide-gray-200">
@@ -301,11 +324,10 @@ function SummaryView({ data, hasCarePlan }: { data: CareBridgeData; hasCarePlan:
             ))}
           </div>
         </div>
-      </div>
+      </AccordionSection>
 
       {/* Suggested Outcomes */}
-      <div>
-        <GroupHeader Icon={Target} title="Suggested Outcomes" count={data.outcomes.length} accent="bg-amber-100 text-amber-700" />
+      <AccordionSection Icon={Target} title="Suggested Outcomes" count={data.outcomes.length} accent="bg-amber-100 text-amber-700" edits={data.edits.outcomes}>
         <div className="space-y-3">
           {data.outcomes.map(o => (
             <div key={o.id} className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-4">
@@ -316,11 +338,10 @@ function SummaryView({ data, hasCarePlan }: { data: CareBridgeData; hasCarePlan:
             </div>
           ))}
         </div>
-      </div>
+      </AccordionSection>
 
       {/* Suggested Tasks */}
-      <div>
-        <GroupHeader Icon={ListChecks} title="Suggested Tasks" count={data.tasks.length} accent="bg-purple-100 text-[rgb(109,27,152)]" />
+      <AccordionSection Icon={ListChecks} title="Suggested Tasks" count={data.tasks.length} accent="bg-purple-100 text-[rgb(109,27,152)]" edits={data.edits.tasks}>
         <div className="space-y-3">
           {data.tasks.map(t => (
             <div key={t.id} className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-4">
@@ -331,7 +352,7 @@ function SummaryView({ data, hasCarePlan }: { data: CareBridgeData; hasCarePlan:
             </div>
           ))}
         </div>
-      </div>
+      </AccordionSection>
     </div>
   );
 }

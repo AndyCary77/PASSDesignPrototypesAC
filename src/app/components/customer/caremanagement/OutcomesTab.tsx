@@ -3,10 +3,12 @@ import { ArrowRight } from 'lucide-react';
 import { StarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
-import { OUTCOMES, TASKS, VISITS, TASK_CATEGORIES } from './types';
-import { TaskBadge, VisitBadge, ActiveBadge, StatusToggle, inputClass, labelClass, CATEGORY_CONFIG } from './shared';
+import { useCareData } from './useCareData';
+import { TASK_CATEGORIES, type Outcome } from './types';
+import { TaskBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, inputClass, labelClass, CATEGORY_CONFIG } from './shared';
 
-function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSelect: () => void }) {
+function OutcomeCard({ outcome, onSelect }: { outcome: Outcome; onSelect: () => void }) {
+  const { TASKS, VISITS } = useCareData();
   const tasks = TASKS.filter(t => outcome.taskIds.includes(t.id));
   const visits = VISITS.filter(v => outcome.visitIds.includes(v.id));
   const preview = outcome.whatICanDo.length > 220
@@ -72,7 +74,8 @@ function OutcomeCard({ outcome, onSelect }: { outcome: typeof OUTCOMES[0]; onSel
   );
 }
 
-function OutcomeEditForm({ outcome }: { outcome: typeof OUTCOMES[0] }) {
+function OutcomeEditForm({ outcome }: { outcome: Outcome }) {
+  const { TASKS, OUTCOMES } = useCareData();
   const OUTCOME_TITLES = OUTCOMES.map(o => o.title);
 
   return (
@@ -180,6 +183,7 @@ function OutcomeEditForm({ outcome }: { outcome: typeof OUTCOMES[0] }) {
 }
 
 export function OutcomesTab() {
+  const { OUTCOMES } = useCareData();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = selectedId ? OUTCOMES.find(o => o.id === selectedId) : null;
   const { registerBack, clearBack } = useCareManagement();
@@ -195,6 +199,10 @@ export function OutcomesTab() {
 
   if (selected) {
     return <OutcomeEditForm outcome={selected} />;
+  }
+
+  if (OUTCOMES.length === 0) {
+    return <EmptyTab label="outcomes" />;
   }
 
   return (

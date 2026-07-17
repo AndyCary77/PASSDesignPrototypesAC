@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HandCoins, CheckCircle2, FileEdit, Users } from 'lucide-react';
 import { CareRequirementsPage } from './CareRequirementsPage';
 import { ServiceAgreementPage } from '../ServiceAgreementPage';
+import { useCustomer } from '../../../data/CustomerContext';
 
 type RosteringSection = 'funders' | 'care-requirements' | 'service-agreement' | 'funder-allocation';
 
@@ -13,7 +14,12 @@ const sectionLabels: Record<RosteringSection, string> = {
 };
 
 export function RosteringLayout() {
-  const [activeSection, setActiveSection] = useState<RosteringSection>('care-requirements');
+  const customer = useCustomer();
+  // New enquiry customers land on the Service agreement (where their planned visits live);
+  // established customers open on Care requirements as before.
+  const [activeSection, setActiveSection] = useState<RosteringSection>(
+    customer.hasCarePlan ? 'care-requirements' : 'service-agreement'
+  );
 
   return (
     <div className="flex flex-col">

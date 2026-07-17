@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCustomer } from '../../../data/CustomerContext';
+import { TabEmptyState } from '../TabEmptyState';
 
 const PATIENT = {
   dob: '10/12/1972',
@@ -258,7 +260,13 @@ function MARLegend() {
 }
 
 export function MARChart() {
+  const customer = useCustomer();
   const [hideSelfAdminister, setHideSelfAdminister] = useState(false);
+
+  if (customer.id !== 'arthur-barrington') {
+    return <TabEmptyState label="medication records" />;
+  }
+
   const month = 6;
   const year = 2026;
   const monthLabel = new Date(year, month - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });

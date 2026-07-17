@@ -19,8 +19,7 @@ import { LandingPage } from './components/LandingPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
 import { AboutMePage, AboutMeSubnav } from './components/customer/AboutMePage';
 import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './components/customer/CareBridgePage';
-import { CustomerProvider, useCustomer } from './data/CustomerContext';
-import { EnquiryEmptyState } from './components/customer/EnquiryEmptyState';
+import { CustomerProvider } from './data/CustomerContext';
 import SideNav from './components/layout/SideNav';
 import TopNav from './components/layout/TopNav';
 
@@ -59,22 +58,13 @@ function IsolationShell({ children }: { children: React.ReactNode }) {
 
 // ─── Page layouts ──────────────────────────────────────────────────────────────
 
-// Renders the tab content for an established customer, or an "assessment stage"
-// empty state for a new (post-enquiry) customer who has no care plan yet.
-function Gated({ tabLabel, children }: { tabLabel: string; children: React.ReactNode }) {
-  const customer = useCustomer();
-  return customer.hasCarePlan ? <>{children}</> : <EnquiryEmptyState tabLabel={tabLabel} />;
-}
-
 function CustomerLayout() {
   return (
     <CustomerProvider>
       <AppShell infoBar={<CustomerInfo />}>
-        <Gated tabLabel="rostering">
-          <DndProvider backend={HTML5Backend}>
-            <RosteringLayout />
-          </DndProvider>
-        </Gated>
+        <DndProvider backend={HTML5Backend}>
+          <RosteringLayout />
+        </DndProvider>
       </AppShell>
     </CustomerProvider>
   );
@@ -84,7 +74,7 @@ function CustomerDetailsLayout() {
   return (
     <CustomerProvider>
       <AppShell infoBar={<CustomerInfo />}>
-        <Gated tabLabel="details"><CustomerDetailsPage /></Gated>
+        <CustomerDetailsPage />
       </AppShell>
     </CustomerProvider>
   );
@@ -95,7 +85,7 @@ function CareManagementLayout() {
     <CustomerProvider>
       <CareManagementProvider>
         <AppShell infoBar={<><CustomerInfo /><CareManagementSubnav /></>}>
-          <Gated tabLabel="care management"><CareManagementPage /></Gated>
+          <CareManagementPage />
         </AppShell>
       </CareManagementProvider>
     </CustomerProvider>
@@ -106,7 +96,7 @@ function CareNotesLayout() {
   return (
     <CustomerProvider>
       <AppShell infoBar={<CustomerInfo />}>
-        <Gated tabLabel="care notes"><CareNotes /></Gated>
+        <CareNotes />
       </AppShell>
     </CustomerProvider>
   );
@@ -116,7 +106,7 @@ function DocumentsLayout() {
   return (
     <CustomerProvider>
       <AppShell infoBar={<CustomerInfo />}>
-        <Gated tabLabel="documents"><DocumentsPage /></Gated>
+        <DocumentsPage />
       </AppShell>
     </CustomerProvider>
   );
@@ -126,7 +116,7 @@ function MARChartLayout() {
   return (
     <CustomerProvider>
       <AppShell infoBar={<CustomerInfo />}>
-        <Gated tabLabel="MAR chart"><MARChart /></Gated>
+        <MARChart />
       </AppShell>
     </CustomerProvider>
   );
@@ -136,7 +126,7 @@ function AboutMeLayout() {
   return (
     <CustomerProvider>
       <AppShell infoBar={<><CustomerInfo /><AboutMeSubnav /></>}>
-        <Gated tabLabel="About Me"><AboutMePage /></Gated>
+        <AboutMePage />
       </AppShell>
     </CustomerProvider>
   );

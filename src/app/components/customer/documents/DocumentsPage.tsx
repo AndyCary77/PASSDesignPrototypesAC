@@ -1,10 +1,13 @@
 import { useState, useMemo } from 'react';
 import { MOCK_DOCUMENTS } from '../../../data/mock-documents';
+import { useCustomer } from '../../../data/CustomerContext';
+import { TabEmptyState } from '../TabEmptyState';
 import { DocumentTabs } from './DocumentTabs';
 import { DocumentFilters } from './DocumentFilters';
 import { DocumentList } from './DocumentList';
 
 export function DocumentsPage() {
+  const customer = useCustomer();
   const [activeTab, setActiveTab] = useState('documents');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'danger' | 'warning'>('all');
@@ -43,6 +46,10 @@ export function DocumentsPage() {
       return matchesSearch && matchesStatus && matchesDate && matchesCategory;
     });
   }, [searchQuery, statusFilter, dateFilter, categoryFilter]);
+
+  if (customer.id !== 'arthur-barrington') {
+    return <TabEmptyState label="documents" />;
+  }
 
   return (
     <div>

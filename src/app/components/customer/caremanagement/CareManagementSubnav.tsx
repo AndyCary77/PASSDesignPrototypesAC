@@ -18,9 +18,6 @@ export function CareManagementSubnav() {
   const scrolled = useScrolled();
   const customer = useCustomer();
 
-  // No care plan yet (new enquiry) — the tab shows an empty state, so hide the action bar.
-  if (!customer.hasCarePlan) return null;
-
   return (
     <div className="bg-gray-50 border-b border-gray-200">
       <div className={`max-w-5xl w-full mx-auto flex items-center justify-between gap-4 transition-all duration-300 ${scrolled ? 'py-2' : 'py-3.5'}`}>
@@ -30,7 +27,7 @@ export function CareManagementSubnav() {
             <Button variant="tertiary" icon={<ArrowLeft className="w-4 h-4" />} onClick={backFn.fn}>
               Back to list
             </Button>
-          ) : (
+          ) : customer.hasCarePlan ? (
             <div className="flex flex-col gap-0.5">
               <span className="text-xs text-gray-500 whitespace-nowrap">Next review</span>
               <span
@@ -40,7 +37,7 @@ export function CareManagementSubnav() {
                 26-03-2026
               </span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Centre — tabs */}

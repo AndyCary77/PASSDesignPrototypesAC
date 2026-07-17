@@ -16,6 +16,15 @@ export const CATEGORY_CONFIG: Record<TaskCategory, {
   Observations:      { bg: 'bg-purple-50',  text: 'text-purple-800',  border: 'border-purple-200', headerBg: 'bg-purple-50',  circleBg: 'bg-purple-200',  Icon: Eye },
 };
 
+export function EmptyTab({ label }: { label: string }) {
+  return (
+    <div className="bg-white rounded-lg border border-dashed border-gray-300 py-16 text-center">
+      <p className="text-sm text-gray-500">No {label} yet</p>
+      <p className="text-xs text-gray-400 mt-1">Nothing has been added for this customer.</p>
+    </div>
+  );
+}
+
 export function TaskBadge({ title, category }: { title: string; category: TaskCategory }) {
   const c = CATEGORY_CONFIG[category];
   const { Icon } = c;

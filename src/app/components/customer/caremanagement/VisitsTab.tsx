@@ -3,8 +3,9 @@ import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2 } fro
 import { CalendarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
-import { VISITS, TASKS, OUTCOMES, TASK_CATEGORIES } from './types';
-import { OutcomeBadge, TaskBadge, ActiveBadge, labelClass, CATEGORY_CONFIG } from './shared';
+import { useCareData } from './useCareData';
+import { TASK_CATEGORIES, type CareVisit } from './types';
+import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, labelClass, CATEGORY_CONFIG } from './shared';
 
 const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -29,7 +30,8 @@ function DayPill({ label, active }: { label: string; active: boolean }) {
   );
 }
 
-function VisitCard({ visit, onSelect }: { visit: typeof VISITS[0]; onSelect: () => void }) {
+function VisitCard({ visit, onSelect }: { visit: CareVisit; onSelect: () => void }) {
+  const { OUTCOMES, TASKS } = useCareData();
   const outcomes = OUTCOMES.filter(o => visit.outcomeIds.includes(o.id));
   const tasks = TASKS.filter(t => visit.taskIds.includes(t.id));
   const cadenceLabel = visit.cadence === 'Alternate week' ? 'BiWeekly' : visit.cadence;
@@ -92,7 +94,8 @@ function VisitCard({ visit, onSelect }: { visit: typeof VISITS[0]; onSelect: () 
   );
 }
 
-function VisitEditForm({ visit }: { visit: typeof VISITS[0] }) {
+function VisitEditForm({ visit }: { visit: CareVisit }) {
+  const { TASKS } = useCareData();
   const cadenceLabel = visit.cadence === 'Alternate week' ? 'BiWeekly' : visit.cadence;
 
   return (
@@ -219,6 +222,7 @@ function VisitEditForm({ visit }: { visit: typeof VISITS[0] }) {
 }
 
 export function VisitsTab() {
+  const { VISITS } = useCareData();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = selectedId ? VISITS.find(v => v.id === selectedId) : null;
   const { registerBack, clearBack } = useCareManagement();
@@ -234,6 +238,10 @@ export function VisitsTab() {
 
   if (selected) {
     return <VisitEditForm visit={selected} />;
+  }
+
+  if (VISITS.length === 0) {
+    return <EmptyTab label="visits" />;
   }
 
   return (

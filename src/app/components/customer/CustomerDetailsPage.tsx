@@ -4,9 +4,13 @@ import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import customerPhoto from '../../imports/david_f.jpg';
 import { useCustomer } from '../../data/CustomerContext';
+import { TabEmptyState } from './TabEmptyState';
 
 export function CustomerDetailsPage() {
   const customer = useCustomer();
+  if (customer.id !== 'arthur-barrington') {
+    return <TabEmptyState label="details" />;
+  }
   return (
     <div className="grid grid-cols-2 gap-6 max-w-[1280px] mx-auto">
 

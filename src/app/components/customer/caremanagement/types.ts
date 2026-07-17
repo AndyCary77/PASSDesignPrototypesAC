@@ -200,3 +200,50 @@ export const VISITS: CareVisit[] = [
     status: 'active',
   },
 ];
+
+// ─── New enquiry customer — visits created at enquiry stage to plan the rota,
+//     but no outcomes or tasks yet (the care plan hasn't been built). ─────────────
+export const EDITH_VISITS: CareVisit[] = [
+  {
+    id: 'ev1',
+    title: 'Morning call',
+    visitType: 'Care visit',
+    numEmployees: 1,
+    startDate: '13/07/2026',
+    startTime: '08:00',
+    endTime: '08:45',
+    duration: '45 minutes',
+    cadence: 'Weekly',
+    weeks: [{ activeDays: [0, 1, 2, 3, 4, 5, 6] }],
+    outcomeIds: [],
+    taskIds: [],
+    status: 'active',
+  },
+  {
+    id: 'ev2',
+    title: 'Lunch call',
+    visitType: 'Care visit',
+    numEmployees: 1,
+    startDate: '13/07/2026',
+    startTime: '12:30',
+    endTime: '13:00',
+    duration: '30 minutes',
+    cadence: 'Weekly',
+    weeks: [{ activeDays: [0, 1, 2, 3, 4, 5, 6] }],
+    outcomeIds: [],
+    taskIds: [],
+    status: 'active',
+  },
+];
+
+// Care-plan data keyed by customer id. Unknown customers get an empty plan.
+export interface CarePlanData {
+  tasks: CareTask[];
+  outcomes: Outcome[];
+  visits: CareVisit[];
+}
+
+export const CARE_DATA: Record<string, CarePlanData> = {
+  'arthur-barrington': { tasks: TASKS, outcomes: OUTCOMES, visits: VISITS },
+  'edith-caldwell': { tasks: [], outcomes: [], visits: EDITH_VISITS },
+};

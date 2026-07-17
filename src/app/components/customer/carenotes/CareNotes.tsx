@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Clock, Calendar, User, Check, Plus, X, CalendarCheck } from 'lucide-react';
+import { useCustomer } from '../../../data/CustomerContext';
+import { TabEmptyState } from '../TabEmptyState';
 
 interface Task {
   time: string;
@@ -280,9 +282,14 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
 }
 
 export function CareNotes() {
+  const customer = useCustomer();
   const [categoryFilter, setCategoryFilter] = useState('');
   const [showMissed, setShowMissed] = useState(false);
   const [unreviewedOnly, setUnreviewedOnly] = useState(false);
+
+  if (customer.id !== 'arthur-barrington') {
+    return <TabEmptyState label="care notes" />;
+  }
 
   const filtered = VISITS.filter(v => {
     if (showMissed && v.status !== 'MISSED') return false;

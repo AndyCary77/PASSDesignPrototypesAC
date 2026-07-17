@@ -3,10 +3,12 @@ import { Calendar, CalendarClock, ArrowRight, Repeat2 } from 'lucide-react';
 import { BodymapDemo } from './BodymapDemo';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
-import { TASKS, OUTCOMES, VISITS } from './types';
-import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, inputClass, labelClass, CATEGORY_CONFIG } from './shared';
+import { useCareData } from './useCareData';
+import { type CareTask } from './types';
+import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, inputClass, labelClass, CATEGORY_CONFIG } from './shared';
 
-function TaskCard({ task, onSelect }: { task: typeof TASKS[0]; onSelect: () => void }) {
+function TaskCard({ task, onSelect }: { task: CareTask; onSelect: () => void }) {
+  const { OUTCOMES, VISITS } = useCareData();
   const outcomes = OUTCOMES.filter(o => task.outcomeIds.includes(o.id));
   const visits = VISITS.filter(v => task.visitIds.includes(v.id));
   const { bg, text, border, circleBg, Icon } = CATEGORY_CONFIG[task.category];
@@ -72,7 +74,8 @@ function TaskCard({ task, onSelect }: { task: typeof TASKS[0]; onSelect: () => v
   );
 }
 
-function TaskEditForm({ task }: { task: typeof TASKS[0] }) {
+function TaskEditForm({ task }: { task: CareTask }) {
+  const { OUTCOMES, VISITS } = useCareData();
   const { Icon, bg, text, border } = CATEGORY_CONFIG[task.category];
   const med = task.medicationDetails;
 
@@ -313,6 +316,7 @@ function TaskEditForm({ task }: { task: typeof TASKS[0] }) {
 }
 
 export function TasksTab() {
+  const { TASKS } = useCareData();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = selectedId ? TASKS.find(t => t.id === selectedId) : null;
   const { registerBack, clearBack } = useCareManagement();
@@ -328,6 +332,10 @@ export function TasksTab() {
 
   if (selected) {
     return <TaskEditForm task={selected} />;
+  }
+
+  if (TASKS.length === 0) {
+    return <EmptyTab label="tasks" />;
   }
 
   return (
