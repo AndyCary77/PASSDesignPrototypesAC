@@ -140,7 +140,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
 
             {/* Full details — shown when not scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0 opacity-0 mt-0' : 'max-h-32 opacity-100 mt-1'}`}>
-              <div className="text-sm text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+              <div className="text-sm font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
                 {contactBits.map((bit, i) => (
                   <span key={bit.label} className="flex items-center gap-3">
                     {i > 0 && <span className="text-gray-300">•</span>}
@@ -148,14 +148,14 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
                   </span>
                 ))}
               </div>
-              <div className="text-gray-700 text-[16px]">
+              <div className="text-gray-700 text-[16px] font-medium">
                 {customer.addressOneLine}
               </div>
             </div>
 
             {/* Condensed single line — shown when scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-10 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'}`}>
-              <p className="text-sm text-gray-600 truncate">{condensed}</p>
+              <p className="text-sm font-medium text-gray-600 truncate">{condensed}</p>
             </div>
           </div>
         </div>

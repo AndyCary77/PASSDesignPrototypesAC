@@ -37,19 +37,19 @@ export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: bo
 
             {/* Full details — shown when not scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0 opacity-0 mt-0' : 'max-h-32 opacity-100 mt-1'}`}>
-              <div className="text-sm text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+              <div className="text-sm font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
                 <span><span className="text-gray-500">Mob:</span> <span className="text-gray-700">07355943508</span></span>
                 <span className="text-gray-300">•</span>
                 <span><span className="text-gray-500">Username:</span> <span className="text-gray-700">davidbuckowski</span></span>
               </div>
-              <div className="text-gray-700 text-[16px]">
+              <div className="text-gray-700 text-[16px] font-medium">
                 11 Matlock Close, Walsall, WS3 3QE
               </div>
             </div>
 
             {/* Condensed single line — shown when scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-10 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'}`}>
-              <p className="text-sm text-gray-600 truncate">
+              <p className="text-sm font-medium text-gray-600 truncate">
                 07355943508 &nbsp;·&nbsp; davidbuckowski &nbsp;·&nbsp; 11 Matlock Close, Walsall, WS3 3QE
               </p>
             </div>
