@@ -145,6 +145,13 @@
   justify-content: center;
 }
 
+.cb-menu-count {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-purple-6-purple-4);
+}
+
 .account-version {
   font-family: Barlow, sans-serif;
   font-size: 13px;
@@ -158,10 +165,16 @@
   width: 48px;
   height: 28px;
   border-radius: 14px;
-  background: #d1d5db;
+  background: #e9e9ea;
   position: relative;
   transition: background 0.2s;
   flex-shrink: 0;
+  border: none;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 .tog.tog-on {

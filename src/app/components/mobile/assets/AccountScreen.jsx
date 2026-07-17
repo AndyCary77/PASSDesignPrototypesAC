@@ -53,6 +53,12 @@ const FaceIdIcon = () => (
   </svg>
 )
 
+const CareBridgeIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+  </svg>
+)
+
 const MenuIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path fillRule="evenodd" clipRule="evenodd" d="M4 8H8V4H4V8ZM10 20H14V16H10V20ZM4 20H8V16H4V20ZM4 14H8V10H4V14ZM10 14H14V10H10V14ZM16 4V8H20V4H16ZM10 8H14V4H10V8ZM16 14H20V10H16V14ZM16 20H20V16H16V20Z"/>
@@ -142,6 +148,21 @@ export default function AccountScreen({ onGoToMessages, onGoToMileage, messagesU
             <div className="profile-role">Careworker</div>
           </div>
           <button className="logout-btn">LOGOUT</button>
+        </div>
+
+        <div className="menu-section-label">Assessments</div>
+        <div className="menu-rows-card">
+          <MenuRow
+            icon={<CareBridgeIcon />}
+            label="CareBridge"
+            onClick={() => { window.location.href = '../carebridge/?transition=1' }}
+            right={
+              <>
+                <span className="cb-menu-count">4 due</span>
+                <ChevronRightIcon />
+              </>
+            }
+          />
         </div>
 
         <div className="menu-section-label">Details</div>
