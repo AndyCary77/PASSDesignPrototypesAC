@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import PhoneFrame from '../../assets/PhoneFrame'
 import StatusBar from '../../assets/StatusBar'
 import AppHeader from '../../assets/AppHeader'
+import CareBridgeIcon from '../../assets/CareBridgeIcon'
 import arthurImg from '../../assets/img/Customer=Arthur.png'
 import davidImg from '../../assets/img/Customer=David Farrington.png'
 import jimImg from '../../assets/img/Customer=Jim McLean.png'
@@ -24,19 +25,9 @@ const CheckIcon = () => (
     <path d="M5 12l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 )
-const MicIcon = ({ size = 26 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-  </svg>
-)
 const StopIcon = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <rect x="6" y="6" width="12" height="12" rx="2"/>
-  </svg>
-)
-const SparkleIcon = ({ size = 15 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2zm7 12l.95 2.55L22.5 17.5l-2.55.95L19 21l-.95-2.55L15.5 17.5l2.55-.95L19 14z"/>
   </svg>
 )
 const SearchIcon = () => (
@@ -227,7 +218,7 @@ function TemplateScreen({ customer, onBack, onPick }) {
             <div className="menu-section-label">Suggested</div>
             <button className="cb-suggested" onClick={() => onPick(suggested)}>
               <div className="cb-suggested-top">
-                <SparkleIcon size={16} />
+                <CareBridgeIcon size={16} />
                 <span className="cb-suggested-tag">Suggested for {customer.name.split(' ')[0]}</span>
               </div>
               <div className="cb-suggested-name">{suggested.name}</div>
@@ -303,7 +294,7 @@ function ConsentScreen({ customer, template, consent, setConsent, share, setShar
 
       <div className="cb-footer">
         <button className="round-btn primary-btn cb-full-btn" disabled={!consent} onClick={onStart}>
-          <MicIcon size={20} /> Start recording
+          <CareBridgeIcon size={20} /> Start recording
         </button>
       </div>
     </div>
@@ -317,7 +308,6 @@ function RecordScreen({ customer, template, seconds, states, onEnd, onLock }) {
   const totalFields = sumFields(states, 'fields')
   const capturedFields = sumFields(states, 'captured')
   const pct = totalFields ? Math.round((capturedFields / totalFields) * 100) : 0
-  const groups = groupStates(states)
   return (
     <div className="cb-screen cb-screen-record">
       <StatusBar />
@@ -329,32 +319,17 @@ function RecordScreen({ customer, template, seconds, states, onEnd, onLock }) {
         <div className="cb-rec-visual">
           <span className="cb-rec-ring" />
           <span className="cb-rec-ring cb-rec-ring-2" />
-          <span className="cb-rec-core"><MicIcon size={30} /></span>
+          <span className="cb-rec-core"><CareBridgeIcon size={30} /></span>
         </div>
         <div className="cb-rec-timer">{fmt(seconds)}</div>
-        <div className="cb-magic-chip"><SparkleIcon size={14} /> CareBridge is listening</div>
+        <div className="cb-magic-chip"><CareBridgeIcon size={14} /> CareBridge is listening</div>
         <div className="cb-rec-sub">Recording {first}’s assessment. You can set the phone aside.</div>
 
         <div className="cb-capture">
           <div className="cb-capture-row">
             <span>Filling the {template?.short}</span>
-            <span className="cb-capture-count">{capturedFields} of {totalFields} fields</span>
           </div>
           <div className="cb-capture-bar"><span style={{ width: `${pct}%` }} /></div>
-
-          {groups.length > 1 && (
-            <div className="cb-group-list">
-              {groups.map(g => (
-                <div key={g.name} className="cb-group-row">
-                  <div className="cb-group-head">
-                    <span className="cb-group-name">{g.name}</span>
-                    <span className="cb-group-count">{g.captured}/{g.fields}</span>
-                  </div>
-                  <div className="cb-group-bar"><span style={{ width: `${g.fields ? Math.round((g.captured / g.fields) * 100) : 0}%` }} /></div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         <button className="cb-rec-note" onClick={onLock}>
@@ -399,15 +374,12 @@ function LockScreen({ customer, seconds, onUnlock }) {
 
 // ─── Screen 5: end-of-visit coverage check ───────────────────
 
-function ReviewScreen({ customer, template, seconds, states, triage, setTriage, onResume, onFinish }) {
-  const first = customer?.name.split(' ')[0] || 'the customer'
+function ReviewScreen({ customer, template, seconds, states, onResume, onFinish }) {
   const groups = groupStates(states)
   const totalFields = sumFields(states, 'fields')
   const capturedFields = sumFields(states, 'captured')
   const incomplete = states.filter(s => !s.complete)
   const completeCount = states.length - incomplete.length
-  const askNow = incomplete.filter(s => triage[s.name] === 'ask')
-  const setItem = (name, val) => setTriage(t => ({ ...t, [name]: t[name] === val ? undefined : val }))
 
   return (
     <div className="cb-screen">
@@ -415,14 +387,14 @@ function ReviewScreen({ customer, template, seconds, states, triage, setTriage, 
       <AppHeader title="Before You Finish" onBack={onResume} />
       <div className="cb-body">
         <div className="cb-review-summary">
-          <div className="cb-review-check"><SparkleIcon size={18} /></div>
+          <div className="cb-review-check"><CareBridgeIcon size={18} /></div>
           <div>
             <div className="cb-review-title">{completeCount} of {states.length} sections complete</div>
             <div className="cb-review-sub">CareBridge filled {capturedFields} of {totalFields} fields · {fmt(seconds)} recorded</div>
           </div>
         </div>
 
-        <div className="cb-check-intro">Complete sections are ready to write up. For anything part-filled, ask {first} now or follow up later.</div>
+        <div className="cb-check-intro">Scan for anything left incomplete, then resume the conversation or finish up.</div>
 
         {groups.map(group => (
           <div key={group.name}>
@@ -433,15 +405,7 @@ function ReviewScreen({ customer, template, seconds, states, triage, setTriage, 
                   <span className={`cb-sec-badge${s.complete ? ' done' : ''}`}>
                     {s.complete ? <CheckIcon /> : `${s.captured}/${s.fields}`}
                   </span>
-                  <div className="cb-sec-main">
-                    <div className="cb-sec-name">{s.name}</div>
-                    {!s.complete && (
-                      <div className="cb-triage">
-                        <button className={`cb-triage-btn${triage[s.name] === 'ask' ? ' ask' : ''}`} onClick={() => setItem(s.name, 'ask')}>Ask now</button>
-                        <button className={`cb-triage-btn${triage[s.name] === 'later' ? ' later' : ''}`} onClick={() => setItem(s.name, 'later')}>Follow up</button>
-                      </div>
-                    )}
-                  </div>
+                  <div className="cb-sec-name">{s.name}</div>
                 </div>
               ))}
             </div>
@@ -451,13 +415,11 @@ function ReviewScreen({ customer, template, seconds, states, triage, setTriage, 
       </div>
 
       <div className="cb-footer cb-footer-stack">
-        {askNow.length > 0 && (
-          <button className="round-btn secondary-btn cb-full-btn" onClick={onResume}>
-            <MicIcon size={18} /> Resume to ask {askNow.length} {askNow.length === 1 ? 'section' : 'sections'}
-          </button>
-        )}
+        <button className="round-btn secondary-btn cb-full-btn" onClick={onResume}>
+          <CareBridgeIcon size={18} /> Resume recording
+        </button>
         <button className="round-btn primary-btn cb-full-btn" onClick={onFinish}>
-          Finish &amp; write up in PASS
+          Finish and Send
         </button>
       </div>
     </div>
@@ -475,7 +437,6 @@ export default function App() {
   const [consent, setConsent] = useState(false)
   const [share, setShare] = useState(false)
   const [seconds, setSeconds] = useState(0)
-  const [triage, setTriage] = useState({})
   const [locked, setLocked] = useState(false)
   const [overlay, setOverlay] = useState(null) // null | 'uploading' | 'done'
   const [entering] = useState(() =>
@@ -493,10 +454,9 @@ export default function App() {
   const recStates = sectionStates(template, Math.min(1, seconds / RECORD_RAMP))
   const finalStates = sectionStates(template, 1)
   const idx = STEPS.indexOf(step)
-  const followUps = finalStates.filter(s => !s.complete && triage[s.name] === 'later').length
 
-  const pickCustomer = (c) => { setCustomer(c); setTemplate(null); setConsent(false); setShare(false); setSeconds(0); setTriage({}); setStep('template') }
-  const pickTemplate = (t) => { setTemplate(t); setConsent(false); setShare(false); setSeconds(0); setTriage({}); setStep('consent') }
+  const pickCustomer = (c) => { setCustomer(c); setTemplate(null); setConsent(false); setShare(false); setSeconds(0); setStep('template') }
+  const pickTemplate = (t) => { setTemplate(t); setConsent(false); setShare(false); setSeconds(0); setStep('consent') }
   const finish = () => { setOverlay('uploading'); setTimeout(() => setOverlay('done'), 1700) }
 
   return (
@@ -522,7 +482,7 @@ export default function App() {
               <RecordScreen customer={customer} template={template} seconds={seconds} states={recStates} onEnd={() => { setLocked(false); setStep('review') }} onLock={() => setLocked(true)} />
             </div>
             <div className="cb-track-item" style={{ width: `${100 / STEPS.length}%` }}>
-              <ReviewScreen customer={customer} template={template} seconds={seconds} states={finalStates} triage={triage} setTriage={setTriage} onResume={() => setStep('record')} onFinish={finish} />
+              <ReviewScreen customer={customer} template={template} seconds={seconds} states={finalStates} onResume={() => setStep('record')} onFinish={finish} />
             </div>
           </div>
 
@@ -547,7 +507,6 @@ export default function App() {
                     <div className="cb-overlay-text">
                       CareBridge has drafted {customer?.name.split(' ')[0]}’s {template?.short || template?.name}.
                       Write up the care plan, risk assessments and templates in PASS.
-                      {followUps > 0 && ` ${followUps} item${followUps === 1 ? '' : 's'} flagged to follow up.`}
                     </div>
                     <button className="round-btn primary-btn cb-full-btn" onClick={() => { window.location.href = '../account/' }}>
                       Done

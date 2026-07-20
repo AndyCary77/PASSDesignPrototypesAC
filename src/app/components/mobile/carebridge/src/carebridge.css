@@ -442,18 +442,11 @@
 }
 
 .cb-capture-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  text-align: center;
   font-family: Barlow, sans-serif;
   font-size: 13px;
   color: var(--greyscale-5-grey-45);
   margin-bottom: 6px;
-}
-
-.cb-capture-count {
-  font-weight: 600;
-  color: var(--brand-purple-6-purple-4);
 }
 
 .cb-capture-bar {
@@ -467,41 +460,6 @@
   display: block;
   height: 100%;
   background: var(--brand-purple-6-purple-4);
-  border-radius: 3px;
-  transition: width 0.5s ease;
-}
-
-/* Per-group breakdown during recording */
-.cb-group-list {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.cb-group-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-family: Barlow, sans-serif;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
-.cb-group-name { color: var(--greyscale-4-grey-40); font-weight: 500; }
-.cb-group-count { color: var(--greyscale-6-grey-50); font-variant-numeric: tabular-nums; }
-
-.cb-group-bar {
-  height: 5px;
-  border-radius: 3px;
-  background: var(--ui-purple-6-lavendar-grey);
-  overflow: hidden;
-}
-
-.cb-group-bar span {
-  display: block;
-  height: 100%;
-  background: var(--brand-purple-4-purple-2-tint);
   border-radius: 3px;
   transition: width 0.5s ease;
 }
@@ -686,7 +644,7 @@
 
 .cb-sec-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 12px 20px;
   border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
@@ -720,9 +678,9 @@
   color: #fff;
 }
 
-.cb-sec-main { flex: 1; min-width: 0; }
-
 .cb-sec-name {
+  flex: 1;
+  min-width: 0;
   font-family: Barlow, sans-serif;
   font-size: 15px;
   color: #222;
@@ -730,38 +688,6 @@
 }
 
 .cb-sec-row.incomplete .cb-sec-name { font-weight: 600; }
-
-.cb-sec-main .cb-triage { margin-top: 8px; }
-
-.cb-triage {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.cb-triage-btn {
-  font-family: Barlow, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 14px;
-  border: 1px solid var(--ui-purple-4-lavendar);
-  background: #fff;
-  color: var(--greyscale-4-grey-40);
-  cursor: pointer;
-}
-
-.cb-triage-btn.ask {
-  background: var(--brand-purple-6-purple-4);
-  border-color: var(--brand-purple-6-purple-4);
-  color: #fff;
-}
-
-.cb-triage-btn.later {
-  background: var(--rag-amber-amber-lightest);
-  border-color: var(--rag-amber-amber-6);
-  color: var(--rag-amber-amber-6);
-}
 
 
 /* ── Submit overlay ──────────────────────────────────────────── */
