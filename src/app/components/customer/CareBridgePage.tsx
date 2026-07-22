@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { FileText, Target, ListChecks, Sparkles, Send, Mic, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, Play, Pause, Download, X, Check } from 'lucide-react';
+import { FileText, Target, ListChecks, Sparkles, Send, Mic, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, Play, Pause, Download, X, Check, Search } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import {
   DropdownMenu,
@@ -9,6 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
 import type { CustomerProfile } from '../../data/customers';
@@ -16,13 +18,6 @@ import { OutcomeBadge, TaskBadge } from './caremanagement/shared';
 import type { TaskCategory } from './caremanagement/types';
 import { Waveform } from '../icons/Waveform';
 
-// ─── Recording labels — used only to reserve a fixed width for the recording
-// picker trigger (sized to the longest possible label) so it doesn't resize
-// as the selection changes. The actual per-customer recordings are defined
-// further down in RECORDINGS. ─────────────────────────────────────────────
-
-const RECORDING_LABELS_FOR_SIZING = ['Initial Assessment', '2-Week Review', '6-Week Review', '6-Month Review'];
-const LONGEST_RECORDING_LABEL = RECORDING_LABELS_FOR_SIZING.reduce((longest, l) => (l.length > longest.length ? l : longest), '');
 
 // ─── Care & Support Plan structure — the real "multi-document" taxonomy ──────
 // This is the customer's largest document, rendered with its own left-hand
@@ -69,6 +64,9 @@ interface TranscriptLine {
 }
 
 const TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:00', text: "Before we get started, would everyone mind saying their name for the recording? I'll go first — I'm Sharon, the care assessor visiting today." },
+  { speaker: 'Arthur', role: 'customer', time: '10:01', text: "I'm Arthur." },
+  { speaker: 'David (Son)', role: 'family', time: '10:01', text: "And I'm David, Arthur's son." },
   { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:02', text: "Morning Arthur, thanks for having me. I just want to have a chat about how you're managing day to day, and what support would help you most. David, good to have you here too." },
   { speaker: 'David (Son)', role: 'family', time: '10:02', text: "No problem. I've flown over from Florida for a fortnight so I wanted to be here for this. I'm his main point of contact — my number's 07980 077250." },
   { speaker: 'Arthur', role: 'customer', time: '10:03', text: "I've lived in this house forty years and I don't intend to leave it. I'm very house-proud. I don't want people coming in and taking over, if I'm honest." },
@@ -80,8 +78,24 @@ const TRANSCRIPT: TranscriptLine[] = [
   { speaker: 'David (Son)', role: 'family', time: '10:09', text: "It'd help if they checked the fridge for out-of-date food too, and washed up any dishes. And he loves a chat — companionship matters more than the chores, really." },
   { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:11', text: "Noted. And getting around the house and outside?" },
   { speaker: 'Arthur', role: 'customer', time: '10:11', text: "Indoors I'm fine on my own. Outside I use my frame and I'm a bit wary on the front step. I do like to get out when the weather's nice." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:13', text: "Last thing — is there a DNACPR or RESPECT form in place?" },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:12', text: "One more thing — how are you managing with washing and getting dressed each morning?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:12', text: "I like to get myself up and washed in my own time — I'm an early riser, up about six. I can manage most of it myself, but David's helped me shave lately as my hands aren't as steady. I dress myself, no bother." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:13', text: "One more thing — is there a DNACPR or RESPECT form in place?" },
   { speaker: 'David (Son)', role: 'family', time: '10:13', text: "Yes, there's a DNACPR. It's in the yellow envelope on the table in the living room." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:14', text: "That's really helpful, thank you. Just a couple more things while I'm here — if you're ever a little reluctant about someone helping you, what's the best way for a carer to approach that?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:15', text: "Just don't rush me, and explain what you're doing first. If I've had a bad morning I can be a bit stubborn, but if someone's patient with me I come round." },
+  { speaker: 'David (Son)', role: 'family', time: '10:15', text: "Same if he gets a bit muddled or anxious in the afternoons with the memory thing — best is just to reassure him gently rather than correct him, it settles him much quicker." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:16', text: "That's really useful to know. Last thing — what time do you like to settle down for the night?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:16', text: "Half nine, ten o'clock usually. I don't like being rushed into bed either — same as the mornings, I like to do things in my own time." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:17', text: "What about hobbies, or things you enjoy doing day to day?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:18', text: "I like my garden, though I can't do as much as I used to. I've got a bird table I like to watch from the window. And I play cards with my neighbour, Reg, most Thursdays." },
+  { speaker: 'David (Son)', role: 'family', time: '10:18', text: "Reg has been really good to him. And he loves the football on the telly — doesn't miss a match." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:19', text: "That's lovely to hear. Would you like any support to keep doing those things?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:20', text: "I'd like a bit of help in the garden if that's possible, and maybe someone to sit with me for the football sometimes, if they don't mind." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:23', text: "Thank you both, that's given me a really good picture. I'll write this up and the office will be in touch about start dates." },
+  { speaker: 'David (Son)', role: 'family', time: '10:23', text: "Thanks Sharon, we appreciate it." },
+  { speaker: 'Arthur', role: 'customer', time: '10:24', text: "Appreciate you coming out. No taking over though, mind!" },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:24', text: "Wouldn't dream of it, Arthur." },
 ];
 
 interface AssessmentSection {
@@ -91,6 +105,16 @@ interface AssessmentSection {
   text: string;
   /** Reference interview questions shown under a drafted section — what the recording was listened for. Care Plan sections only. */
   promptingQuestions?: string[];
+  /** false = CareBridge drafted this section from the recording and it hasn't been manually accepted yet. Undefined where there's nothing to review (e.g. secondary-document sections not yet wired up to this workflow). */
+  reviewed?: boolean;
+  /** Where in the recording's transcript this section was drafted from — powers "Check transcript". */
+  sourceLines?: TranscriptReference[];
+}
+
+/** A transcript line this field's content was drafted from, and optionally the exact substring of that line's text to highlight — lets "Check transcript" point at precisely the words that generated the value, not just the line. */
+interface TranscriptReference {
+  index: number;
+  highlight?: string;
 }
 
 /**
@@ -112,6 +136,8 @@ interface FormField {
   rows?: string[][]; // table only
   /** false = CareBridge drafted this from the recording and it hasn't been manually accepted yet. Undefined for fields with no captured content — nothing to review. Set true once a reviewer accepts it, or automatically the moment they edit it themselves. */
   reviewed?: boolean;
+  /** Where in the recording's transcript this field was drafted from — lets a reviewer jump straight to the source via "Check transcript". Undefined for fields with nothing to trace (not drafted from this recording). */
+  sourceLines?: TranscriptReference[];
 }
 
 // IDs match CARE_PLAN_STRUCTURE below (the real document's section taxonomy),
@@ -126,6 +152,60 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
       'Who are the important people in your life?',
       'Is there anything about your home that matters to you?',
     ],
+    reviewed: false,
+    sourceLines: [
+      { index: 5, highlight: "I've lived in this house forty years and I don't intend to leave it" },
+      { index: 4, highlight: "I'm his main point of contact — my number's 07980 077250" },
+    ],
+  },
+  {
+    id: 'section-2',
+    title: 'Section 2 - Personal care and daily routine',
+    text: `I'm an early riser and usually up by about six. I like to wash and get dressed in my own time, without being rushed, and I can manage most of it myself — I just need a hand with shaving now as my hands aren't as steady as they were. If I seem a bit reluctant some mornings, please don't push me — just explain what you're doing and give me a minute, and I'll come round.
+
+I value my independence and my privacy, and I don't want to feel as though someone's taking over in my own home. Please let me do as much as I can for myself, and offer help rather than just getting on with it.
+
+Some afternoons I get a bit muddled with my memory and can seem confused or unsettled. Please don't correct me too bluntly if I've got something wrong — a calm, reassuring approach settles me much quicker than being corrected.
+
+I like to settle down for the night around half nine or ten, and I don't like being rushed into bed any more than I like being rushed in the mornings.
+
+Good Dementia Care Guidance for Staff
+- Don't rush me in the mornings or at bedtime — let me do things in my own time.
+- If I seem reluctant, explain what you're doing and give me a moment rather than pushing ahead.
+- If I get muddled or confused, reassure me calmly rather than correcting me bluntly.
+- Support me with shaving, but let me manage the rest of my washing and dressing myself.
+- Respect my independence and my home — I don't want to feel like anyone's taking over.`,
+    promptingQuestions: [
+      'What time do you usually get up in the morning?',
+      'How are you managing with washing, showering and getting dressed?',
+      'Do you need any support with personal grooming, like shaving?',
+      'Is there a particular way we should approach you if you seem reluctant about support?',
+      'How should carers respond if you seem confused or muddled?',
+      'What time do you usually go to bed?',
+      'Is there anything about your routine that helps you feel comfortable and settled?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 15, highlight: "I like to get myself up and washed in my own time — I'm an early riser, up about six" },
+      { index: 19, highlight: "Just don't rush me, and explain what you're doing first" },
+      { index: 20, highlight: 'best is just to reassure him gently rather than correct him' },
+      { index: 22, highlight: "Half nine, ten o'clock usually" },
+    ],
+  },
+  {
+    id: 'section-3',
+    title: 'Section 3 - Activities, exercise and socialising',
+    text: 'Enjoys gardening, though is now limited in what he can manage himself, and likes to watch birds from the window at a bird table. Plays cards with his neighbour Reg most Thursdays, which is an important social connection. Keen follower of football on television. Would welcome support to maintain the garden and company during football matches.',
+    promptingQuestions: [
+      'What do you enjoy doing day to day?',
+      'Do you see friends, family or neighbours regularly?',
+      'Would you like any support to keep doing the things you enjoy?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 24, highlight: 'I play cards with my neighbour, Reg, most Thursdays' },
+      { index: 27, highlight: "I'd like a bit of help in the garden if that's possible, and maybe someone to sit with me for the football sometimes" },
+    ],
   },
   {
     id: 'section-6',
@@ -136,6 +216,12 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
       'What medication are you taking, and can you manage it yourself?',
       'Is there a DNACPR or RESPECT form in place?',
     ],
+    reviewed: false,
+    sourceLines: [
+      { index: 7, highlight: 'Dad was diagnosed with vascular dementia a couple of years ago' },
+      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day" },
+      { index: 17, highlight: "in the yellow envelope on the table in the living room" },
+    ],
   },
   {
     id: 'section-4',
@@ -144,6 +230,10 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
     promptingQuestions: [
       'How are you doing with food and drink?',
       'Do you need any support preparing meals?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 10, highlight: "I manage a bit but I'd like someone to make me some lunch and maybe leave a snack plate out" },
     ],
   },
   {
@@ -154,6 +244,10 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
       'How are you getting around the house and outside?',
       'Do you use any walking aids?',
     ],
+    reviewed: false,
+    sourceLines: [
+      { index: 13, highlight: "Outside I use my frame and I'm a bit wary on the front step" },
+    ],
   },
   {
     id: 'section-7',
@@ -162,6 +256,10 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
     promptingQuestions: [
       'Would you like any help with washing up or housework?',
       'Is there anything around the home you find harder to manage?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 11, highlight: 'checked the fridge for out-of-date food too, and washed up any dishes' },
     ],
   },
 ];
@@ -183,13 +281,30 @@ const PETS_OPTIONS = ['None', 'Dog(s)', 'Cat(s)', 'Other pets'];
 // in themselves (which counts as reviewed the moment they type it).
 const ARTHUR_PERSONAL_DETAILS: FormField[] = [
   { id: 'language', label: 'What language would you prefer this assessment to be carried out in?', type: 'select', options: LANGUAGE_OPTIONS },
-  { id: 'known-as', label: 'Known as', type: 'text', value: 'Arthur', reviewed: false },
-  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'He/Him', reviewed: false },
-  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Man', reviewed: false },
+  { id: 'known-as', label: 'Known as', type: 'text', value: 'Arthur', reviewed: false, sourceLines: [{ index: 1, highlight: 'Arthur' }] },
+  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'He/Him', reviewed: false, sourceLines: [{ index: 7, highlight: 'His' }] },
+  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Man', reviewed: false, sourceLines: [{ index: 7, highlight: 'Dad' }] },
   { id: 'sexual-orientation', label: 'Sexual orientation', type: 'select', options: SEXUAL_ORIENTATION_OPTIONS },
   { id: 'allergies', label: 'Allergies', type: 'table', columns: ['Allergy', 'Symptoms experienced', 'Rescue medication'] },
-  { id: 'dnar', label: 'Is there a DNAR/TEP (e.g. RESPECT form) in place?', type: 'radio', value: 'Yes', reviewed: false },
-  { id: 'dnar-location', label: 'If yes, where can this be found?', type: 'text', value: 'Yellow envelope, living room table', reviewed: false },
+  {
+    id: 'dnar',
+    label: 'Is there a DNAR/TEP (e.g. RESPECT form) in place?',
+    type: 'radio',
+    value: 'Yes',
+    reviewed: false,
+    sourceLines: [
+      { index: 16, highlight: 'DNACPR or RESPECT form in place' },
+      { index: 17, highlight: "Yes, there's a DNACPR" },
+    ],
+  },
+  {
+    id: 'dnar-location',
+    label: 'If yes, where can this be found?',
+    type: 'text',
+    value: 'Yellow envelope, living room table',
+    reviewed: false,
+    sourceLines: [{ index: 17, highlight: 'in the yellow envelope on the table in the living room' }],
+  },
   { id: 'smoker', label: 'Smoker status', type: 'select', options: SMOKER_OPTIONS },
   { id: 'pets', label: 'Pets', type: 'select', options: PETS_OPTIONS },
   { id: 'dietary', label: 'Dietary requirements', type: 'text' },
@@ -200,6 +315,10 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
     columns: ['Name', 'Relationship', 'Phone number', 'Decision maker'],
     rows: [['David Barrington', 'Son', '07980 077250', 'Yes']],
     reviewed: false,
+    sourceLines: [
+      { index: 2, highlight: "David, Arthur's son" },
+      { index: 4, highlight: "I'm his main point of contact — my number's 07980 077250" },
+    ],
   },
   { id: 'poa', label: 'Is there a PoA or alternative decision maker in place?', type: 'radio' },
   { id: 'professionals', label: 'Professionals involved', type: 'table', columns: ['Name', 'Profession', 'Contact number'] },
@@ -342,6 +461,9 @@ const GUIDE_SECTIONS_ARTHUR: AssessmentSection[] = [
 // the "cumulative and refined over time" case the Care Plan tab reflects.
 
 const INSTRUCTIONS_TRANSCRIPT_ARTHUR: TranscriptLine[] = [
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '09:29', text: "Just for the recording, could you both confirm your names for me quickly?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:29', text: "Arthur." },
+  { speaker: 'David (Son)', role: 'family', time: '09:29', text: "David, his son." },
   { speaker: 'Sharon (Assessor)', role: 'assessor', time: '09:30', text: "Morning Arthur, morning David — it's been six weeks now, so this visit is to make sure the care plan still reflects what you both want before we confirm it formally." },
   { speaker: 'Arthur', role: 'customer', time: '09:31', text: "Things have settled in nicely I think, the carers know what they're doing now." },
   { speaker: 'David (Son)', role: 'family', time: '09:32', text: "I agree, though could we add that they check his blood pressure readings weekly now — his GP asked for that last month." },
@@ -366,6 +488,9 @@ const BP_MONITORING_TASK: TaskSuggestion = {
 // ─── New enquiry — Mrs Edith Caldwell's assessment ──────────────────────────────
 
 const EDITH_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '13:59', text: "Before I get started properly, would you both mind saying your names for the recording? I'll start — I'm Alison, from the care team." },
+  { speaker: 'Edith', role: 'customer', time: '13:59', text: "I'm Edith." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '13:59', text: "And I'm Susan, Edith's daughter." },
   { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:00', text: "Hello Edith, I'm Alison from the care team — thanks for seeing me. Susan, good to meet you too. I'd like to understand how things have been since you came home." },
   { speaker: 'Susan (Daughter)', role: 'family', time: '14:01', text: "Mum was in hospital for three weeks after a fall in the kitchen — she fractured her hip. She's home now but nowhere near as steady, and I'm worried about her managing on her own. My number's 07712 660145." },
   { speaker: 'Edith', role: 'customer', time: '14:02', text: "I've been in this bungalow thirty years and I intend to stay. I've always done for myself, but since the fall I can't manage the way I used to, and that frustrates me." },
@@ -393,6 +518,11 @@ const EDITH_SECTIONS: AssessmentSection[] = [
       'Who are the important people in your life?',
       'How have things been since you came home?',
     ],
+    reviewed: false,
+    sourceLines: [
+      { index: 5, highlight: "I've been in this bungalow thirty years and I intend to stay" },
+      { index: 4, highlight: "My number's 07712 660145" },
+    ],
   },
   {
     id: 'section-2',
@@ -401,6 +531,10 @@ const EDITH_SECTIONS: AssessmentSection[] = [
     promptingQuestions: [
       'How are you managing with washing and dressing?',
       'Do you have a preference for a male or female carer?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 10, highlight: "My top half I'm alright, but I can't manage my legs and feet since the hip, and dressing is a struggle. I'd rather a lady helped me with that" },
     ],
   },
   {
@@ -411,6 +545,11 @@ const EDITH_SECTIONS: AssessmentSection[] = [
       'How are you managing with meals and drinks?',
       'Are you able to prepare food for yourself?',
     ],
+    reviewed: false,
+    sourceLines: [
+      { index: 11, highlight: "I can't stand long enough to cook now. I've been having biscuits and not much else" },
+      { index: 12, highlight: 'make her a proper breakfast and lunch and leave a drink out' },
+    ],
   },
   {
     id: 'section-5',
@@ -419,6 +558,11 @@ const EDITH_SECTIONS: AssessmentSection[] = [
     promptingQuestions: [
       'How do you get around indoors and outdoors?',
       'Have you had any falls recently?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 13, highlight: 'I use my frame indoors. There are two steps down to the back door' },
+      { index: 14, highlight: "The physio said she's a high falls risk" },
     ],
   },
   {
@@ -429,6 +573,11 @@ const EDITH_SECTIONS: AssessmentSection[] = [
       'Can you tell me about your health?',
       'What medication are you taking, and do you remember to take it?',
     ],
+    reviewed: false,
+    sourceLines: [
+      { index: 7, highlight: "I take a tablet for my blood pressure — amlodipine — and some co-codamol when the pain's bad" },
+      { index: 8, highlight: "she forgets her tablets, and sometimes forgets whether she's eaten" },
+    ],
   },
   {
     id: 'section-7',
@@ -437,6 +586,10 @@ const EDITH_SECTIONS: AssessmentSection[] = [
     promptingQuestions: [
       'Is there any help you need around the home, like laundry?',
       'Are you able to carry things safely with your frame?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 15, highlight: "The laundry and changing my bed too — I can't carry things with the frame" },
     ],
   },
 ];
@@ -523,7 +676,7 @@ const RECORDINGS: Record<string, Recording[]> = {
     {
       id: 'initial',
       label: 'Initial Assessment',
-      recordingMeta: '14 Oct 2025 · 10:02–11:10 · 68 min',
+      recordingMeta: '14 Oct 2025 · 10:00–11:10 · 70 min',
       transcript: [...TRANSCRIPT, ...CONSENT_TRANSCRIPT_ARTHUR, ...RECEIPT_TRANSCRIPT_ARTHUR, ...PRIVACY_TRANSCRIPT_ARTHUR, ...TERMS_TRANSCRIPT_ARTHUR, ...GUIDE_TRANSCRIPT_ARTHUR],
       focusDocumentName: 'Customer Care and Support Plan',
       isCarePlanFocus: true,
@@ -544,7 +697,7 @@ const RECORDINGS: Record<string, Recording[]> = {
     {
       id: 'review6',
       label: '6-Week Review',
-      recordingMeta: '25 Nov 2025 · 09:30–09:52 · 22 min',
+      recordingMeta: '25 Nov 2025 · 09:29–09:52 · 23 min',
       transcript: INSTRUCTIONS_TRANSCRIPT_ARTHUR,
       focusDocumentName: 'Confirmation of Instructions',
       isCarePlanFocus: false,
@@ -559,7 +712,7 @@ const RECORDINGS: Record<string, Recording[]> = {
     {
       id: 'initial',
       label: 'Initial Assessment',
-      recordingMeta: '7 Jul 2026 · 14:00–14:45 · 45 min',
+      recordingMeta: '7 Jul 2026 · 13:59–14:45 · 46 min',
       transcript: [...EDITH_TRANSCRIPT, ...EDITH_CONSENT_TRANSCRIPT],
       focusDocumentName: 'Customer Care and Support Plan',
       isCarePlanFocus: true,
@@ -583,6 +736,15 @@ function resolveRecording(customerId: string, recordingId: string): Recording {
   const recordings = resolveRecordings(customerId);
   return recordings.find(r => r.id === recordingId) ?? recordings[0];
 }
+
+// Reserves a fixed width for the document picker trigger (sized to the
+// longest actual document name across every customer) so it doesn't resize
+// as the selection changes, and so real names like "Customer Care and
+// Support Plan" never get clipped.
+const LONGEST_FOCUS_DOCUMENT_NAME = Object.values(RECORDINGS)
+  .flat()
+  .map(r => r.focusDocumentName)
+  .reduce((longest, name) => (name.length > longest.length ? name : longest), '');
 
 interface CarePlanItem<T> {
   item: T;
@@ -611,7 +773,7 @@ function buildCarePlan(recordings: Recording[]): {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function EditableBlock({ text }: { text: string }) {
+function EditableBlock({ text, pending, onChange }: { text: string; pending?: boolean; onChange?: () => void }) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   const resize = () => {
@@ -628,8 +790,13 @@ function EditableBlock({ text }: { text: string }) {
       ref={ref}
       defaultValue={text}
       rows={1}
-      onInput={resize}
-      className="block w-full resize-none overflow-hidden bg-transparent text-base text-gray-700 leading-relaxed rounded-md px-2 py-1.5 -mx-2 hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] transition-colors"
+      onInput={() => {
+        resize();
+        onChange?.();
+      }}
+      className={`block w-full resize-none overflow-hidden text-sm text-gray-900 leading-relaxed rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors ${
+        pending ? 'border-2 border-amber-300 bg-amber-50/40' : 'border border-gray-200 bg-white'
+      }`}
     />
   );
 }
@@ -721,7 +888,15 @@ function fieldBoxClass(captured: boolean, pending: boolean): string {
   return 'border border-dashed border-gray-300 bg-gray-50';
 }
 
-function EditableFormField({ field, onChange }: { field: FormField; onChange: (patch: Partial<FormField>) => void }) {
+function EditableFormField({
+  field,
+  onChange,
+  transcript,
+}: {
+  field: FormField;
+  onChange: (patch: Partial<FormField>) => void;
+  transcript: TranscriptLine[];
+}) {
   const captured = isFieldCaptured(field);
   const pending = captured && field.reviewed === false;
   const inputClass = `w-full ${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 placeholder:italic focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors`;
@@ -735,13 +910,25 @@ function EditableFormField({ field, onChange }: { field: FormField; onChange: (p
       <div className="flex items-center justify-between gap-3 mb-1.5">
         {labelEl}
         {pending && (
-          <button
-            type="button"
-            onClick={() => onChange({ reviewed: true })}
-            className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer flex-shrink-0"
-          >
-            <Check className="w-3.5 h-3.5" /> Accept
-          </button>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {!!field.sourceLines?.length && (
+              <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines}>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5" /> Check transcript
+                </button>
+              </TranscriptCheckPopover>
+            )}
+            <button
+              type="button"
+              onClick={() => onChange({ reviewed: true })}
+              className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+            >
+              <Check className="w-3.5 h-3.5" /> Accept
+            </button>
+          </div>
         )}
       </div>
 
@@ -881,13 +1068,112 @@ function EditableTableField({
 }
 
 /**
+ * Lets a reviewer trace a drafted field back to where it came from in the
+ * original recording — the transcript scrolls straight to the relevant
+ * line(s) and highlights them, while staying freely scrollable so the
+ * reviewer can check the surrounding context either side.
+ */
+/** Renders a transcript line's text with its drafted substring (if any) marked, rather than tinting the whole line. */
+function HighlightedTranscriptText({ text, highlight }: { text: string; highlight?: string }) {
+  const start = highlight ? text.indexOf(highlight) : -1;
+  if (start === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, start)}
+      <mark className="bg-amber-200 text-gray-900 rounded-sm px-0.5">{text.slice(start, start + highlight!.length)}</mark>
+      {text.slice(start + highlight!.length)}
+    </>
+  );
+}
+
+/**
+ * Anchored to the "Check transcript" link itself (a popover, not a centered
+ * modal) so it reads as a callout from that specific link rather than a
+ * disconnected overlay — the arrow ties it visually back to its trigger.
+ */
+function TranscriptCheckPopover({
+  fieldLabel,
+  transcript,
+  references,
+  children,
+}: {
+  fieldLabel: string;
+  transcript: TranscriptLine[];
+  references: TranscriptReference[];
+  children: React.ReactNode;
+}) {
+  const customer = useCustomer();
+  const [open, setOpen] = useState(false);
+  const firstIndex = Math.min(...references.map(r => r.index));
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => {
+      highlightRef.current?.scrollIntoView({ block: 'center' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="end"
+        sideOffset={8}
+        className="w-[26rem] max-w-[calc(100vw-2rem)] h-[360px] flex flex-col p-0"
+      >
+        <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+          <p className="text-sm font-semibold text-gray-900">Check transcript</p>
+          <p className="text-sm text-gray-500">Where "{fieldLabel}" was drafted from.</p>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          {transcript.map((line, i) => {
+            const ref = references.find(r => r.index === i);
+            return (
+              <div
+                key={i}
+                ref={i === firstIndex ? highlightRef : undefined}
+                className={`flex gap-3 rounded-lg px-3 py-2.5 mb-1 transition-colors ${ref ? 'ring-1 ring-amber-300' : ''}`}
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${speakerAvatarColor(line, customer)}`}>
+                  {speakerInitials(line, customer)}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`text-sm font-semibold ${roleStyle[line.role]}`}>{line.speaker}</span>
+                    <span className="text-sm text-gray-500 tabular-nums">{line.time}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    <HighlightedTranscriptText text={line.text} highlight={ref?.highlight} />
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/**
  * Renders a genuinely multi-field section (e.g. Personal details) as real,
  * editable form controls. Fields CareBridge drafted from the recording start
  * flagged for manual review (amber) until accepted individually, in bulk, or
  * implicitly by editing them — fields the reviewer types in themselves need
  * no separate accept step, since typing them in is itself the review.
  */
-function FormFieldsView({ fields, onChange }: { fields: FormField[]; onChange: (fields: FormField[]) => void }) {
+function FormFieldsView({
+  fields,
+  onChange,
+  transcript,
+}: {
+  fields: FormField[];
+  onChange: (fields: FormField[]) => void;
+  transcript: TranscriptLine[];
+}) {
   const updateField = (id: string, patch: Partial<FormField>) => {
     onChange(fields.map(f => (f.id === id ? { ...f, ...patch } : f)));
   };
@@ -911,7 +1197,7 @@ function FormFieldsView({ fields, onChange }: { fields: FormField[]; onChange: (
         </div>
       )}
       {fields.map(field => (
-        <EditableFormField key={field.id} field={field} onChange={patch => updateField(field.id, patch)} />
+        <EditableFormField key={field.id} field={field} onChange={patch => updateField(field.id, patch)} transcript={transcript} />
       ))}
     </div>
   );
@@ -925,24 +1211,25 @@ function FormFieldsView({ fields, onChange }: { fields: FormField[]; onChange: (
  * is the true full structure, not just what's been captured so far.
  */
 function CarePlanMultiDocView({ recording }: { recording: Recording }) {
-  // Local, live copy of the recording's form sections — lets edits and accepts
-  // made while reviewing (see FormFieldsView) immediately update the capture
-  // counts and badges below, not just the field itself.
-  const [formSections, setFormSections] = useState<Record<string, FormField[]>>(recording.formSections ?? {});
+  // Draft review state lives in CareBridgeContext (per recording), not locally
+  // here, so the "Save updates" CTA in the subnav can also see whether
+  // there's anything still outstanding and disable itself.
+  const { getFormSections, setFormSections, getProseSections, setProseSections } = useContext(CareBridgeContext);
+  const formSections = getFormSections(recording);
+  const proseSections = getProseSections(recording);
 
   const firstWithContent = CARE_PLAN_STRUCTURE.find(item => sectionCompletion(formSections, recording, item.id)) ?? CARE_PLAN_STRUCTURE[0];
   const [selectedId, setSelectedId] = useState(firstWithContent.id);
 
-  // Jump back to the first captured section, and reload the live form data, whenever the recording changes.
+  // Jump back to the first captured section whenever the recording changes.
   useEffect(() => {
-    setFormSections(recording.formSections ?? {});
-    setSelectedId((CARE_PLAN_STRUCTURE.find(item => sectionCompletion(recording.formSections ?? {}, recording, item.id)) ?? CARE_PLAN_STRUCTURE[0]).id);
+    setSelectedId((CARE_PLAN_STRUCTURE.find(item => sectionCompletion(getFormSections(recording), recording, item.id)) ?? CARE_PLAN_STRUCTURE[0]).id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recording.id]);
 
   const selectedItem = CARE_PLAN_STRUCTURE.find(item => item.id === selectedId) ?? CARE_PLAN_STRUCTURE[0];
   const selectedFormFields = formSections[selectedId];
-  const selectedContent = recording.focusSections.find(s => s.id === selectedId);
+  const selectedContent = proseSections[selectedId];
   const capturedCount = CARE_PLAN_STRUCTURE.filter(item => sectionCompletion(formSections, recording, item.id)).length;
 
   return (
@@ -960,7 +1247,8 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
               const completion = sectionCompletion(formSections, recording, item.id);
               const hasContent = !!completion;
               const isPartial = !!completion && completion.captured < completion.total;
-              const needsReview = !!formSections[item.id]?.some(f => isFieldCaptured(f) && f.reviewed === false);
+              const needsReview = !!formSections[item.id]?.some(f => isFieldCaptured(f) && f.reviewed === false)
+                || proseSections[item.id]?.reviewed === false;
               return (
                 <button
                   key={item.id}
@@ -970,8 +1258,8 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                     isActive
                       ? 'bg-[rgb(154,38,214)] text-white font-medium'
                       : hasContent
-                        ? 'text-[rgb(109,27,152)] hover:bg-purple-50'
-                        : 'text-gray-400 hover:bg-gray-50'
+                        ? 'text-[rgb(109,27,152)] font-medium hover:bg-purple-50'
+                        : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   <span
@@ -1009,17 +1297,43 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
           {selectedFormFields ? (
             <FormFieldsView
               fields={selectedFormFields}
-              onChange={updated => setFormSections(prev => ({ ...prev, [selectedId]: updated }))}
+              onChange={updated => setFormSections(recording.id, { ...formSections, [selectedId]: updated })}
+              transcript={recording.transcript}
             />
           ) : selectedContent ? (
             <>
-              <EditableBlock text={selectedContent.text} />
+              {selectedContent.reviewed === false && (
+                <div className="flex items-center justify-end gap-3 mb-2">
+                  {!!selectedContent.sourceLines?.length && (
+                    <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={recording.transcript} references={selectedContent.sourceLines}>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                      >
+                        <Search className="w-3.5 h-3.5" /> Check transcript
+                      </button>
+                    </TranscriptCheckPopover>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Accept
+                  </button>
+                </div>
+              )}
+              <EditableBlock
+                text={selectedContent.text}
+                pending={selectedContent.reviewed === false}
+                onChange={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
+              />
               {selectedContent.promptingQuestions && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="text-sm font-semibold text-gray-500 mb-1.5">Prompting questions</p>
                   <ul className="space-y-1">
                     {selectedContent.promptingQuestions.map((q, i) => (
-                      <li key={i} className="text-sm text-gray-400">{q}</li>
+                      <li key={i} className="text-sm text-gray-500">{q}</li>
                     ))}
                   </ul>
                 </div>
@@ -1039,26 +1353,23 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
 
 // ─── This Recording — focus document + secondary documents from the same visit ──
 
-function RecordingSummaryView({ recording, hasCarePlan }: { recording: Recording; hasCarePlan: boolean }) {
-  const bannerText = !recording.isCarePlanFocus
-    ? `Draft generated from the ${recording.label} recording. Review and edit inline, then confirm to save it to the customer file.`
-    : hasCarePlan
-      ? `This recording informed the current care plan (${recording.recordingMeta.split(' · ')[0]}). Review a reassessment below and suggest updates to the existing plan.`
-      : 'Draft generated from the assessment visit recording. Nothing has been saved to the care plan yet — review, edit inline, then pre-fill the assessment and care plan.';
-
+function RecordingSummaryView({ recording }: { recording: Recording }) {
   return (
     <div className="space-y-8">
-      <div className="flex items-start gap-2.5 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
-        <Info className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-purple-900">{bannerText}</p>
-      </div>
-
       {/* Focus document — the basis this recording was made for, prominent */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center text-sm font-bold uppercase tracking-wide text-[rgb(109,27,152)] bg-purple-100 rounded-full px-2.5 py-1">
-            Focus of this visit
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-[rgb(109,27,152)] bg-purple-100 rounded-full px-2.5 py-1 cursor-default">
+                Draft content
+                <Info className="w-3.5 h-3.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-sm normal-case font-normal tracking-normal">
+              Generated by AI from the audio recording. All content must be reviewed before saving.
+            </TooltipContent>
+          </Tooltip>
           <span className="text-sm text-gray-500">Recorded {recording.recordingMeta.split(' · ')[0]}</span>
         </div>
 
@@ -1415,10 +1726,10 @@ function RecordingPicker({ recordings, recordingId, onChange }: { recordings: Re
   return (
     <DropdownMenu>
       <div className="relative inline-flex">
-        {/* Invisible sizer — reserves width for the longest possible recording label so the trigger doesn't resize as the selection changes. */}
+        {/* Invisible sizer — reserves width for the longest possible document name so the trigger doesn't resize as the selection changes or clip a long name. */}
         <span aria-hidden="true" className="invisible flex items-center gap-2 h-9 pl-3 pr-2.5 text-sm font-medium whitespace-nowrap">
           <Mic className="w-4 h-4 flex-shrink-0" />
-          {LONGEST_RECORDING_LABEL}
+          {LONGEST_FOCUS_DOCUMENT_NAME}
           <ChevronDown className="w-4 h-4 flex-shrink-0" />
         </span>
         <DropdownMenuTrigger asChild>
@@ -1427,12 +1738,12 @@ function RecordingPicker({ recordings, recordingId, onChange }: { recordings: Re
             className="absolute inset-0 h-9 inline-flex items-center gap-2 rounded-lg border border-[rgb(154,38,214)] bg-white pl-3 pr-2.5 text-sm font-medium text-gray-700 hover:border-[rgb(130,28,190)] transition-colors cursor-pointer"
           >
             <Mic className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="truncate flex-1 min-w-0">{selected?.label}</span>
+            <span className="whitespace-nowrap">{selected?.focusDocumentName}</span>
             <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </button>
         </DropdownMenuTrigger>
       </div>
-      <DropdownMenuContent align="start" className="w-72">
+      <DropdownMenuContent align="start" className="w-96">
         <DropdownMenuLabel>Recordings for this customer</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {recordings.map(r => (
@@ -1441,8 +1752,8 @@ function RecordingPicker({ recordings, recordingId, onChange }: { recordings: Re
             onSelect={() => onChange(r.id)}
             className="flex items-center justify-between gap-3 py-2"
           >
-            <span className="text-gray-900">{r.label}</span>
-            <span className="text-sm text-gray-400 whitespace-nowrap flex-shrink-0">
+            <span className="text-gray-900 whitespace-nowrap">{r.focusDocumentName}</span>
+            <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
               {r.recordingMeta.split(' · ')[0]}
             </span>
           </DropdownMenuItem>
@@ -1471,6 +1782,11 @@ const CareBridgeContext = createContext<{
   setRecordingId: (id: string) => void;
   chatOpen: boolean;
   setChatOpen: (open: boolean) => void;
+  getFormSections: (recording: Recording) => Record<string, FormField[]>;
+  setFormSections: (recordingId: string, fields: Record<string, FormField[]>) => void;
+  getProseSections: (recording: Recording) => Record<string, AssessmentSection>;
+  setProseSections: (recordingId: string, sections: Record<string, AssessmentSection>) => void;
+  hasPendingReview: (recording: Recording) => boolean;
 }>({
   tab: 'recording',
   setTab: () => {},
@@ -1480,6 +1796,11 @@ const CareBridgeContext = createContext<{
   setRecordingId: () => {},
   chatOpen: false,
   setChatOpen: () => {},
+  getFormSections: () => ({}),
+  setFormSections: () => {},
+  getProseSections: () => ({}),
+  setProseSections: () => {},
+  hasPendingReview: () => false,
 });
 
 export function CareBridgeProvider({ children }: { children: React.ReactNode }) {
@@ -1489,8 +1810,37 @@ export function CareBridgeProvider({ children }: { children: React.ReactNode }) 
   // Descoped from the default view for now — see the floating launcher in
   // CareBridgePage. Hidden by default; the reviewer opts back in per visit.
   const [chatOpen, setChatOpen] = useState(false);
+
+  // Draft review state, per recording — lifted up here (rather than local to
+  // CarePlanMultiDocView) so the "Save updates" CTA in the subnav can also
+  // see whether there's anything still outstanding and disable itself.
+  const [formSectionsByRecording, setFormSectionsByRecording] = useState<Record<string, Record<string, FormField[]>>>({});
+  const [proseSectionsByRecording, setProseSectionsByRecording] = useState<Record<string, Record<string, AssessmentSection>>>({});
+
+  const getFormSections = (recording: Recording) => formSectionsByRecording[recording.id] ?? recording.formSections ?? {};
+  const setFormSections = (recordingId: string, fields: Record<string, FormField[]>) => {
+    setFormSectionsByRecording(prev => ({ ...prev, [recordingId]: fields }));
+  };
+  const getProseSections = (recording: Recording) =>
+    proseSectionsByRecording[recording.id] ?? Object.fromEntries(recording.focusSections.map(s => [s.id, s]));
+  const setProseSections = (recordingId: string, sections: Record<string, AssessmentSection>) => {
+    setProseSectionsByRecording(prev => ({ ...prev, [recordingId]: sections }));
+  };
+  const hasPendingReview = (recording: Recording) => {
+    const forms = getFormSections(recording);
+    const prose = getProseSections(recording);
+    const formsPending = Object.values(forms).some(fields => fields.some(f => isFieldCaptured(f) && f.reviewed === false));
+    const prosePending = Object.values(prose).some(s => s.reviewed === false);
+    return formsPending || prosePending;
+  };
+
   return (
-    <CareBridgeContext.Provider value={{ tab, setTab, view, setView, recordingId, setRecordingId, chatOpen, setChatOpen }}>
+    <CareBridgeContext.Provider
+      value={{
+        tab, setTab, view, setView, recordingId, setRecordingId, chatOpen, setChatOpen,
+        getFormSections, setFormSections, getProseSections, setProseSections, hasPendingReview,
+      }}
+    >
       {children}
     </CareBridgeContext.Provider>
   );
@@ -1531,7 +1881,7 @@ export function CareBridgeSubnav() {
                 key={id}
                 onClick={() => setTab(id)}
                 className={`relative pb-2 px-1 text-sm transition-colors cursor-pointer whitespace-nowrap ${
-                  isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-700'
+                  isActive ? 'text-gray-900 font-semibold' : 'text-gray-800 hover:text-gray-900'
                 }`}
               >
                 {label}
@@ -1587,7 +1937,7 @@ export function CareBridgePage() {
     chat = ([...recordings].reverse().find(r => r.isCarePlanFocus) ?? recordings[0]).chat;
   } else {
     mainContent = view === 'summary'
-      ? <RecordingSummaryView recording={recording} hasCarePlan={customer.hasCarePlan} />
+      ? <RecordingSummaryView recording={recording} />
       : <TranscriptView recording={recording} customer={customer} />;
     // The assistant refines the summarised draft — no utility against the raw transcript, so it's unavailable there.
     chat = view === 'summary' ? recording.chat : null;
