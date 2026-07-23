@@ -54,6 +54,11 @@ const CARE_PLAN_STRUCTURE: CarePlanNavItem[] = [
 
 const CARE_PLAN_GROUPS: CarePlanNavItem['group'][] = ['Hospital passport', 'Care plan', 'Assessments'];
 
+/** Static instructional banner shown above a section's fields, same wording regardless of customer — not customer-drafted content, so it's never part of any FormField/AssessmentSection and is never "reviewed". */
+const SECTION_INTROS: Partial<Record<string, string>> = {
+  'section-6': 'Please read the Medical History section in the customer file in conjunction with this plan, for details of my medical diagnosis, how this affects me and any medical interventions that are currently in place.',
+};
+
 // ─── Demo data — Arthur Barrington's initial care assessment ─────────────────────
 
 interface TranscriptLine {
@@ -129,11 +134,16 @@ interface TranscriptReference {
 interface FormField {
   id: string;
   label: string;
-  type: 'text' | 'select' | 'radio' | 'table';
+  type: 'text' | 'textarea' | 'select' | 'radio' | 'checkbox-group' | 'table';
   value?: string;
-  options?: string[]; // select only
+  values?: string[]; // checkbox-group only — multiple boxes may be ticked at once
+  options?: string[]; // select/checkbox-group only
   columns?: string[]; // table only
   rows?: string[][]; // table only
+  /** Small standing note shown under the control (e.g. "If you have checked more than one box, explain why in the details") — unlike promptingQuestions, shown regardless of review state since it's guidance for filling the field in, not a source reference. */
+  helpText?: string;
+  /** Reference interview questions shown under the field, same idea as AssessmentSection.promptingQuestions but scoped to a single form field rather than a whole section. */
+  promptingQuestions?: string[];
   /** false = CareBridge drafted this from the recording and it hasn't been manually accepted yet. Undefined for fields with no captured content — nothing to review. Set true once a reviewer accepts it, or automatically the moment they edit it themselves. */
   reviewed?: boolean;
   /** Where in the recording's transcript this field was drafted from — lets a reviewer jump straight to the source via "Check transcript". Undefined for fields with nothing to trace (not drafted from this recording). */
@@ -152,7 +162,7 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
       'Who are the important people in your life?',
       'Is there anything about your home that matters to you?',
     ],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 5, highlight: "I've lived in this house forty years and I don't intend to leave it" },
       { index: 4, highlight: "I'm his main point of contact — my number's 07980 077250" },
@@ -184,7 +194,7 @@ Good Dementia Care Guidance for Staff
       'What time do you usually go to bed?',
       'Is there anything about your routine that helps you feel comfortable and settled?',
     ],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 15, highlight: "I like to get myself up and washed in my own time — I'm an early riser, up about six" },
       { index: 19, highlight: "Just don't rush me, and explain what you're doing first" },
@@ -195,32 +205,41 @@ Good Dementia Care Guidance for Staff
   {
     id: 'section-3',
     title: 'Section 3 - Activities, exercise and socialising',
-    text: 'Enjoys gardening, though is now limited in what he can manage himself, and likes to watch birds from the window at a bird table. Plays cards with his neighbour Reg most Thursdays, which is an important social connection. Keen follower of football on television. Would welcome support to maintain the garden and company during football matches.',
+    text: `I enjoy watching the football and cricket on the television, and spending time outdoors when I'm able. My garden means a great deal to me, and so does my bird table — I like to watch the birds from the window even on the days I can't get out there myself. I'd like my carers to support me to spend time in the garden, and to get out for a short walk with my frame, whenever it's safe and practical to do so. Getting outside helps me stay active, maintain my independence, enjoy meaningful occupation and carry on with the things that bring me comfort, purpose and happiness. Playing cards with my neighbour Reg most Thursdays, and having company for the football, also help me stay connected to my community and support my wellbeing.
+
+At times I may become anxious, distressed or unsettled, and ask after my mum and dad, or my late wife. Rather than correcting me, please focus on the feelings behind what I'm saying and provide reassurance — for example, by telling me they've popped out to the shops, or gone to visit my daughter Lorraine. Consistent, calm and compassionate responses help reduce my anxiety and help me feel safe and secure.
+
+I benefit from positive social interaction, reassurance and opportunities to engage in activities that are meaningful and familiar to me. Taking the time to listen to me, validate my feelings and support my choices helps me maintain my wellbeing, independence and quality of life.
+
+I usually like to settle for bed around half nine to ten. Supporting my preferred bedtime routine helps me feel relaxed, comfortable and ready for a good night's sleep.
+
+Good Dementia Care Guidance for Staff
+- Recognise and support the things that matter most to me, including spending time in my garden, watching the birds, playing cards with Reg, and following the football.
+- Focus on my emotional wellbeing rather than factual accuracy when I'm distressed or confused.
+- Use validation, reassurance and redirection rather than correction.
+- Offer choices wherever possible to support my independence, control and decision-making.
+- Encourage and enable me to do as much as I can for myself.
+- Use a calm, patient, compassionate and unhurried approach.
+- Support me to take part in meaningful activities that promote my wellbeing, identity and sense of purpose.
+- Respect my life history, preferences, routines, dignity and individuality at all times.
+- Consider what may be causing any distress or change in behaviour, and respond to the unmet need rather than the behaviour itself.
+- Promote positive risk-taking by supporting me to remain active, independent and engaged in activities that matter to me, whilst managing any identified risks appropriately.`,
     promptingQuestions: [
-      'What do you enjoy doing day to day?',
-      'Do you see friends, family or neighbours regularly?',
-      'Would you like any support to keep doing the things you enjoy?',
+      'What activities do you enjoy participating in daily?',
+      'Are there any activities or hobbies you used to enjoy but stopped doing? If so, why?',
+      'Do you engage in any regular exercise or physical activity? If so, what activities do you enjoy?',
+      'How often do you interact with others socially, either in person or virtually?',
+      'What types of social activities do you enjoy participating in? (e.g. gatherings, outings, group activities)',
+      'Are you involved in any community events, groups, or organisations?',
+      'Have you participated in any community events or activities in the past? If so, what did you enjoy about them?',
+      'Would you like support in finding or participating in community events or groups?',
+      'Do you require any assistance or accommodations to participate in activities, exercise, or socialising?',
+      'How can we support you in maintaining or increasing your engagement in activities and socialising?',
     ],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 24, highlight: 'I play cards with my neighbour, Reg, most Thursdays' },
       { index: 27, highlight: "I'd like a bit of help in the garden if that's possible, and maybe someone to sit with me for the football sometimes" },
-    ],
-  },
-  {
-    id: 'section-6',
-    title: 'Section 6 - Health and medication',
-    text: 'Diagnosed with vascular dementia approximately two years ago; memory fluctuates and confusion increases in the afternoons. Also has hypertension managed with prescribed medication. Prescribed Hydromol ointment to be applied to both lower legs twice daily — Arthur cannot reliably self-administer and requires support. A DNACPR is in place (yellow envelope, living room table).',
-    promptingQuestions: [
-      'Can you tell me about your health?',
-      'What medication are you taking, and can you manage it yourself?',
-      'Is there a DNACPR or RESPECT form in place?',
-    ],
-    reviewed: false,
-    sourceLines: [
-      { index: 7, highlight: 'Dad was diagnosed with vascular dementia a couple of years ago' },
-      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day" },
-      { index: 17, highlight: "in the yellow envelope on the table in the living room" },
     ],
   },
   {
@@ -231,7 +250,7 @@ Good Dementia Care Guidance for Staff
       'How are you doing with food and drink?',
       'Do you need any support preparing meals?',
     ],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 10, highlight: "I manage a bit but I'd like someone to make me some lunch and maybe leave a snack plate out" },
     ],
@@ -244,7 +263,7 @@ Good Dementia Care Guidance for Staff
       'How are you getting around the house and outside?',
       'Do you use any walking aids?',
     ],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 13, highlight: "Outside I use my frame and I'm a bit wary on the front step" },
     ],
@@ -257,7 +276,7 @@ Good Dementia Care Guidance for Staff
       'Would you like any help with washing up or housework?',
       'Is there anything around the home you find harder to manage?',
     ],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 11, highlight: 'checked the fridge for out-of-date food too, and washed up any dishes' },
     ],
@@ -275,15 +294,15 @@ const SEXUAL_ORIENTATION_OPTIONS = ['Heterosexual/Straight', 'Gay/Lesbian', 'Bis
 const SMOKER_OPTIONS = ['Non-smoker', 'Smoker', 'Ex-smoker', 'Prefer not to say'];
 const PETS_OPTIONS = ['None', 'Dog(s)', 'Cat(s)', 'Other pets'];
 
-// Fields the recording actually covered are marked `reviewed: false` — drafted
-// by CareBridge from the transcript, awaiting a supervisor's manual accept.
-// Fields it didn't cover are left uncaptured, ready for the reviewer to fill
-// in themselves (which counts as reviewed the moment they type it).
+// Fields the recording actually covered are marked `reviewed: true` — this
+// visit happened in the past, so everything CareBridge drafted from it has
+// since been reviewed and accepted by a supervisor. Fields it didn't cover
+// are left uncaptured, ready for the reviewer to fill in themselves.
 const ARTHUR_PERSONAL_DETAILS: FormField[] = [
   { id: 'language', label: 'What language would you prefer this assessment to be carried out in?', type: 'select', options: LANGUAGE_OPTIONS },
-  { id: 'known-as', label: 'Known as', type: 'text', value: 'Arthur', reviewed: false, sourceLines: [{ index: 1, highlight: 'Arthur' }] },
-  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'He/Him', reviewed: false, sourceLines: [{ index: 7, highlight: 'His' }] },
-  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Man', reviewed: false, sourceLines: [{ index: 7, highlight: 'Dad' }] },
+  { id: 'known-as', label: 'Known as', type: 'text', value: 'Arthur', reviewed: true, sourceLines: [{ index: 1, highlight: 'Arthur' }] },
+  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'He/Him', reviewed: true, sourceLines: [{ index: 7, highlight: 'His' }] },
+  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Man', reviewed: true, sourceLines: [{ index: 7, highlight: 'Dad' }] },
   { id: 'sexual-orientation', label: 'Sexual orientation', type: 'select', options: SEXUAL_ORIENTATION_OPTIONS },
   { id: 'allergies', label: 'Allergies', type: 'table', columns: ['Allergy', 'Symptoms experienced', 'Rescue medication'] },
   {
@@ -291,7 +310,7 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
     label: 'Is there a DNAR/TEP (e.g. RESPECT form) in place?',
     type: 'radio',
     value: 'Yes',
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 16, highlight: 'DNACPR or RESPECT form in place' },
       { index: 17, highlight: "Yes, there's a DNACPR" },
@@ -302,7 +321,7 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
     label: 'If yes, where can this be found?',
     type: 'text',
     value: 'Yellow envelope, living room table',
-    reviewed: false,
+    reviewed: true,
     sourceLines: [{ index: 17, highlight: 'in the yellow envelope on the table in the living room' }],
   },
   { id: 'smoker', label: 'Smoker status', type: 'select', options: SMOKER_OPTIONS },
@@ -314,7 +333,7 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
     type: 'table',
     columns: ['Name', 'Relationship', 'Phone number', 'Decision maker'],
     rows: [['David Barrington', 'Son', '07980 077250', 'Yes']],
-    reviewed: false,
+    reviewed: true,
     sourceLines: [
       { index: 2, highlight: "David, Arthur's son" },
       { index: 4, highlight: "I'm his main point of contact — my number's 07980 077250" },
@@ -326,6 +345,119 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
   { id: 'capacity', label: 'Are there any mental capacity assessments or best interest decisions in place?', type: 'radio' },
   { id: 'understanding', label: 'Understanding/comprehension', type: 'table', columns: ['Area where support may be needed', 'What support is needed'] },
   { id: 'additional-details', label: 'Additional important details', type: 'text' },
+];
+
+const MEDICATION_PRESCRIBED_OPTIONS = [
+  'Blood thinners',
+  'Controlled drugs',
+  "PRN/'As required' medications",
+  'Fluctuating dose/sliding dose',
+  'Rescue medications',
+  'Insulin',
+  'Prescriber medication plan',
+  'None of the above',
+  'Not disclosed',
+];
+const MEDICATION_SUPPORT_LEVEL_OPTIONS = ['Administer', 'Prompt', 'Assist', 'Self-administer', 'Specialist administration'];
+
+// Section 6, rebuilt the same way as Personal details — a real multi-field
+// form rather than one prose paragraph. Only what the recording actually
+// covered (the Hydromol ointment support) is filled in; the medication
+// screening checklist and any other prescribed medications weren't discussed
+// at this visit, so they're left "Not yet captured" rather than invented.
+const ARTHUR_SECTION6_FIELDS: FormField[] = [
+  {
+    id: 'additional-information',
+    label: 'Additional information',
+    type: 'textarea',
+    helpText: 'Outline any support that is given to the customer from their care professionals that is not already included in their medical history.',
+    promptingQuestions: ['Are you currently receiving any ongoing medical care, follow up appointments or specialist support with medications?'],
+  },
+  {
+    id: 'prescribed-checks',
+    label: 'Are any of the following prescribed?',
+    type: 'checkbox-group',
+    options: MEDICATION_PRESCRIBED_OPTIONS,
+    helpText: 'If you have checked any of the boxes then this must be included in the support details and medication risk assessment.',
+  },
+  {
+    id: 'support-level',
+    label: 'Medication support level',
+    type: 'checkbox-group',
+    options: MEDICATION_SUPPORT_LEVEL_OPTIONS,
+    values: ['Administer'],
+    helpText: 'If you have checked more than one box, explain why in the details.',
+    reviewed: true,
+    sourceLines: [
+      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
+      { index: 9, highlight: 'We can have the carer apply that for you and keep an eye on your skin.' },
+    ],
+  },
+  {
+    id: 'detail',
+    label: 'Detail',
+    type: 'textarea',
+    value: "I would like my carers to support me with applying my Hydromol ointment to both legs, twice a day, as I can't always manage this myself. Having this support helps me look after my skin and reduces the risk of it being missed.",
+    reviewed: true,
+    promptingQuestions: [
+      'How consistent are you with taking your medications as prescribed?',
+      'Do you have difficulties in remembering to take your medications, or do you encounter any other barriers?',
+      'Do you require assistance or reminders to manage your medications effectively? (does the customer need assistance/prompting/administer?)',
+    ],
+    sourceLines: [
+      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
+    ],
+  },
+  {
+    id: 'support-look-like',
+    label: 'What will medication support look like?',
+    type: 'textarea',
+    value: `I would like my carers to support me with applying my Hydromol ointment, to help me look after my skin and wellbeing.
+
+Carers will:
+
+Apply Hydromol ointment to both lower legs twice daily, as prescribed and in line with my care plan.
+Explain what they are doing and offer reassurance in a calm and respectful manner.
+Encourage me to stay involved as much as I'm able, and support my understanding of what's happening.
+Monitor my skin for any changes, redness or soreness and report concerns through the appropriate channels.
+Report and document any refusals or concerns in line with organisational procedures.
+Order sufficient supplies of Hydromol when required and communicate any concerns about stock levels to my family or the office, as agreed.
+Store my ointment and medication safely and securely in line with policy and guidance.
+
+Good Dementia Care Considerations
+
+Approach me calmly and at my pace.
+Offer reassurance if I appear anxious, confused or reluctant.
+Explain each step using clear and simple language.
+Allow me time to process information and make decisions.
+Respect my choices and preferences whilst ensuring any refusals or concerns are managed appropriately.
+Focus on my wellbeing and comfort, maintaining my dignity throughout.`,
+    reviewed: true,
+    promptingQuestions: [
+      'How will the customer consent?',
+      'Where is medication stored?',
+      'Have you experienced any adverse reactions or intolerances to medications in the past?',
+      'How can we best support you in managing your medications while respecting your preferences and autonomy?',
+      'How is your medication ordered and delivered?',
+      'What is the frequency of delivery of your medications and who orders them?',
+    ],
+    sourceLines: [
+      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
+      { index: 9, highlight: 'We can have the carer apply that for you and keep an eye on your skin.' },
+    ],
+  },
+  {
+    id: 'medication-list',
+    label: 'Medication list',
+    type: 'table',
+    columns: ['Name of medication', 'Daily dose'],
+    rows: [['Hydromol ointment', 'Apply to both lower legs, twice daily']],
+    helpText: 'OPTIONAL: If required list any medications that are not included on the MAR chart that you need to know about.',
+    reviewed: true,
+    sourceLines: [
+      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day" },
+    ],
+  },
 ];
 
 interface OutcomeSuggestion {
@@ -486,6 +618,11 @@ const BP_MONITORING_TASK: TaskSuggestion = {
 };
 
 // ─── New enquiry — Mrs Edith Caldwell's assessment ──────────────────────────────
+// Mirrors the same full initial-visit structure as Arthur's (all Care Plan
+// sections, the Personal details form, and every secondary document), but
+// this is a genuinely partial assessment — a single visit, nothing yet
+// accepted — using Edith's own established story (hip fracture, arthritis,
+// falls risk, female-carer preference, daughter Susan visiting evenings).
 
 const EDITH_TRANSCRIPT: TranscriptLine[] = [
   { speaker: 'Alison (Assessor)', role: 'assessor', time: '13:59', text: "Before I get started properly, would you both mind saying your names for the recording? I'll start — I'm Alison, from the care team." },
@@ -504,6 +641,14 @@ const EDITH_TRANSCRIPT: TranscriptLine[] = [
   { speaker: 'Edith', role: 'customer', time: '14:12', text: "I use my frame indoors. There are two steps down to the back door and I daren't do them on my own now." },
   { speaker: 'Susan (Daughter)', role: 'family', time: '14:13', text: "The physio said she's a high falls risk. That's my biggest worry." },
   { speaker: 'Edith', role: 'customer', time: '14:15', text: "The laundry and changing my bed too — I can't carry things with the frame. I'd be grateful if someone could see to that." },
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:16', text: "That's really helpful, thank you. What about hobbies, or things you enjoy doing day to day?" },
+  { speaker: 'Edith', role: 'customer', time: '14:17', text: "I like my knitting, though my hands aren't as quick as they were with the arthritis. I listen to the radio a lot, and I look forward to Susan popping in of an evening." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '14:18', text: "She used to go to a knitting group at the church hall on Tuesdays — she's missed it since the fall." },
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:19', text: "Would you like any support to get back to that once you're steadier on your feet?" },
+  { speaker: 'Edith', role: 'customer', time: '14:20', text: "I would, if someone wouldn't mind coming with me the first few times, just in case." },
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:23', text: "Thank you both, that's given me a really good picture. I'll write this up and the office will be in touch about start dates." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '14:23', text: "Thanks Alison, we appreciate it." },
+  { speaker: 'Edith', role: 'customer', time: '14:24', text: "Thank you for coming out." },
 ];
 
 // IDs match CARE_PLAN_STRUCTURE below (the real document's section taxonomy),
@@ -527,14 +672,40 @@ const EDITH_SECTIONS: AssessmentSection[] = [
   {
     id: 'section-2',
     title: 'Section 2 - Personal care and daily routine',
-    text: 'Able to wash her upper body independently but needs assistance to wash her lower half and feet since the hip fracture, and finds dressing a struggle. Has expressed a preference for a female carer to support with personal care, with dignity maintained throughout.',
+    text: `My top half I can manage, but I can't manage my legs and feet since the hip, and dressing is a struggle — I'd rather a lady helped me with that.
+
+I've always looked after myself and I don't want to feel like people are taking over — I'd like to stay as involved as I can, even where I need a hand with the parts I can't manage.
+
+I do get frustrated some days that I can't do what I used to, so please bear with me if I seem a bit short — it's not personal, I just miss being able to get on with things myself.
+
+Good Practice Guidance for Staff
+- Support with washing and dressing the lower half and feet; let me manage my top half myself.
+- Female carer preferred for personal care.
+- Explain what you're doing and let me help where I can, rather than just taking over.
+- Be patient if I seem frustrated — it's the loss of independence, not the carer.`,
     promptingQuestions: [
       'How are you managing with washing and dressing?',
       'Do you have a preference for a male or female carer?',
+      'Is there a particular way we should approach you if you seem frustrated?',
     ],
     reviewed: false,
     sourceLines: [
       { index: 10, highlight: "My top half I'm alright, but I can't manage my legs and feet since the hip, and dressing is a struggle. I'd rather a lady helped me with that" },
+    ],
+  },
+  {
+    id: 'section-3',
+    title: 'Section 3 - Activities, exercise and socialising',
+    text: "Enjoys knitting, though finds it slower going since her arthritis, and listens to the radio regularly. Values her daughter Susan's evening visits. Previously attended a knitting group at the church hall on Tuesdays but has not been able to go since the fall. Would welcome someone to accompany her back to the group for the first few sessions while she regains her confidence.",
+    promptingQuestions: [
+      'What do you enjoy doing day to day?',
+      'Do you see friends, family or neighbours regularly?',
+      'Would you like any support to keep doing the things you enjoy?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 17, highlight: "I like my knitting, though my hands aren't as quick as they were with the arthritis" },
+      { index: 20, highlight: "I would, if someone wouldn't mind coming with me the first few times" },
     ],
   },
   {
@@ -594,6 +765,41 @@ const EDITH_SECTIONS: AssessmentSection[] = [
   },
 ];
 
+// Personal details, populated only where the recording actually covered it —
+// same honest-gaps approach as Arthur's. No DNACPR discussion took place at
+// this visit, so that field is left "Not yet captured" rather than invented.
+const EDITH_PERSONAL_DETAILS: FormField[] = [
+  { id: 'language', label: 'What language would you prefer this assessment to be carried out in?', type: 'select', options: LANGUAGE_OPTIONS },
+  { id: 'known-as', label: 'Known as', type: 'text', value: 'Edith', reviewed: false, sourceLines: [{ index: 1, highlight: 'Edith' }] },
+  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'She/Her', reviewed: false, sourceLines: [{ index: 4, highlight: 'Mum' }] },
+  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Woman', reviewed: false, sourceLines: [{ index: 4, highlight: 'Mum' }] },
+  { id: 'sexual-orientation', label: 'Sexual orientation', type: 'select', options: SEXUAL_ORIENTATION_OPTIONS },
+  { id: 'allergies', label: 'Allergies', type: 'table', columns: ['Allergy', 'Symptoms experienced', 'Rescue medication'] },
+  { id: 'dnar', label: 'Is there a DNAR/TEP (e.g. RESPECT form) in place?', type: 'radio' },
+  { id: 'dnar-location', label: 'If yes, where can this be found?', type: 'text' },
+  { id: 'smoker', label: 'Smoker status', type: 'select', options: SMOKER_OPTIONS },
+  { id: 'pets', label: 'Pets', type: 'select', options: PETS_OPTIONS },
+  { id: 'dietary', label: 'Dietary requirements', type: 'text' },
+  {
+    id: 'next-of-kin',
+    label: 'Next of kin and other contacts',
+    type: 'table',
+    columns: ['Name', 'Relationship', 'Phone number', 'Decision maker'],
+    rows: [['Susan Caldwell', 'Daughter', '07712 660145', 'Yes']],
+    reviewed: false,
+    sourceLines: [
+      { index: 2, highlight: "I'm Susan, Edith's daughter" },
+      { index: 4, highlight: "My number's 07712 660145" },
+    ],
+  },
+  { id: 'poa', label: 'Is there a PoA or alternative decision maker in place?', type: 'radio' },
+  { id: 'professionals', label: 'Professionals involved', type: 'table', columns: ['Name', 'Profession', 'Contact number'] },
+  { id: 'communication-needs', label: 'Communication needs', type: 'table', columns: ['Area where support may be needed', 'What support is needed'] },
+  { id: 'capacity', label: 'Are there any mental capacity assessments or best interest decisions in place?', type: 'radio' },
+  { id: 'understanding', label: 'Understanding/comprehension', type: 'table', columns: ['Area where support may be needed', 'What support is needed'] },
+  { id: 'additional-details', label: 'Additional important details', type: 'text' },
+];
+
 const EDITH_OUTCOMES: OutcomeSuggestion[] = [
   { id: 'o-falls', title: 'Maintain Safe Mobility & Reduce Falls Risk', text: 'Edith is a high falls risk following a hip fracture. Support safe transfers and movement around the bungalow, supervise use of the walking frame, and do not attempt the back-door steps unaided. Keep the environment clear of hazards.' },
   { id: 'o-personal', title: 'Support with Personal Care & Dignity', text: 'Assist Edith to wash her lower body and feet and to dress, promoting as much independence as possible while preserving dignity. Provide a female carer in line with her preference.' },
@@ -612,15 +818,19 @@ const EDITH_TASKS: TaskSuggestion[] = [
 
 const EDITH_CHAT: ChatMessage[] = [
   { from: 'ai', text: "I've summarised the assessment visit into draft sections for the Care & Support Plan, plus suggested Outcomes and Tasks. Review and edit anything, or ask me to refine a section." },
-  { from: 'ai', text: "This visit also covered consent to care — I've drafted that too. See the secondary section below the Care Plan." },
+  { from: 'ai', text: "This visit also covered consent, receipt of your documents, the Privacy Policy, Terms and Conditions, and the Customer Guide — I've drafted those too. See the secondary sections below the Care Plan." },
   { from: 'user', text: 'Add that the physio assessed her as a high falls risk to the mobility section.' },
   { from: 'ai', text: 'Done — the Mobility section now notes she was assessed by physiotherapy as a high falls risk and cannot manage the back-door steps unaided.' },
   { from: 'user', text: "She'd prefer a female carer for personal care — make sure that's captured." },
   { from: 'ai', text: 'Captured — the Personal care section and the personal care outcome both now state that a female carer is preferred.' },
+  { from: 'user', text: "Add Susan's number as the emergency contact in the profile section." },
+  { from: 'ai', text: 'Added — Susan (daughter) on 07712 660145 is listed as primary contact under Profile & background.' },
 ];
 
-// Edith is a brand-new enquiry — her one visit so far covered the initial
-// assessment and, incidentally, consent to care.
+// Edith is a brand-new enquiry — a care company doesn't book a separate visit
+// for consent, receipt, T&Cs etc, so her one recording covers all of it, same
+// as Arthur's initial visit — these are secondary documents from that same
+// conversation, not separate recordings.
 
 const EDITH_CONSENT_TRANSCRIPT: TranscriptLine[] = [
   { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:39', text: "Just before I go Edith, I need to run through consent for care — is it alright if we share information with your GP and with Susan where needed?" },
@@ -633,6 +843,52 @@ const EDITH_CONSENT_SECTIONS: AssessmentSection[] = [
   { id: 'consent-scope', title: 'Consent to care & support', target: 'Consent record', text: "Edith has given verbal consent for care and support to be provided, and for information to be shared with her GP and her daughter Susan, her primary contact." },
   { id: 'decision-making', title: 'Decision-making & capacity', target: 'Capacity check', text: "No concerns regarding capacity to consent were identified. Edith engaged clearly with the consent discussion." },
   { id: 'info-sharing', title: 'Information sharing', target: 'Info sharing', text: "Edith agreed Susan may be contacted directly regarding care decisions, including where Edith is unable to respond herself." },
+];
+
+const EDITH_RECEIPT_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:46', text: "I've also given you copies of the Privacy Policy and our Terms and Conditions today, along with the Customer Guide for the area." },
+  { speaker: 'Edith', role: 'customer', time: '14:47', text: "Yes, Susan's got those in a folder for me." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '14:47', text: "I've got them all together, I'll keep them safe with the paperwork." },
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:48', text: "Great — I'll confirm receipt of those documents now." },
+];
+
+const EDITH_RECEIPT_SECTIONS: AssessmentSection[] = [
+  { id: 'documents-received', title: 'Documents received', target: 'Documents', text: "Edith, via her daughter Susan, confirmed receipt of the Privacy Policy, Terms and Conditions of Business, and the Customer Guide, all provided at this visit." },
+  { id: 'understanding', title: 'Understanding confirmed', target: 'Understanding', text: "Susan confirmed she had read through the documents on Edith's behalf and had no questions at this stage." },
+];
+
+const EDITH_PRIVACY_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:51', text: "I've talked you through how we handle your information in line with our Privacy Policy — that alright?" },
+  { speaker: 'Edith', role: 'customer', time: '14:52', text: "Yes fine, nothing I'm worried about." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '14:52', text: "I had a read through it too, all seems standard." },
+];
+
+const EDITH_PRIVACY_SECTIONS: AssessmentSection[] = [
+  { id: 'privacy-explained', title: 'Privacy explained', target: 'Explanation', text: "The Privacy Policy was explained verbally, covering how Edith's personal and care information is collected, stored and shared." },
+  { id: 'data-use', title: 'How data is used', target: 'Data use', text: "Edith and Susan confirmed understanding of how her data is used and raised no concerns." },
+];
+
+const EDITH_TERMS_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:55', text: "Last one — Terms and Conditions of Business, covers things like fees, notice periods and cancellations." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '14:56', text: "Yes, I read through the fee schedule, that's clear." },
+  { speaker: 'Edith', role: 'customer', time: '14:56', text: "As long as Susan's happy, I am." },
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '14:57', text: "I'll confirm that's agreed then." },
+];
+
+const EDITH_TERMS_SECTIONS: AssessmentSection[] = [
+  { id: 'terms-explained', title: 'Terms explained', target: 'Terms', text: "Terms and Conditions of Business were explained, including fees, notice periods and cancellation terms." },
+  { id: 'fees', title: 'Fees & charges', target: 'Fees', text: "Susan confirmed she had reviewed the fee schedule and had no questions." },
+];
+
+const EDITH_GUIDE_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Alison (Assessor)', role: 'assessor', time: '15:00', text: "And finally, here's your Customer Guide — has our office number, out-of-hours contact, all that." },
+  { speaker: 'Susan (Daughter)', role: 'family', time: '15:01', text: "Great, I'll keep this handy." },
+  { speaker: 'Edith', role: 'customer', time: '15:01', text: "Good, in case I need to complain about something!" },
+];
+
+const EDITH_GUIDE_SECTIONS: AssessmentSection[] = [
+  { id: 'guide-provided', title: 'Guide provided', target: 'Guide', text: "Edith and Susan were given the Customer Guide, covering local office contact details and what to expect from visits." },
+  { id: 'key-contacts', title: 'Key contacts', target: 'Contacts', text: "Key contact numbers for the office and the out-of-hours line were confirmed and left with Susan." },
 ];
 
 // ─── Recordings ──────────────────────────────────────────────────────────────
@@ -683,7 +939,7 @@ const RECORDINGS: Record<string, Recording[]> = {
       focusSections: ASSESSMENT_SECTIONS,
       focusOutcomes: SUGGESTED_OUTCOMES,
       focusTasks: SUGGESTED_TASKS,
-      formSections: { 'personal-details': ARTHUR_PERSONAL_DETAILS },
+      formSections: { 'personal-details': ARTHUR_PERSONAL_DETAILS, 'section-6': ARTHUR_SECTION6_FIELDS },
       secondary: [
         { id: 'consent-care', name: 'Consent to Care', sections: CONSENT_SECTIONS_ARTHUR },
         { id: 'confirm-receipt', name: 'Confirmation of Receipt', sections: RECEIPT_SECTIONS_ARTHUR },
@@ -712,18 +968,23 @@ const RECORDINGS: Record<string, Recording[]> = {
     {
       id: 'initial',
       label: 'Initial Assessment',
-      recordingMeta: '7 Jul 2026 · 13:59–14:45 · 46 min',
-      transcript: [...EDITH_TRANSCRIPT, ...EDITH_CONSENT_TRANSCRIPT],
+      recordingMeta: '7 Jul 2026 · 13:59–15:01 · 62 min',
+      transcript: [...EDITH_TRANSCRIPT, ...EDITH_CONSENT_TRANSCRIPT, ...EDITH_RECEIPT_TRANSCRIPT, ...EDITH_PRIVACY_TRANSCRIPT, ...EDITH_TERMS_TRANSCRIPT, ...EDITH_GUIDE_TRANSCRIPT],
       focusDocumentName: 'Customer Care and Support Plan',
       isCarePlanFocus: true,
       focusSections: EDITH_SECTIONS,
       focusOutcomes: EDITH_OUTCOMES,
       focusTasks: EDITH_TASKS,
+      formSections: { 'personal-details': EDITH_PERSONAL_DETAILS },
       secondary: [
         { id: 'consent-care', name: 'Consent to Care', sections: EDITH_CONSENT_SECTIONS },
+        { id: 'confirm-receipt', name: 'Confirmation of Receipt', sections: EDITH_RECEIPT_SECTIONS },
+        { id: 'privacy', name: 'Privacy Policy', sections: EDITH_PRIVACY_SECTIONS },
+        { id: 'terms', name: 'Terms and Conditions of Business', sections: EDITH_TERMS_SECTIONS },
+        { id: 'customer-guide', name: 'Customer Guide – Lichfield & Tamworth', sections: EDITH_GUIDE_SECTIONS },
       ],
       chat: EDITH_CHAT,
-      edits: { focus: 2 },
+      edits: { focus: 3 },
     },
   ],
 };
@@ -860,7 +1121,9 @@ function SectionCard({ section, badge }: { section: AssessmentSection; badge: st
 }
 
 function isFieldCaptured(field: FormField): boolean {
-  return field.type === 'table' ? (field.rows?.length ?? 0) > 0 : !!field.value;
+  if (field.type === 'table') return (field.rows?.length ?? 0) > 0;
+  if (field.type === 'checkbox-group') return (field.values?.length ?? 0) > 0;
+  return !!field.value;
 }
 
 /** Captured/total field counts for a Care Plan section, whichever shape it's authored in — a real multi-field form or a single prose paragraph. `formSections` is passed in live (rather than read off `recording` directly) so counts reflect fields the reviewer has since filled in or accepted, not just the original AI draft. Returns null if the section hasn't been touched at all. */
@@ -888,6 +1151,41 @@ function fieldBoxClass(captured: boolean, pending: boolean): string {
   return 'border border-dashed border-gray-300 bg-gray-50';
 }
 
+/** Controlled, auto-resizing multi-line textarea for `textarea` form fields — unlike EditableBlock (uncontrolled, used for whole-section prose), this needs a `value`/`onChange` pair so it can participate in the same review/accept flow as the other form controls. */
+function AutoResizeTextarea({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(resize, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={1}
+      className={`resize-none overflow-hidden ${className}`}
+    />
+  );
+}
+
 function EditableFormField({
   field,
   onChange,
@@ -909,7 +1207,7 @@ function EditableFormField({
     <div className="mb-5 last:mb-0">
       <div className="flex items-center justify-between gap-3 mb-1.5">
         {labelEl}
-        {pending && (
+        {captured && (
           <div className="flex items-center gap-3 flex-shrink-0">
             {!!field.sourceLines?.length && (
               <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines}>
@@ -921,13 +1219,21 @@ function EditableFormField({
                 </button>
               </TranscriptCheckPopover>
             )}
-            <button
-              type="button"
-              onClick={() => onChange({ reviewed: true })}
-              className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
-            >
-              <Check className="w-3.5 h-3.5" /> Accept
-            </button>
+            {field.reviewed === false ? (
+              <button
+                type="button"
+                onClick={() => onChange({ reviewed: true })}
+                className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" /> Accept
+              </button>
+            ) : field.reviewed === true && (
+              // Accepted into this draft, not into the real, live assessment document it feeds —
+              // a static label rather than a button, since there's nothing left to action here.
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-500">
+                <Check className="w-3.5 h-3.5" /> Accepted
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -941,6 +1247,38 @@ function EditableFormField({
           placeholder="Not yet captured"
           className={inputClass}
         />
+      )}
+
+      {field.type === 'textarea' && (
+        <AutoResizeTextarea
+          value={field.value ?? ''}
+          onChange={value => onChange({ value, reviewed: true })}
+          placeholder="Not yet captured"
+          className={inputClass}
+        />
+      )}
+
+      {field.type === 'checkbox-group' && (
+        <fieldset className={`${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2.5 space-y-2`}>
+          <legend className="sr-only">{field.label}</legend>
+          {field.options!.map(opt => {
+            const checked = field.values?.includes(opt) ?? false;
+            return (
+              <label key={opt} className="flex items-center gap-2 text-sm text-gray-900 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => {
+                    const next = checked ? (field.values ?? []).filter(v => v !== opt) : [...(field.values ?? []), opt];
+                    onChange({ values: next, reviewed: true });
+                  }}
+                  className="w-4 h-4 rounded accent-[rgb(154,38,214)] cursor-pointer"
+                />
+                {opt}
+              </label>
+            );
+          })}
+        </fieldset>
       )}
 
       {field.type === 'select' && (
@@ -980,6 +1318,19 @@ function EditableFormField({
 
       {field.type === 'table' && (
         <EditableTableField field={field} pending={pending} captured={captured} onChange={onChange} />
+      )}
+
+      {field.helpText && <p className="text-sm text-gray-500 mt-1.5">{field.helpText}</p>}
+
+      {field.promptingQuestions && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-sm font-semibold text-gray-500 mb-1.5">Prompting questions</p>
+          <ul className="space-y-1">
+            {field.promptingQuestions.map((q, i) => (
+              <li key={i} className="text-sm text-gray-500">{q}</li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -1246,7 +1597,6 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
               const isActive = item.id === selectedId;
               const completion = sectionCompletion(formSections, recording, item.id);
               const hasContent = !!completion;
-              const isPartial = !!completion && completion.captured < completion.total;
               const needsReview = !!formSections[item.id]?.some(f => isFieldCaptured(f) && f.reviewed === false)
                 || proseSections[item.id]?.reviewed === false;
               return (
@@ -1273,7 +1623,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                       className={`flex-shrink-0 text-sm font-semibold rounded-full px-2 py-0.5 ${
                         isActive
                           ? 'bg-white/20 text-white'
-                          : isPartial
+                          : needsReview
                             ? 'bg-amber-100 text-amber-700'
                             : 'bg-purple-100 text-[rgb(109,27,152)]'
                       }`}
@@ -1294,6 +1644,9 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
           <span className="text-sm font-semibold text-gray-900">{selectedItem.label}</span>
         </div>
         <div className="p-5">
+          {SECTION_INTROS[selectedId] && (
+            <p className="text-lg font-semibold text-gray-900 mb-5 leading-snug">{SECTION_INTROS[selectedId]}</p>
+          )}
           {selectedFormFields ? (
             <FormFieldsView
               fields={selectedFormFields}
@@ -1302,7 +1655,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
             />
           ) : selectedContent ? (
             <>
-              {selectedContent.reviewed === false && (
+              {selectedContent.reviewed !== undefined && (
                 <div className="flex items-center justify-end gap-3 mb-2">
                   {!!selectedContent.sourceLines?.length && (
                     <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={recording.transcript} references={selectedContent.sourceLines}>
@@ -1314,16 +1667,25 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                       </button>
                     </TranscriptCheckPopover>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Accept
-                  </button>
+                  {selectedContent.reviewed === false ? (
+                    <button
+                      type="button"
+                      onClick={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Accept
+                    </button>
+                  ) : (
+                    // Accepted into this draft, not into the real, live assessment document it
+                    // feeds — a static label rather than a button, nothing left to action here.
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-500">
+                      <Check className="w-3.5 h-3.5" /> Accepted
+                    </span>
+                  )}
                 </div>
               )}
               <EditableBlock
+                key={`${recording.id}-${selectedId}`}
                 text={selectedContent.text}
                 pending={selectedContent.reviewed === false}
                 onChange={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
@@ -1354,6 +1716,12 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
 // ─── This Recording — focus document + secondary documents from the same visit ──
 
 function RecordingSummaryView({ recording }: { recording: Recording }) {
+  // Section/doc ids (e.g. "section-1", "consent-scope") repeat across
+  // customers, and this view isn't remounted on a customer switch (the route
+  // only changes the :customerId param) — namespace keys by customer so React
+  // doesn't reuse a previous customer's uncontrolled EditableBlock textarea.
+  const customer = useCustomer();
+
   return (
     <div className="space-y-8">
       {/* Focus document — the basis this recording was made for, prominent */}
@@ -1379,7 +1747,7 @@ function RecordingSummaryView({ recording }: { recording: Recording }) {
           <AccordionSection Icon={FileText} title={recording.focusDocumentName} count={recording.focusSections.length} accent="bg-slate-100 text-slate-600" edits={recording.edits.focus}>
             <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm divide-y divide-gray-200 overflow-hidden">
               {recording.focusSections.map(section => (
-                <SectionCard key={section.id} section={section} badge={`${recording.focusDocumentName}${section.target ? ` · ${section.target}` : ''}`} />
+                <SectionCard key={`${customer.id}-${section.id}`} section={section} badge={`${recording.focusDocumentName}${section.target ? ` · ${section.target}` : ''}`} />
               ))}
             </div>
           </AccordionSection>
@@ -1394,10 +1762,10 @@ function RecordingSummaryView({ recording }: { recording: Recording }) {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">Also captured in this conversation</h3>
           <div className="space-y-3">
             {recording.secondary.map(doc => (
-              <AccordionSection key={doc.id} Icon={FileText} title={doc.name} count={doc.sections.length} accent="bg-gray-100 text-gray-500" defaultOpen={false}>
+              <AccordionSection key={`${customer.id}-${doc.id}`} Icon={FileText} title={doc.name} count={doc.sections.length} accent="bg-gray-100 text-gray-500" defaultOpen={false}>
                 <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm divide-y divide-gray-200 overflow-hidden">
                   {doc.sections.map(section => (
-                    <SectionCard key={section.id} section={section} badge={`${doc.name}${section.target ? ` · ${section.target}` : ''}`} />
+                    <SectionCard key={`${customer.id}-${doc.id}-${section.id}`} section={section} badge={`${doc.name}${section.target ? ` · ${section.target}` : ''}`} />
                   ))}
                 </div>
               </AccordionSection>
@@ -1412,6 +1780,10 @@ function RecordingSummaryView({ recording }: { recording: Recording }) {
 // ─── Care Plan Draft — cumulative, refined across every contributing recording ──
 
 function CarePlanView({ carePlan, hasCarePlan }: { carePlan: ReturnType<typeof buildCarePlan>; hasCarePlan: boolean }) {
+  // Outcome/task ids (e.g. "o-nutrition", "t-med") repeat across customers,
+  // and this view isn't remounted on a customer switch — namespace keys by
+  // customer so React doesn't reuse a previous customer's EditableBlock.
+  const customer = useCustomer();
   const bannerText = hasCarePlan
     ? 'These are the current Suggested Outcomes and Tasks — built up and refined from every contributing recording. Review and suggest updates to the existing plan.'
     : 'Draft Suggested Outcomes and Tasks built from the assessment recording so far. Nothing has been saved to the care plan yet — review, edit inline, then pre-fill the assessment and care plan.';
@@ -1426,7 +1798,7 @@ function CarePlanView({ carePlan, hasCarePlan }: { carePlan: ReturnType<typeof b
       <AccordionSection Icon={Target} title="Suggested Outcomes" count={carePlan.outcomes.length} accent="bg-amber-100 text-amber-700">
         <div className="space-y-3">
           {carePlan.outcomes.map(({ item, source }) => (
-            <div key={item.id} className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-4">
+            <div key={`${customer.id}-${item.id}`} className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-4">
               <div className="flex items-center justify-between gap-3 mb-2">
                 <OutcomeBadge title={item.title} />
                 <span className="text-sm text-gray-400 whitespace-nowrap">{source}</span>
@@ -1440,7 +1812,7 @@ function CarePlanView({ carePlan, hasCarePlan }: { carePlan: ReturnType<typeof b
       <AccordionSection Icon={ListChecks} title="Suggested Tasks" count={carePlan.tasks.length} accent="bg-purple-100 text-[rgb(109,27,152)]">
         <div className="space-y-3">
           {carePlan.tasks.map(({ item, source }) => (
-            <div key={item.id} className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-4">
+            <div key={`${customer.id}-${item.id}`} className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-4">
               <div className="flex items-center justify-between gap-3 mb-2">
                 <TaskBadge title={item.title} category={item.category} />
                 <span className="text-sm text-gray-400 whitespace-nowrap">{source}</span>
@@ -1804,6 +2176,7 @@ const CareBridgeContext = createContext<{
 });
 
 export function CareBridgeProvider({ children }: { children: React.ReactNode }) {
+  const customer = useCustomer();
   const [tab, setTab] = useState<Tab>('recording');
   const [view, setView] = useState<View>('summary');
   const [recordingId, setRecordingId] = useState('initial');
@@ -1811,20 +2184,33 @@ export function CareBridgeProvider({ children }: { children: React.ReactNode }) 
   // CareBridgePage. Hidden by default; the reviewer opts back in per visit.
   const [chatOpen, setChatOpen] = useState(false);
 
+  // Recording ids (e.g. "initial") aren't unique across customers, and this
+  // provider stays mounted across a customer switch (the route only changes
+  // the :customerId param) — reset back to the default recording so a
+  // selection from the previous customer doesn't linger.
+  useEffect(() => {
+    setRecordingId('initial');
+  }, [customer.id]);
+
   // Draft review state, per recording — lifted up here (rather than local to
   // CarePlanMultiDocView) so the "Save updates" CTA in the subnav can also
   // see whether there's anything still outstanding and disable itself.
+  // Keyed by customer id + recording id together, since recording ids repeat
+  // across customers (every customer's first visit is "initial") and this
+  // provider isn't remounted when switching between customers.
   const [formSectionsByRecording, setFormSectionsByRecording] = useState<Record<string, Record<string, FormField[]>>>({});
   const [proseSectionsByRecording, setProseSectionsByRecording] = useState<Record<string, Record<string, AssessmentSection>>>({});
 
-  const getFormSections = (recording: Recording) => formSectionsByRecording[recording.id] ?? recording.formSections ?? {};
+  const key = (recordingId: string) => `${customer.id}:${recordingId}`;
+
+  const getFormSections = (recording: Recording) => formSectionsByRecording[key(recording.id)] ?? recording.formSections ?? {};
   const setFormSections = (recordingId: string, fields: Record<string, FormField[]>) => {
-    setFormSectionsByRecording(prev => ({ ...prev, [recordingId]: fields }));
+    setFormSectionsByRecording(prev => ({ ...prev, [key(recordingId)]: fields }));
   };
   const getProseSections = (recording: Recording) =>
-    proseSectionsByRecording[recording.id] ?? Object.fromEntries(recording.focusSections.map(s => [s.id, s]));
+    proseSectionsByRecording[key(recording.id)] ?? Object.fromEntries(recording.focusSections.map(s => [s.id, s]));
   const setProseSections = (recordingId: string, sections: Record<string, AssessmentSection>) => {
-    setProseSectionsByRecording(prev => ({ ...prev, [recordingId]: sections }));
+    setProseSectionsByRecording(prev => ({ ...prev, [key(recordingId)]: sections }));
   };
   const hasPendingReview = (recording: Recording) => {
     const forms = getFormSections(recording);

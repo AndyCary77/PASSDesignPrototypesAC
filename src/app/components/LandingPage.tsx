@@ -5,14 +5,19 @@ const SCREENS = [
     title: 'Customer Profile',
     items: [
       { label: 'Customers List', to: '/customers/list' },
-      { label: 'CareBridge (existing customer) — Arthur Barrington', to: '/customers/arthur-barrington/carebridge' },
-      { label: 'CareBridge (new enquiry) — Edith Caldwell', to: '/customers/edith-caldwell/carebridge' },
       { label: 'Rostering — Care Requirements & Service Agreement', to: '/customers/arthur-barrington' },
       { label: 'Care Management — Outcomes, Tasks, Visits & Care Groups', to: '/customers/arthur-barrington/caremanagement' },
       { label: 'Care Notes', to: '/customers/arthur-barrington/carenotes' },
       { label: 'Documents', to: '/customers/arthur-barrington/documents' },
       { label: 'MAR Chart', to: '/customers/arthur-barrington/marchart' },
       { label: 'Customer Details', to: '/customers/arthur-barrington/details' },
+    ],
+  },
+  {
+    title: 'CareBridge',
+    items: [
+      { label: 'CareBridge (existing customer) — Arthur Barrington', to: '/customers/arthur-barrington/carebridge' },
+      { label: 'CareBridge (new enquiry) — Edith Caldwell', to: '/customers/edith-caldwell/carebridge' },
     ],
   },
   {
@@ -81,7 +86,7 @@ export function LandingPage() {
                       <li key={item.to}>
                         <Link
                           to={item.to}
-                          className="text-sm text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
+                          className="text-sm font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
                         >
                           {item.label}
                         </Link>
@@ -104,7 +109,7 @@ export function LandingPage() {
                       <li key={item.to}>
                         <a
                           href={item.to}
-                          className="text-sm text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
+                          className="text-sm font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
                         >
                           {item.label}
                         </a>
@@ -127,7 +132,7 @@ export function LandingPage() {
                       <li key={item.to}>
                         <Link
                           to={item.to}
-                          className="text-sm text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
+                          className="text-sm font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline transition-colors"
                         >
                           {item.label}
                         </Link>
