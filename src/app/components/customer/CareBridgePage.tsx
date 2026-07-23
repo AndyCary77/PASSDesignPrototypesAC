@@ -1847,7 +1847,7 @@ export function CareBridgeProvider({ children }: { children: React.ReactNode }) 
 }
 
 export function CareBridgeSubnav() {
-  const { tab, setTab, view, setView, recordingId, setRecordingId } = useContext(CareBridgeContext);
+  const { tab, setTab, view, setView, recordingId, setRecordingId, hasPendingReview } = useContext(CareBridgeContext);
   const scrolled = useScrolled();
   const customer = useCustomer();
   const recordings = resolveRecordings(customer.id);
@@ -1862,12 +1862,15 @@ export function CareBridgeSubnav() {
   }, [customer.id]);
 
   const currentRecording = recordings.find(r => r.id === recordingId) ?? recordings[0];
-  const carePlanCtaLabel = customer.hasCarePlan ? 'Suggest updates to care plan' : 'Pre-fill assessment & care plan';
+  const carePlanCtaLabel = customer.hasCarePlan ? 'Save updates' : 'Pre-fill assessment & care plan';
   const ctaLabel = tab === 'careplan'
     ? carePlanCtaLabel
     : currentRecording.isCarePlanFocus
       ? carePlanCtaLabel
       : 'Save to customer file';
+  // Only the Recordings tab currently tracks per-field/per-section review
+  // state — nothing to block on yet for the cumulative Draft Care Plan tab.
+  const ctaDisabled = tab === 'recording' && hasPendingReview(currentRecording);
 
   return (
     <div className="bg-gray-50 border-b border-gray-200">
@@ -1893,7 +1896,13 @@ export function CareBridgeSubnav() {
 
         <div className="flex items-center gap-3">
           <Button variant="tertiary">Discard draft</Button>
-          <Button icon={<ArrowRight className="w-4 h-4" />}>{ctaLabel}</Button>
+          <Button
+            icon={<ArrowRight className="w-4 h-4" />}
+            disabled={ctaDisabled}
+            title={ctaDisabled ? 'Accept the outstanding drafted fields before saving' : undefined}
+          >
+            {ctaLabel}
+          </Button>
         </div>
       </div>
 
@@ -1911,7 +1920,7 @@ export function CareBridgeSubnav() {
                   view === v ? 'bg-[rgb(154,38,214)] text-white' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {v === 'summary' ? 'Summary' : 'Original transcript'}
+                {v === 'summary' ? 'Draft document' : 'Original transcript'}
               </button>
             ))}
           </div>
