@@ -257,6 +257,100 @@
   margin-top: 1px;
 }
 
+.cb-mic-check {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(100% - 40px);
+  margin: 4px 20px 0;
+  padding: 12px 14px;
+  border: 1.5px solid var(--ui-purple-4-lavendar);
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cb-mic-check.ok {
+  border-color: var(--rag-green-green-4);
+  background: var(--rag-green-green-lightest);
+}
+
+.cb-mic-check-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cb-mic-check-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-purple-6-purple-4);
+}
+
+.cb-mic-check.ok .cb-mic-check-icon { color: var(--rag-green-green-4); }
+
+.cb-mic-check-t {
+  font-family: Barlow, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #222;
+}
+
+.cb-mic-check-d {
+  font-family: Barlow, sans-serif;
+  font-size: 12px;
+  color: var(--greyscale-5-grey-45);
+}
+
+.cb-mic-check-btn {
+  flex-shrink: 0;
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-purple-6-purple-4);
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cb-mic-check-btn:disabled { cursor: default; }
+
+.cb-mic-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+  padding: 0 6px;
+}
+
+.cb-mic-bars span {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--brand-purple-6-purple-4);
+  animation: cbMicLevel 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.cb-mic-bars span:nth-child(1) { height: 6px; animation-delay: 0s; }
+.cb-mic-bars span:nth-child(2) { height: 12px; animation-delay: 0.15s; }
+.cb-mic-bars span:nth-child(3) { height: 16px; animation-delay: 0.3s; }
+.cb-mic-bars span:nth-child(4) { height: 10px; animation-delay: 0.45s; }
+.cb-mic-bars span:nth-child(5) { height: 14px; animation-delay: 0.6s; }
+
+@keyframes cbMicLevel {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
 .cb-consent-confirm {
   display: flex;
   align-items: center;
@@ -412,18 +506,42 @@
   margin-top: 22px;
 }
 
-.cb-magic-chip {
+.cb-live-wave {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  height: 28px;
+  width: 140px;
   margin-top: 12px;
-  padding: 6px 14px;
   border-radius: 16px;
   background: var(--brand-purple-8-purple-10);
-  color: var(--brand-purple-3-purple-2);
-  font-family: Barlow, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
+
+.cb-live-wave-track {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  animation: cbWaveScroll 6s linear infinite;
+}
+
+.cb-live-wave-track span {
+  flex-shrink: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--brand-purple-3-purple-2);
+}
+
+/* The track is two copies of the same sequence back to back, so scrolling
+   exactly 50% of its own width loops seamlessly into the start of the
+   second copy — indistinguishable from the first. */
+@keyframes cbWaveScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 .cb-rec-sub {

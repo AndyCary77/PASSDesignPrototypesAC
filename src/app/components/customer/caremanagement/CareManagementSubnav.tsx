@@ -1,5 +1,6 @@
 import { ArrowLeft, Printer } from 'lucide-react';
 import { Button } from '../../buttons/Button';
+import { SubnavTabs } from '../../tabs/SubnavTabs';
 import { useCareManagement } from './CareManagementContext';
 import { useScrolled } from '../../../hooks/useScrolled';
 import { useCustomer } from '../../../data/CustomerContext';
@@ -41,25 +42,7 @@ export function CareManagementSubnav() {
         </div>
 
         {/* Centre — tabs */}
-        <nav className="flex gap-6">
-          {TABS.map(({ id, label }) => {
-            const isActive = activeTab === id;
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`relative pb-2 px-1 text-sm transition-colors cursor-pointer whitespace-nowrap ${
-                  isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {label}
-                {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[rgb(154,38,214)]" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
+        <SubnavTabs tabs={TABS} activeTab={activeTab} onChange={id => setActiveTab(id as Tab)} />
 
         {/* Right — actions */}
         <div className="flex items-center gap-3">

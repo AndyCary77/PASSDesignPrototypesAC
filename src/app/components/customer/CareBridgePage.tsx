@@ -17,6 +17,7 @@ import type { CustomerProfile } from '../../data/customers';
 import { OutcomeBadge, TaskBadge } from './caremanagement/shared';
 import type { TaskCategory } from './caremanagement/types';
 import { Waveform } from '../icons/Waveform';
+import { SubnavTabs } from '../tabs/SubnavTabs';
 
 
 // ─── Care & Support Plan structure — the real "multi-document" taxonomy ──────
@@ -2262,23 +2263,7 @@ export function CareBridgeSubnav() {
     <div className="bg-gray-50 border-b border-gray-200">
       {/* Primary tabs — This Recording vs the cumulative Care Plan Draft */}
       <div className={`max-w-[1600px] w-full mx-auto px-6 flex items-center justify-between gap-4 transition-all duration-300 ${scrolled ? 'py-2' : 'py-3.5'}`}>
-        <nav className="flex gap-6">
-          {TABS.map(({ id, label }) => {
-            const isActive = tab === id;
-            return (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                className={`relative pb-2 px-1 text-sm transition-colors cursor-pointer whitespace-nowrap ${
-                  isActive ? 'text-gray-900 font-semibold' : 'text-gray-800 hover:text-gray-900'
-                }`}
-              >
-                {label}
-                {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[rgb(154,38,214)]" />}
-              </button>
-            );
-          })}
-        </nav>
+        <SubnavTabs tabs={TABS} activeTab={tab} onChange={id => setTab(id as Tab)} />
 
         <div className="flex items-center gap-3">
           <Button variant="tertiary">Discard draft</Button>

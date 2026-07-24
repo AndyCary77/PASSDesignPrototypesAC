@@ -50,6 +50,31 @@ const LockIcon = () => (
     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
   </svg>
 )
+const MicIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M19 11a7 7 0 01-14 0M12 18v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
+const MicLevelBars = () => (
+  <span className="cb-mic-bars">
+    <span /><span /><span /><span /><span />
+  </span>
+)
+// Fixed, hand-authored bar heights (not Math.random) so the sequence loops
+// seamlessly — the track is rendered twice back-to-back and scrolled by
+// exactly one copy's width, which only lines up if the pattern is stable
+// across renders (the record clock re-renders this screen every second).
+const WAVE_SEQUENCE = [6, 14, 9, 20, 11, 17, 7, 22, 13, 8, 18, 10, 15, 6, 12, 19, 9, 16, 7, 21, 11, 8, 14, 17]
+const LiveWaveform = () => (
+  <div className="cb-live-wave" role="img" aria-label="CareBridge is listening">
+    <div className="cb-live-wave-track">
+      {[...WAVE_SEQUENCE, ...WAVE_SEQUENCE].map((h, i) => (
+        <span key={i} style={{ height: `${h}px` }} />
+      ))}
+    </div>
+  </div>
+)
 
 // ─── Data ────────────────────────────────────────────────────
 
@@ -252,6 +277,11 @@ function TemplateScreen({ customer, onBack, onPick }) {
 
 function ConsentScreen({ customer, template, consent, setConsent, share, setShare, onBack, onStart }) {
   const first = customer?.name.split(' ')[0] || 'the customer'
+  const [micTest, setMicTest] = useState('idle') // idle | testing | ok
+  // The screen stays mounted across a template switch (all steps render in a
+  // single sliding track), so reset the test whenever a fresh visit begins.
+  useEffect(() => { setMicTest('idle') }, [template])
+  const testMic = () => { setMicTest('testing'); setTimeout(() => setMicTest('ok'), 1400) }
   return (
     <div className="cb-screen">
       <StatusBar />
@@ -275,6 +305,21 @@ function ConsentScreen({ customer, template, consent, setConsent, share, setShar
             <LockIcon />
             <div><div className="cb-cpoint-t">Keeps recording</div><div className="cb-cpoint-d">Through screen lock, backgrounding and calls. Works offline.</div></div>
           </div>
+        </div>
+
+        <div className={`cb-mic-check${micTest === 'ok' ? ' ok' : ''}`}>
+          <div className="cb-mic-check-main">
+            <span className="cb-mic-check-icon">{micTest === 'ok' ? <CheckIcon /> : <MicIcon />}</span>
+            <div>
+              <div className="cb-mic-check-t">{micTest === 'ok' ? 'Microphone sounds good' : 'Check your microphone'}</div>
+              {micTest === 'testing' && <div className="cb-mic-check-d">Say something…</div>}
+            </div>
+          </div>
+          {micTest !== 'ok' && (
+            <button className="cb-mic-check-btn" disabled={micTest === 'testing'} onClick={testMic}>
+              {micTest === 'testing' ? <MicLevelBars /> : 'Test microphone'}
+            </button>
+          )}
         </div>
 
         <button className={`cb-consent-confirm${consent ? ' on' : ''}`} onClick={() => setConsent(c => !c)}>
@@ -322,7 +367,7 @@ function RecordScreen({ customer, template, seconds, states, onEnd, onLock }) {
           <span className="cb-rec-core"><CareBridgeIcon size={30} /></span>
         </div>
         <div className="cb-rec-timer">{fmt(seconds)}</div>
-        <div className="cb-magic-chip"><CareBridgeIcon size={14} /> CareBridge is listening</div>
+        <LiveWaveform />
         <div className="cb-rec-sub">Recording {first}’s assessment. You can set the phone aside.</div>
 
         <div className="cb-capture">
