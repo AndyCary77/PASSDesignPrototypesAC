@@ -19,11 +19,13 @@ const SCREENS = [
     // older entry point has been superseded by this flow.
     title: 'Assessment Hero — Drafts',
     items: [
-      // Arthur's 'initial' recording has every field/section already
-      // reviewed:true baked in, so it never shows any pending-review state —
-      // Edith's is a genuinely partial assessment with fields still
-      // outstanding, so hers is the one that actually demos the draft badge.
-      { label: 'Assessment Draft — Edith Caldwell', to: '/customers/edith-caldwell/documents/care-plan' },
+      // Arthur is the demo persona for this flow (see project notes) — his
+      // Assessments-list draft is "Personal Care / Moving and Handling", a
+      // simple single-page document, rather than his much larger Care and
+      // Support Plan (also a genuine pending-review draft, but no longer
+      // what the Assessments list actually links to), so that's what this
+      // shortcuts to.
+      { label: 'Assessment Draft — Arthur Barrington (Personal Care)', to: '/customers/arthur-barrington/documents/personal-care' },
         { label: 'Care Management — Create Draft from Assessments — Vera Bramwell', to: '/customers/vera-bramwell/caremanagement' },
       // The newer Care Management draft flow — Outcomes/Tasks drafted from
       // the same initial assessment, reviewed per-record with Accept/Discard,

@@ -36,10 +36,26 @@ export const CUSTOMER = {
 // status: 'success', so every item here is 'complete'. folderId is the
 // foreign key onto ASSESSMENT_FOLDERS — null means "loose", not in a
 // folder; every item is loose here, matching the web list's flat layout.
+//
+// d0 — "Personal Care / Moving and Handling" — is the exception to all of
+// that: it's the mobile mirror of the same Assessment Hero demo document on
+// the web platform (see ASSESSMENT_TEMPLATES['arthur-barrington'][0] in
+// mock-documents.ts and PersonalCareMovingHandlingDocumentPage), not part
+// of the original web pack. `status: 'partial'` stands in for the web
+// version's "AI draft pending review" state — mobile has no separate draft
+// status to distinguish it further. Its carebridgeTemplateId ('personal-care')
+// has a matching mobile/carebridge template too (see TEMPLATES there), so
+// it's selectable from "Record with CareBridge" like everything else — the
+// "Select documents" picker no longer requires status === 'complete' to
+// offer an item, since recording against a still-pending Assessment Hero
+// draft is exactly the point, not just re-confirming an already-settled
+// one. Kept first in the array so it renders at the top of the list, same
+// relative position as on the web platform.
 // carebridgeTemplateId links each row to its matching template in
 // mobile/carebridge (see TEMPLATES there) — the "Record with CareBridge"
 // picker uses this to deep-link into that recording flow.
 export const ASSESSMENTS = [
+  { id: 'd0', name: 'Personal Care / Moving and Handling',         group: 'mandatory', status: 'partial',  date: '05/09/2026', folderId: null, carebridgeTemplateId: 'personal-care' },
   { id: 'd1', name: 'Customer Care and Support Plan',              group: 'mandatory', status: 'complete', date: '14/05/2026', folderId: null, carebridgeTemplateId: 'careplan' },
   { id: 'd2', name: 'Consent to Care',                             group: 'mandatory', status: 'complete', date: '15/05/2026', folderId: null, carebridgeTemplateId: 'consent-care' },
   { id: 'd3', name: 'Confirmation of Receipt',                     group: 'mandatory', status: 'complete', date: '14/05/2026', folderId: null, carebridgeTemplateId: 'confirm-receipt' },

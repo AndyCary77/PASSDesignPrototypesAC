@@ -1035,16 +1035,20 @@ function RecordingsSection({ recordings, initialExpanded, customerId }) {
 // (Assessments and Other Documents) in one scrollable list — grouped under
 // section labels instead of the web version's tab switcher, since a phone
 // screen has room to just show both rather than picking one at a time.
-// Only complete items with a matching mobile/carebridge template are
-// offered (nothing outstanding has settled content yet to record against,
-// and an item with no carebridgeTemplateId has nowhere to link through to).
+// Any item with a matching mobile/carebridge template is offered, complete
+// or not — an item with no carebridgeTemplateId has nowhere to link
+// through to, so that's the only real requirement. Used to also require
+// status === 'complete' (re-recording an already-signed-off form), but
+// that excluded a still-pending Assessment Hero draft like "Personal Care /
+// Moving and Handling" — recording against something not yet finished is
+// exactly what Assessment Hero is for, not just re-confirming settled ones.
 // Selection keys are `${kind}:${id}` — Assessments and Other Documents use
 // separate, independently-assigned id sequences, so a bare id can collide
 // across the two lists.
 function CareBridgeSelectScreen({ assessments, documents, onContinue, onClose }) {
   const [selected, setSelected] = useState(new Set())
-  const eligibleAssessments = assessments.filter(a => a.status === 'complete' && a.carebridgeTemplateId)
-  const eligibleDocuments = documents.filter(d => d.status === 'complete' && d.carebridgeTemplateId)
+  const eligibleAssessments = assessments.filter(a => a.carebridgeTemplateId)
+  const eligibleDocuments = documents.filter(d => d.carebridgeTemplateId)
   const assessmentKeys = eligibleAssessments.map(item => `assessment:${item.id}`)
   const documentKeys = eligibleDocuments.map(item => `document:${item.id}`)
   const allAssessmentsSelected = assessmentKeys.length > 0 && assessmentKeys.every(k => selected.has(k))

@@ -162,6 +162,21 @@ const CUSTOMERS = [
 // the conversation (omitted = all → section completes). This drives the live
 // recording progress and the end-of-visit completion indicators.
 const TEMPLATES = [
+  // Mirrors the web platform's own "Personal Care / Moving and Handling"
+  // demo document (PersonalCareMovingHandlingDocumentPage) — a single-page
+  // Assessment Hero draft, not the full multi-section Care & Support Plan
+  // below. Section field/target counts loosely match that document's real
+  // content: 8 of 8 personal-care fields captured, 0 of 2 products/risk
+  // fields (both left blank there too), 5 of 17 moving-and-handling fields,
+  // 0 of 1 COSHH field — same "honest gaps" split as the real draft, not
+  // invented to look more complete than Claire's actual recording was.
+  { id: 'personal-care', name: 'Personal Care / Moving and Handling', short: 'Personal Care & M&H', created: '05/09/2026',
+    sections: [
+      { name: 'What personal care support do I require?', fields: 8 },
+      { name: 'Use of products and objects to support me', fields: 2, target: 0 },
+      { name: 'How to support with moving and handling?', fields: 17, target: 5 },
+      { name: 'COSHH Assessment', fields: 1, target: 0 },
+    ] },
   { id: 'careplan', name: 'Customer Care and Support Plan', short: 'Care & Support Plan', created: '30/12/2026',
     sections: [
       { group: 'Hospital passport', name: 'Personal details', fields: 12 },
