@@ -558,6 +558,24 @@
   border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
 }
 .docs-recording-row:last-child { border-bottom: none; }
+/* Demo-only reset switch, not a real reviewer action — kept visually quiet
+   (small centred text, muted colour) so it doesn't compete with the actual
+   recordings above it. */
+.docs-recordings-reset {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--ui-purple-6-lavendar-grey);
+  font-family: Barlow, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--greyscale-8-grey-65);
+  text-align: center;
+  cursor: pointer;
+}
+.docs-recordings-reset:active { color: var(--greyscale-6-grey-50); }
 .docs-recording-row-icon {
   flex-shrink: 0;
   color: var(--brand-purple-6-purple-4);

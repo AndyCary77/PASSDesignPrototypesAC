@@ -77,3 +77,27 @@ export function addRecording(customerId, { title }) {
 export function useRecordings(customerId) {
   return useSyncExternalStore(subscribe, () => getRecordings(customerId))
 }
+
+/**
+ * Resets a customer back to the seeded demo state (just the one "uploaded"
+ * recording) — for clearing out whatever's piled up in localStorage after
+ * rehearsing a demo, without wiping the baseline "already uploaded" example
+ * a presenter would otherwise have to re-record from scratch.
+ */
+export function resetRecordings(customerId) {
+  const all = load()
+  const seed = DEFAULT_RECORDINGS[customerId]
+  cache = { ...all, [customerId]: seed ? [...seed] : [] }
+  persist()
+  listeners.forEach(fn => fn())
+}
+
+/**
+ * Whether a customer's recordings are still exactly the seeded demo state —
+ * lets the UI hide the reset control until there's actually anything to
+ * reset, rather than showing it permanently.
+ */
+export function isDefaultRecordings(customerId, recordings) {
+  const seed = DEFAULT_RECORDINGS[customerId] ?? []
+  return JSON.stringify(recordings) === JSON.stringify(seed)
+}

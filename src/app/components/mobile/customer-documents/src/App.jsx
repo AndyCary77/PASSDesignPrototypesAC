@@ -4,7 +4,7 @@ import ScreenSlider from '../../assets/ScreenSlider'
 import PhoneFrame from '../../assets/PhoneFrame'
 import CareBridgeIcon from '../../assets/CareBridgeIcon'
 import { handleSystemBack, useBackHandler } from '../../assets/backStack'
-import { useRecordings } from '../../assets/recordings'
+import { useRecordings, resetRecordings, isDefaultRecordings } from '../../assets/recordings'
 import {
   CUSTOMER, ASSESSMENTS, ASSESSMENT_FOLDERS, OPTIONAL_ASSESSMENT_TEMPLATES,
   OTHER_DOCUMENTS, OTHER_DOCUMENT_FOLDERS, DOCUMENT_TEMPLATES,
@@ -883,7 +883,7 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge }) {
 
       <CareBridgeBanner onSelect={onOpenCareBridge} />
 
-      <RecordingsSection recordings={recordings} initialExpanded={showRecordings} />
+      <RecordingsSection recordings={recordings} initialExpanded={showRecordings} customerId="arthur" />
 
       <div className="docs-section-list">
         <button className="docs-section-row" onClick={() => onOpenSection('assessments')}>
@@ -981,8 +981,21 @@ function CareBridgeBanner({ onSelect }) {
 // project_carebridge_mobile). Auto-expanded on the trip back right after
 // finishing a recording (`initialExpanded`); otherwise sits collapsed,
 // since it's useful on any visit, not just the one that just finished.
-function RecordingsSection({ recordings, initialExpanded }) {
+function RecordingsSection({ recordings, initialExpanded, customerId }) {
   const [expanded, setExpanded] = useState(initialExpanded)
+  // Quiet, deliberately unstyled-as-a-feature text link — this is a demo
+  // reset switch, not something a real reviewer would ever need, so it
+  // shouldn't compete visually with the rows above it. Confirmed first:
+  // a stray tap resetting the list mid-demo (e.g. while presenting) would
+  // be a worse moment than the one extra tap costs everyone else. Hidden
+  // entirely once there's nothing to reset — a live app never earns a
+  // permanent "reset demo" affordance, so it only earns a temporary one.
+  const isDefault = isDefaultRecordings(customerId, recordings)
+  const handleReset = () => {
+    if (window.confirm('Reset recordings back to the demo starting point? This removes anything queued and keeps just the one already-uploaded example.')) {
+      resetRecordings(customerId)
+    }
+  }
   return (
     <div className="docs-recordings">
       <button type="button" className="docs-recordings-header" onClick={() => setExpanded(e => !e)}>
@@ -1005,6 +1018,11 @@ function RecordingsSection({ recordings, initialExpanded }) {
               </span>
             </div>
           ))}
+          {!isDefault && (
+            <button type="button" className="docs-recordings-reset" onClick={handleReset}>
+              Reset for demo
+            </button>
+          )}
         </div>
       )}
     </div>
