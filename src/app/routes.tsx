@@ -14,6 +14,7 @@ import { DocumentsPage } from './components/customer/documents/DocumentsPage';
 import { CarePlanDocumentProvider, CarePlanDocumentSubnav, CarePlanDocumentContent } from './components/customer/documents/CarePlanDocumentPage';
 import { RecordingDocumentPage } from './components/customer/documents/RecordingDocumentPage';
 import { WiitmDocumentProvider, WiitmDocumentSubnav, WiitmDocumentContent } from './components/customer/documents/WhatIsImportantToMeDocumentPage';
+import { PersonalCareDocumentProvider, PersonalCareDocumentSubnav, PersonalCareDocumentContent } from './components/customer/documents/PersonalCareMovingHandlingDocumentPage';
 import { CareManagementPage } from './components/customer/caremanagement/CareManagementPage';
 import { CareManagementProvider } from './components/customer/caremanagement/CareManagementContext';
 import { CareManagementSubnav } from './components/customer/caremanagement/CareManagementSubnav';
@@ -221,6 +222,18 @@ function WhatIsImportantToMeDocumentLayout() {
   );
 }
 
+function PersonalCareDocumentLayout() {
+  return (
+    <CustomerProvider>
+      <PersonalCareDocumentProvider>
+        <AppShell infoBar={<><CustomerInfo /><PersonalCareDocumentSubnav /></>}>
+          <PersonalCareDocumentContent />
+        </AppShell>
+      </PersonalCareDocumentProvider>
+    </CustomerProvider>
+  );
+}
+
 function MARChartLayout() {
   return (
     <CustomerProvider>
@@ -349,6 +362,10 @@ export const router = createBrowserRouter([
   {
     path: "/customers/:customerId/documents/wiitm",
     Component: WhatIsImportantToMeDocumentLayout,
+  },
+  {
+    path: "/customers/:customerId/documents/personal-care",
+    Component: PersonalCareDocumentLayout,
   },
   {
     path: "/customers/:customerId/marchart",

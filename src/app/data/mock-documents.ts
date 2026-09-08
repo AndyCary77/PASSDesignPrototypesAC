@@ -145,16 +145,20 @@ const STANDARD_ASSESSMENT_PACK: Document[] = [
 ];
 
 export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
-  // Arthur is the demo persona for Assessment Hero (2026-09-07) — his Care
-  // and Support Plan is a click-through into the AI-drafted, pending-review
-  // state, same shape as Edith's own entry below, rather than the plain
-  // "BBC SD05 (6)" row from the shared pack.
+  // Arthur is the demo persona for Assessment Hero (2026-09-07) — his
+  // assessment list has a click-through into an AI-drafted, pending-review
+  // document, same shape as Edith's own Care and Support Plan entry below,
+  // rather than the plain "BBC SD05 (6)" row from the shared pack. Swapped
+  // (2026-09-08) from the full 16-section Care and Support Plan to the much
+  // simpler single-page "Personal Care / Moving and Handling" — the 16-section
+  // document read as too much to walk through in a quick demo of the review
+  // flow; see PersonalCareMovingHandlingDocumentPage.
   'arthur-barrington': [
     {
       ...STANDARD_ASSESSMENT_PACK[0],
       status: 'draft',
-      title: 'Customer Care and Support Plan',
-      to: '/customers/arthur-barrington/documents/care-plan',
+      title: 'Personal Care / Moving and Handling',
+      to: '/customers/arthur-barrington/documents/personal-care',
     },
     ...STANDARD_ASSESSMENT_PACK.slice(1),
   ],

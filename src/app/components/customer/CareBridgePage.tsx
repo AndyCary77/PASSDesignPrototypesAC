@@ -83,6 +83,9 @@ interface TranscriptLine {
   role: 'assessor' | 'customer' | 'family';
   time: string;
   text: string;
+  /** This line's span, in seconds, within its recording's real audioUrl — lets "Check transcript" play just this line rather than the whole file. Only set for recordings with a real audio file behind them (estimated proportionally from word count against the file's real duration, not a precise transcription-aligned timestamp). */
+  audioStart?: number;
+  audioEnd?: number;
 }
 
 const TRANSCRIPT: TranscriptLine[] = [
@@ -478,6 +481,55 @@ const BP_MONITORING_TASK: TaskSuggestion = {
   text: "Check and record Arthur's blood pressure weekly, following a request from his GP.",
 };
 
+// ─── Arthur — Personal Care / Moving and Handling: a separate, later recording ──
+// Backs the standalone document of the same name (see
+// PersonalCareMovingHandlingDocumentPage / personalCareMovingHandlingData.ts)
+// — a different visit from the initial assessment above, a different
+// assessor (Claire, a care supervisor rather than the original assessor),
+// and a narrower focus: personal care and moving and handling only, not a
+// full reassessment.
+// Times compressed to fit the real audio's actual ~4:20 length (see
+// audioUrl on the 'personal-care' recording below) rather than the ~13min
+// pacing assumed before that recording existed.
+//
+// audioStart/audioEnd: real per-word timestamps from running this actual
+// file through a local Whisper transcription (`whisper ... --word_timestamps
+// True`), then aligning its output word-by-word against this hand-authored
+// transcript (near-identical wording; a few numbers/contractions differ,
+// e.g. "81" vs "eighty-one") to find each line's real first/last word — not
+// a word-count estimate. That first pass (word-count proportional against
+// the file's total duration) drifted enough by the second half of the
+// recording that a snippet could audibly bleed into the next line; real
+// ASR timestamps don't have that problem since they're anchored to what's
+// actually said, not an assumed constant speaking rate.
+const ARTHUR_PERSONAL_CARE_TRANSCRIPT: TranscriptLine[] = [
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:15', audioStart: 0.00, audioEnd: 10.32, text: "Hi, my name's Claire, I'm one of the care supervisors here, and I'm just going to have a chat with Mr. Barrington today about his personal care needs so we can get everything up to date." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:15', audioStart: 11.12, audioEnd: 13.64, text: 'Morning Mr. Barrington, how are you doing today?' },
+  { speaker: 'Arthur', role: 'customer', time: '09:15', audioStart: 14.54, audioEnd: 20.28, text: "Oh, not too bad, love, bit of a rough night if I'm honest, my hip was playing up." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:15', audioStart: 21.46, audioEnd: 28.26, text: "Sorry to hear that. Is that affecting how you're getting on in the mornings at all — washing, getting dressed, that sort of thing?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:15', audioStart: 28.70, audioEnd: 42.62, text: "Well, funny you should say, yes actually. It's my back mostly, I can't twist round to do it myself anymore, so whoever's helping me needs to do that bit. The rest of the washing I can manage fine at the sink." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:16', audioStart: 43.08, audioEnd: 49.90, text: "That's fine, we'll note that down. And when you have a bath — do you still use the bath, or is it mostly showers now?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:16', audioStart: 50.48, audioEnd: 62.46, text: "Bit of both really… I like a bath on a Sunday, my daughter used to run me one when she visited, but she's moved up to Leeds now with the grandkids so —" },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:16', audioStart: 64.06, audioEnd: 65.66, text: "Ah, how's that going, the move?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:16', audioStart: 66.38, audioEnd: 81.10, text: "Good, good, they're settling in. Anyway — the bath, yes, I need help getting in and out of it, it's the getting up again that's the trouble, and someone doing my back same as I said." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:16', audioStart: 81.78, audioEnd: 83.30, text: 'And showering, during the week?' },
+  { speaker: 'Arthur', role: 'customer', time: '09:17', audioStart: 83.88, audioEnd: 97.38, text: "That's easier for me, I can stand at the rail and do most of it myself, just need a hand with my back again, and honestly someone just being nearby in case I go a bit dizzy, it's happened once or twice." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:17', audioStart: 98.76, audioEnd: 105.66, text: "Noted, we'll flag that as a safety thing too. Right, let's talk about getting dressed — any bits you find fiddly?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:17', audioStart: 106.30, audioEnd: 130.98, text: "Buttons. God, don't get me started on buttons — hah! My fingers just won't do what I tell them some mornings, especially if it's cold. Shirt buttons are the worst offender. Jumper's alright once it's over my head but someone needs to help me get my arms in sometimes if my shoulder's stiff. Jacket if I'm going out, same thing really." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:17', audioStart: 132.20, audioEnd: 135.82, text: 'Okay. What about your teeth — are you managing brushing yourself?' },
+  { speaker: 'Arthur', role: 'customer', time: '09:17', audioStart: 136.56, audioEnd: 155.60, text: "Still got my own, believe it or not — eighty-one years old and still got most of them! I can brush them fine, it's opening the toothpaste tube that does me in, my grip's gone. So someone needs to open it and put a bit on the brush for me really." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:18', audioStart: 156.18, audioEnd: 160.80, text: 'That’s a common one. And shaving, hair — do you use an electric razor?' },
+  { speaker: 'Arthur', role: 'customer', time: '09:18', audioStart: 161.24, audioEnd: 176.94, text: "I do, yeah, but I need someone to hold the mirror steady, and switch it on for me, the little button's too fiddly. And don't get me started on the hairdryer plug, I can't manage that either, my hands just aren't strong enough anymore." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:18', audioStart: 178.38, audioEnd: 185.40, text: "That's alright, we'll get that all written up. Skin-wise — do you use any creams, moisturiser, anything like that?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:18', audioStart: 186.32, audioEnd: 208.46, text: "Yes, my legs get ever so dry, especially in winter, cracks a bit round the ankles if I don't keep on top of it. And my lower back too. So I need someone to put the cream on there after I've washed, I can't reach it myself, obviously, same problem as the back washing." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:18', audioStart: 209.62, audioEnd: 215.70, text: 'Makes sense. And is there anything around continence I should note — any support you need there?' },
+  { speaker: 'Arthur', role: 'customer', time: '09:19', audioStart: 216.36, audioEnd: 230.26, text: "Yeah, um — I wear pads, day and night now, since the operation. I'll need help checking them and changing them, and just tidying up after, if you know what I mean." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:19', audioStart: 231.26, audioEnd: 236.90, text: "Of course, we'll get all that documented properly for you. Anything else on your mind before I head off?" },
+  { speaker: 'Arthur', role: 'customer', time: '09:19', audioStart: 237.62, audioEnd: 250.08, text: "No, I think that's everything, love. Oh — actually, my shoulder, I mentioned it for the jumper, that's been bad for a few weeks now, might be worth someone having a look at it." },
+  { speaker: 'Claire (Assessor)', role: 'assessor', time: '09:19', audioStart: 250.96, audioEnd: 257.40, text: "I'll make a note of that separately and flag it to the team. Thanks Mr. Barrington, I'll see you Thursday." },
+  { speaker: 'Arthur', role: 'customer', time: '09:19', audioStart: 257.68, audioEnd: 259.14, text: 'Cheers love, see you then.' },
+];
+
 // ─── New enquiry — Mrs Edith Caldwell's assessment ──────────────────────────────
 // Same shape as Arthur's own initial assessment above (all Care Plan
 // sections, the Personal details form, and every secondary document), both
@@ -823,6 +875,8 @@ export interface Recording {
   edits: { focus: number };
   /** Flags this recording as not yet opened, for the "New" badge on the Documents › CareBridge list. */
   isNew?: boolean;
+  /** A real audio file backing this recording (e.g. a demo .mp3 in /public) — when set, RecordingPlayer plays and scrubs it for real instead of simulating playback against recordingMeta's stated duration. */
+  audioUrl?: string;
 }
 
 // ─── Vera Bramwell — 4-week review: a separate, later recording ─────────────
@@ -916,6 +970,26 @@ const RECORDINGS: Record<string, Recording[]> = {
       secondary: [],
       chat: [{ from: 'ai', text: 'Confirmation of Instructions drafted — plan confirmed accurate, and a new blood pressure monitoring task added to the care plan. Consent to the plan captured.' }],
       edits: { focus: 1 },
+    },
+    {
+      id: 'personal-care',
+      label: 'Personal Care / Moving and Handling',
+      // Real audio backs this one (see audioUrl below) — recordingMeta's
+      // duration and every transcript line's timestamp were adjusted to
+      // match its actual ~4:20 length (was a placeholder 13 min before the
+      // real recording existed).
+      recordingMeta: '5 Sep 2026 · 09:15–09:19 · 4 min',
+      recordedBy: 'Claire Doyle',
+      transcript: ARTHUR_PERSONAL_CARE_TRANSCRIPT,
+      focusDocumentName: 'Personal Care / Moving and Handling',
+      isCarePlanFocus: false,
+      focusDocumentPath: 'documents/personal-care',
+      focusSections: [],
+      secondary: [],
+      chat: [],
+      edits: { focus: 0 },
+      isNew: true,
+      audioUrl: '/Example_CareBridge_Assessment_v2.mp3',
     },
   ],
   'edith-caldwell': [
@@ -1161,7 +1235,7 @@ function SectionCard({ section, badge }: { section: AssessmentSection; badge: st
   );
 }
 
-function isFieldCaptured(field: FormField): boolean {
+export function isFieldCaptured(field: FormField): boolean {
   if (field.type === 'table') return (field.rows?.length ?? 0) > 0;
   if (field.type === 'checkbox-group') return (field.values?.length ?? 0) > 0;
   return !!field.value;
@@ -1231,10 +1305,12 @@ function EditableFormField({
   field,
   onChange,
   transcript,
+  audioUrl,
 }: {
   field: FormField;
   onChange: (patch: Partial<FormField>) => void;
   transcript: TranscriptLine[];
+  audioUrl?: string;
 }) {
   const captured = isFieldCaptured(field);
   const pending = captured && field.reviewed === false;
@@ -1259,7 +1335,7 @@ function EditableFormField({
         {pending && (
           <div className="flex items-center gap-3 flex-shrink-0">
             {!!field.sourceLines?.length && (
-              <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines}>
+              <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines} audioUrl={audioUrl}>
                 <button
                   type="button"
                   className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
@@ -1487,6 +1563,10 @@ function HighlightedTranscriptText({ text, highlight }: { text: string; highligh
   );
 }
 
+// How far a "Play snippet" click backs up before the line's own estimated
+// start, into the natural pause between turns — see toggleSnippet below.
+const SNIPPET_LEAD_IN = 0.6;
+
 /**
  * Anchored to the "Check transcript" link itself (a popover, not a centered
  * modal) so it reads as a callout from that specific link rather than a
@@ -1496,17 +1576,25 @@ function TranscriptCheckPopover({
   fieldLabel,
   transcript,
   references,
+  audioUrl,
   children,
 }: {
   fieldLabel: string;
   transcript: TranscriptLine[];
   references: TranscriptReference[];
+  /** Recording's real audio file, if it has one — lets a highlighted line offer "Play snippet" rather than just text. */
+  audioUrl?: string;
   children: React.ReactNode;
 }) {
   const customer = useCustomer();
   const [open, setOpen] = useState(false);
   const firstIndex = Math.min(...references.map(r => r.index));
   const highlightRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  // Which line's snippet is currently playing, if any — at most one at a
+  // time, since starting a second snippet should cut off the first rather
+  // than overlap it.
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -1515,6 +1603,52 @@ function TranscriptCheckPopover({
     });
     return () => cancelAnimationFrame(id);
   }, [open]);
+
+  // Closing the popover shouldn't leave a snippet quietly still playing.
+  useEffect(() => {
+    if (open) return;
+    audioRef.current?.pause();
+    setPlayingIndex(null);
+  }, [open]);
+
+  // Stops itself at this line's audioEnd rather than playing on into the
+  // next line — a "snippet" that quietly kept going would just be "play the
+  // recording from here", which the full transcript page already offers.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || playingIndex === null) return;
+    const end = transcript[playingIndex]?.audioEnd;
+    const onTimeUpdate = () => { if (end != null && audio.currentTime >= end) { audio.pause(); setPlayingIndex(null); } };
+    const onEnded = () => setPlayingIndex(null);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('ended', onEnded);
+    return () => {
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, [playingIndex, transcript]);
+
+  const toggleSnippet = (index: number) => {
+    const audio = audioRef.current;
+    const line = transcript[index];
+    if (!audio || line.audioStart == null) return;
+    if (playingIndex === index) {
+      audio.pause();
+      setPlayingIndex(null);
+      return;
+    }
+    // Starting exactly on audioStart can land mid-word rather than in the
+    // natural pause before it — these are estimated boundaries, not a real
+    // forced alignment, so a hard cut right on the line's own onset is the
+    // riskiest possible moment to be a touch early or late. Back up into the
+    // gap beforehand instead, but never past the previous line's own end —
+    // that would start playing the tail of what the other speaker said.
+    const previousEnd = transcript[index - 1]?.audioEnd ?? 0;
+    const playStart = Math.max(previousEnd, line.audioStart - SNIPPET_LEAD_IN);
+    audio.currentTime = playStart;
+    audio.play();
+    setPlayingIndex(index);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -1525,6 +1659,7 @@ function TranscriptCheckPopover({
         sideOffset={8}
         className="w-[26rem] max-w-[calc(100vw-2rem)] h-[360px] flex flex-col p-0"
       >
+        {audioUrl && <audio ref={audioRef} src={audioUrl} preload="none" />}
         <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
           <p className="text-sm font-semibold text-gray-900">Check transcript</p>
           <p className="text-sm text-gray-500">Where "{fieldLabel}" was drafted from.</p>
@@ -1532,6 +1667,8 @@ function TranscriptCheckPopover({
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {transcript.map((line, i) => {
             const ref = references.find(r => r.index === i);
+            const canPlaySnippet = !!audioUrl && line.audioStart != null;
+            const isPlaying = playingIndex === i;
             return (
               <div
                 key={i}
@@ -1541,10 +1678,22 @@ function TranscriptCheckPopover({
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${speakerAvatarColor(line, customer)}`}>
                   {speakerInitials(line, customer)}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className={`text-sm font-semibold ${roleStyle[line.role]}`}>{line.speaker}</span>
                     <span className="text-sm text-gray-500 tabular-nums">{line.time}</span>
+                    {ref && canPlaySnippet && (
+                      <button
+                        type="button"
+                        onClick={() => toggleSnippet(i)}
+                        className={`ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium transition-colors cursor-pointer flex-shrink-0 ${
+                          isPlaying ? 'bg-[rgb(154,38,214)] text-white' : 'text-[rgb(154,38,214)] hover:bg-purple-50'
+                        }`}
+                      >
+                        {isPlaying ? <Pause className="w-3 h-3" fill="currentColor" /> : <Play className="w-3 h-3" fill="currentColor" />}
+                        {isPlaying ? 'Playing' : 'Play snippet'}
+                      </button>
+                    )}
                   </div>
                   <p className="text-sm text-gray-700 leading-relaxed">
                     <HighlightedTranscriptText text={line.text} highlight={ref?.highlight} />
@@ -1573,10 +1722,12 @@ export function FormFieldsView({
   fields,
   onChange,
   transcript,
+  audioUrl,
 }: {
   fields: FormField[];
   onChange: (fields: FormField[]) => void;
   transcript: TranscriptLine[];
+  audioUrl?: string;
 }) {
   const updateField = (id: string, patch: Partial<FormField>) => {
     onChange(fields.map(f => (f.id === id ? { ...f, ...patch } : f)));
@@ -1585,7 +1736,7 @@ export function FormFieldsView({
   return (
     <div>
       {fields.map(field => (
-        <EditableFormField key={field.id} field={field} onChange={patch => updateField(field.id, patch)} transcript={transcript} />
+        <EditableFormField key={field.id} field={field} onChange={patch => updateField(field.id, patch)} transcript={transcript} audioUrl={audioUrl} />
       ))}
     </div>
   );
@@ -1689,13 +1840,14 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
               fields={selectedFormFields}
               onChange={updated => setFormSections(recording.id, { ...formSections, [selectedId]: updated })}
               transcript={recording.transcript}
+              audioUrl={recording.audioUrl}
             />
           ) : selectedContent ? (
             <>
               {selectedContent.reviewed !== undefined && (
                 <div className="flex items-center justify-end gap-3 mb-2">
                   {!!selectedContent.sourceLines?.length && (
-                    <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={recording.transcript} references={selectedContent.sourceLines}>
+                    <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={recording.transcript} references={selectedContent.sourceLines} audioUrl={recording.audioUrl}>
                       <button
                         type="button"
                         className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
@@ -2006,21 +2158,31 @@ function durationSeconds(recordingMeta: string): number {
   return (parseInt(last, 10) || 0) * 60;
 }
 
-function RecordingPlayer({ recordingMeta }: { recordingMeta: string }) {
-  const total = durationSeconds(recordingMeta);
+function RecordingPlayer({ recordingMeta, audioUrl }: { recordingMeta: string; audioUrl?: string }) {
+  const fallbackTotal = durationSeconds(recordingMeta);
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  // Real audio reports its own duration once metadata loads (see the
+  // loadedmetadata listener below) — recordingMeta's parsed minutes are only
+  // ever the starting guess, and only actually used at all for a recording
+  // with no real file behind it.
+  const [total, setTotal] = useState(fallbackTotal);
   const [isDragging, setIsDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Reset playback state when the selected recording changes.
   useEffect(() => {
     setPlaying(false);
     setElapsed(0);
-  }, [recordingMeta]);
+    setTotal(fallbackTotal);
+  }, [recordingMeta, fallbackTotal]);
 
+  // Simulated playback — every recording except one with a real audioUrl
+  // (there's only ever been one to demo with so far) has no actual file, so
+  // this fakes a ticking clock against recordingMeta's stated duration.
   useEffect(() => {
-    if (!playing) return;
+    if (audioUrl || !playing) return;
     const id = setInterval(() => {
       setElapsed(e => {
         if (e + 1 >= total) {
@@ -2031,7 +2193,34 @@ function RecordingPlayer({ recordingMeta }: { recordingMeta: string }) {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [playing, total]);
+  }, [audioUrl, playing, total]);
+
+  // Real playback — mirrors the <audio> element's own clock/duration/end
+  // event instead of faking one, and actually starts/stops it on play/pause.
+  useEffect(() => {
+    if (!audioUrl) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onLoadedMetadata = () => { if (isFinite(audio.duration)) setTotal(audio.duration); };
+    const onTimeUpdate = () => setElapsed(audio.currentTime);
+    const onEnded = () => setPlaying(false);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('ended', onEnded);
+    return () => {
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, [audioUrl]);
+
+  useEffect(() => {
+    if (!audioUrl) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) audio.play().catch(() => setPlaying(false));
+    else audio.pause();
+  }, [audioUrl, playing]);
 
   const pct = total ? Math.min(100, (elapsed / total) * 100) : 0;
 
@@ -2040,7 +2229,9 @@ function RecordingPlayer({ recordingMeta }: { recordingMeta: string }) {
     if (!el || !total) return;
     const rect = el.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    setElapsed(Math.round(ratio * total));
+    const next = ratio * total;
+    setElapsed(next);
+    if (audioUrl && audioRef.current) audioRef.current.currentTime = next;
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -2061,11 +2252,15 @@ function RecordingPlayer({ recordingMeta }: { recordingMeta: string }) {
 
   return (
     <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-5">
+      {audioUrl && <audio ref={audioRef} src={audioUrl} preload="metadata" />}
       <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={() => {
-            if (elapsed >= total) setElapsed(0);
+            if (elapsed >= total) {
+              setElapsed(0);
+              if (audioUrl && audioRef.current) audioRef.current.currentTime = 0;
+            }
             setPlaying(p => !p);
           }}
           className="w-11 h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer"
@@ -2113,9 +2308,19 @@ function RecordingPlayer({ recordingMeta }: { recordingMeta: string }) {
           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>Recording available for 60 days — the transcript remains available after that.</span>
         </div>
-        <button type="button" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0">
-          <Download className="w-3.5 h-3.5" /> Download recording
-        </button>
+        {audioUrl ? (
+          <a
+            href={audioUrl}
+            download
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0"
+          >
+            <Download className="w-3.5 h-3.5" /> Download recording
+          </a>
+        ) : (
+          <button type="button" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0">
+            <Download className="w-3.5 h-3.5" /> Download recording
+          </button>
+        )}
       </div>
     </div>
   );
@@ -2124,7 +2329,7 @@ function RecordingPlayer({ recordingMeta }: { recordingMeta: string }) {
 function TranscriptView({ recording, customer }: { recording: Recording; customer: CustomerProfile }) {
   return (
     <div className="space-y-4">
-      <RecordingPlayer recordingMeta={recording.recordingMeta} />
+      <RecordingPlayer recordingMeta={recording.recordingMeta} audioUrl={recording.audioUrl} />
 
       <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50 rounded-t-[10px]">

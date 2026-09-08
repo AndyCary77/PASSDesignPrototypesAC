@@ -524,6 +524,7 @@ export function WiitmDocumentContent() {
                   fields={groupFields}
                   onChange={updated => updateGroupFields(group.fieldIds, updated)}
                   transcript={linkedRecording?.transcript ?? []}
+                  audioUrl={linkedRecording?.audioUrl}
                 />
               )}
             </div>
