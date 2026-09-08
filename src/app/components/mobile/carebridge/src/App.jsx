@@ -65,6 +65,11 @@ const LockIcon = () => (
     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm3 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
   </svg>
 )
+const UsersIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+  </svg>
+)
 const MicIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" strokeWidth="1.6"/>
@@ -301,6 +306,16 @@ const groupStates = (states) => {
 
 const sumFields = (states, key) => states.reduce((n, s) => n + s[key], 0)
 const RECORD_RAMP = 24 // seconds to a full first-pass capture (simulated)
+
+// How long the "introduce everyone" prompt holds the record screen's
+// subtitle before handing it back to the normal "set the phone aside" line.
+// Feedback: transcription can only label speakers by name if someone says
+// them out loud, and the moment recording actually starts — not the Consent
+// screen, a step earlier and a tap removed from anyone actually talking — is
+// when that's still actionable. Keyed off `seconds` itself (not a step
+// change or a separate timer) so it naturally never reappears after a
+// pause/resume once the session is already under way.
+const SPEAKER_INTRO_WINDOW = 8
 
 // Temporarily off — the per-section completion checklist on the "Before
 // You Finish" review screen (X of Y sections complete, the field-count
@@ -572,7 +587,20 @@ function RecordScreen({ customer, template, docsLabel, seconds, states, onEnd, o
         </div>
         <div className="cb-rec-timer">{fmt(seconds)}</div>
         <LiveWaveform />
-        <div className="cb-rec-sub">Recording {first}’s assessment. You can set the phone aside.</div>
+        {seconds < SPEAKER_INTRO_WINDOW ? (
+          // Its own tinted card rather than the plain caption below — this is
+          // the one thing worth actually noticing in the first few seconds
+          // (everything else on this screen is "ignore me, keep talking"),
+          // so it borrows the mic-check card's card-not-caption treatment to
+          // read as a distinct, brief prompt rather than blend into the
+          // normal status text it's about to be replaced by.
+          <div className="cb-speaker-tip">
+            <UsersIcon size={17} />
+            <span>Ask everyone in the room to say their name — it helps tell voices apart later.</span>
+          </div>
+        ) : (
+          <div className="cb-rec-sub">Recording {first}’s assessment. You can set the phone aside.</div>
+        )}
 
         {/* Tied to the same per-section completion tracking as the review
             checklist — temporarily off alongside it, see

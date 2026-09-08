@@ -145,7 +145,19 @@ const STANDARD_ASSESSMENT_PACK: Document[] = [
 ];
 
 export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
-  'arthur-barrington': STANDARD_ASSESSMENT_PACK,
+  // Arthur is the demo persona for Assessment Hero (2026-09-07) — his Care
+  // and Support Plan is a click-through into the AI-drafted, pending-review
+  // state, same shape as Edith's own entry below, rather than the plain
+  // "BBC SD05 (6)" row from the shared pack.
+  'arthur-barrington': [
+    {
+      ...STANDARD_ASSESSMENT_PACK[0],
+      status: 'draft',
+      title: 'Customer Care and Support Plan',
+      to: '/customers/arthur-barrington/documents/care-plan',
+    },
+    ...STANDARD_ASSESSMENT_PACK.slice(1),
+  ],
   // Edith's Care and Support Plan is click-through — no form-code prefix,
   // it opens the same Care Plan view CareBridge shows for her, and it's a
   // draft rather than complete/incomplete. Consent to Care and the Privacy

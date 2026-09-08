@@ -63,6 +63,20 @@ const SECTION_INTROS: Partial<Record<string, string>> = {
 };
 
 // ─── Demo data — Arthur Barrington's initial care assessment ─────────────────────
+// Arthur is the demo persona for Assessment Hero (2026-09-07). His initial
+// assessment used to be its own hand-written, fully-reviewed story
+// (vascular dementia, Hydromol ointment) — reused elsewhere already, e.g.
+// Care Management's own separate, static live plan for him — but with
+// nothing left pending it couldn't show the AI-draft review workflow
+// Assessment Hero exists to demo. This is Edith Caldwell's own assessment
+// (see the note above EDITH_TRANSCRIPT) re-skinned to Arthur's name, family
+// and gender instead: same hip-fracture/arthritis/falls-risk story, same
+// pending-review state (nothing yet accepted), David (son) standing in for
+// Edith's daughter Susan, "a man" not "a lady" for the personal-care
+// preference. The secondary documents below (Consent to Care, Confirmation
+// of Receipt, Privacy Policy, Terms and Conditions, Customer Guide) are
+// untouched — they never referenced Edith's specific story and were already
+// genuinely Arthur's own.
 
 interface TranscriptLine {
   speaker: string;
@@ -72,38 +86,30 @@ interface TranscriptLine {
 }
 
 const TRANSCRIPT: TranscriptLine[] = [
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:00', text: "Before we get started, would everyone mind saying their name for the recording? I'll go first — I'm Sharon, the care assessor visiting today." },
-  { speaker: 'Arthur', role: 'customer', time: '10:01', text: "I'm Arthur." },
-  { speaker: 'David (Son)', role: 'family', time: '10:01', text: "And I'm David, Arthur's son." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:02', text: "Morning Arthur, thanks for having me. I just want to have a chat about how you're managing day to day, and what support would help you most. David, good to have you here too." },
-  { speaker: 'David (Son)', role: 'family', time: '10:02', text: "No problem. I've flown over from Florida for a fortnight so I wanted to be here for this. I'm his main point of contact — my number's 07980 077250." },
-  { speaker: 'Arthur', role: 'customer', time: '10:03', text: "I've lived in this house forty years and I don't intend to leave it. I'm very house-proud. I don't want people coming in and taking over, if I'm honest." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:04', text: "That's completely understood — the aim is to help you stay independent at home, not take over. Can you tell me about your health?" },
-  { speaker: 'David (Son)', role: 'family', time: '10:05', text: "Dad was diagnosed with vascular dementia a couple of years ago. His memory comes and goes and he gets a bit muddled in the afternoons. He's also got high blood pressure that he takes tablets for." },
-  { speaker: 'Arthur', role: 'customer', time: '10:06', text: "I know I forget things. I don't always remember if I've eaten. And I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:07', text: "We can have the carer apply that for you and keep an eye on your skin. What about meals — how are you doing with food and drink?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:08', text: "I manage a bit but I'd like someone to make me some lunch and maybe leave a snack plate out. I sometimes get a ready meal out and then forget and get another one." },
-  { speaker: 'David (Son)', role: 'family', time: '10:09', text: "It'd help if they checked the fridge for out-of-date food too, and washed up any dishes. And he loves a chat — companionship matters more than the chores, really." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:11', text: "Noted. And getting around the house and outside?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:11', text: "Indoors I'm fine on my own. Outside I use my frame and I'm a bit wary on the front step. I do like to get out when the weather's nice." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:12', text: "One more thing — how are you managing with washing and getting dressed each morning?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:12', text: "I like to get myself up and washed in my own time — I'm an early riser, up about six. I can manage most of it myself, but David's helped me shave lately as my hands aren't as steady. I dress myself, no bother." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:13', text: "One more thing — is there a DNACPR or RESPECT form in place?" },
-  { speaker: 'David (Son)', role: 'family', time: '10:13', text: "Yes, there's a DNACPR. It's in the yellow envelope on the table in the living room." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:14', text: "That's really helpful, thank you. Just a couple more things while I'm here — if you're ever a little reluctant about someone helping you, what's the best way for a carer to approach that?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:15', text: "Just don't rush me, and explain what you're doing first. If I've had a bad morning I can be a bit stubborn, but if someone's patient with me I come round." },
-  { speaker: 'David (Son)', role: 'family', time: '10:15', text: "Same if he gets a bit muddled or anxious in the afternoons with the memory thing — best is just to reassure him gently rather than correct him, it settles him much quicker." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:16', text: "That's really useful to know. Last thing — what time do you like to settle down for the night?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:16', text: "Half nine, ten o'clock usually. I don't like being rushed into bed either — same as the mornings, I like to do things in my own time." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:17', text: "What about hobbies, or things you enjoy doing day to day?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:18', text: "I like my garden, though I can't do as much as I used to. I've got a bird table I like to watch from the window. And I play cards with my neighbour, Reg, most Thursdays." },
-  { speaker: 'David (Son)', role: 'family', time: '10:18', text: "Reg has been really good to him. And he loves the football on the telly — doesn't miss a match." },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:19', text: "That's lovely to hear. Would you like any support to keep doing those things?" },
-  { speaker: 'Arthur', role: 'customer', time: '10:20', text: "I'd like a bit of help in the garden if that's possible, and maybe someone to sit with me for the football sometimes, if they don't mind." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:00', text: "Before I get started properly, would you both mind saying your names for the recording? I'll start — I'm Sharon, from the care team." },
+  { speaker: 'Arthur', role: 'customer', time: '10:00', text: "I'm Arthur." },
+  { speaker: 'David (Son)', role: 'family', time: '10:00', text: "And I'm David, Arthur's son." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:01', text: "Hello Arthur, I'm Sharon from the care team — thanks for seeing me. David, good to meet you too. I'd like to understand how things have been since you came home." },
+  { speaker: 'David (Son)', role: 'family', time: '10:02', text: "Dad was in hospital for three weeks after a fall at home — he fractured his hip. He's home now but nowhere near as steady, and I'm worried about him managing on his own. My number's 07980 077250." },
+  { speaker: 'Arthur', role: 'customer', time: '10:03', text: "I've lived in this house forty years and I intend to stay. I've always done for myself, but since the fall I can't manage the way I used to, and that frustrates me." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:05', text: "That's exactly what we're here to help with. Can you tell me about your health?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:06', text: "I've arthritis in my hands and knees, and now the hip. I take a tablet for my blood pressure — amlodipine — and some co-codamol when the pain's bad, but I don't always remember them." },
+  { speaker: 'David (Son)', role: 'family', time: '10:07', text: "That's a worry — he forgets his tablets, and sometimes forgets whether he's eaten. His memory comes and goes, especially in the afternoons." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:08', text: "We can prompt his medication and keep a record. How are you managing with washing and dressing, Arthur?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:09', text: "My top half I'm alright, but I can't manage my legs and feet since the hip, and dressing is a struggle. I'd rather a man helped me with that." },
+  { speaker: 'Arthur', role: 'customer', time: '10:11', text: "And I can't stand long enough to cook now. I've been having biscuits and not much else, if I'm honest — and I don't drink enough, I forget." },
+  { speaker: 'David (Son)', role: 'family', time: '10:12', text: "I'd like someone to make him a proper breakfast and lunch and leave a drink out. I do the evenings when I finish work." },
+  { speaker: 'Arthur', role: 'customer', time: '10:13', text: "I use my frame indoors. There are two steps down to the back door and I daren't do them on my own now." },
+  { speaker: 'David (Son)', role: 'family', time: '10:14', text: "The physio said he's a high falls risk. That's my biggest worry." },
+  { speaker: 'Arthur', role: 'customer', time: '10:16', text: "The laundry and changing my bed too — I can't carry things with the frame. I'd be grateful if someone could see to that." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:17', text: "That's really helpful, thank you. What about hobbies, or things you enjoy doing day to day?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:18', text: "I like a game of cards, though my hands aren't as quick as they were with the arthritis. I listen to the radio a lot, and I look forward to David popping in of an evening." },
+  { speaker: 'David (Son)', role: 'family', time: '10:19', text: "He used to play cards with his neighbour Reg every Thursday — he's missed it since the fall." },
+  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:20', text: "Would you like any support to get back to that once you're steadier on your feet?" },
+  { speaker: 'Arthur', role: 'customer', time: '10:21', text: "I would, if someone wouldn't mind coming with me the first few times, just in case." },
   { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:23', text: "Thank you both, that's given me a really good picture. I'll write this up and the office will be in touch about start dates." },
   { speaker: 'David (Son)', role: 'family', time: '10:23', text: "Thanks Sharon, we appreciate it." },
-  { speaker: 'Arthur', role: 'customer', time: '10:24', text: "Appreciate you coming out. No taking over though, mind!" },
-  { speaker: 'Sharon (Assessor)', role: 'assessor', time: '10:24', text: "Wouldn't dream of it, Arthur." },
+  { speaker: 'Arthur', role: 'customer', time: '10:24', text: "Thank you for coming out." },
 ];
 
 interface AssessmentSection {
@@ -175,129 +181,110 @@ const ASSESSMENT_SECTIONS: AssessmentSection[] = [
   {
     id: 'section-1',
     title: 'Section 1 - Profile and background',
-    text: 'Arthur has lived in his own home in Sutton Coldfield for over forty years and is strongly motivated to remain there. He is house-proud and values his independence, and can find it difficult to accept help that feels like others "taking over". Primary contact is his son David (lives in Florida, currently visiting) on 07980 077250.',
+    text: 'Arthur has lived in his own home in Sutton Coldfield for forty years and is determined to remain there. Recently discharged after a three-week hospital admission for a fractured hip following a fall at home. Used to managing alone and finding reduced independence frustrating. Son David is the main contact (07980 077250) and visits in the evenings after work.',
     promptingQuestions: [
       'Can you tell me about your family background?',
       'Who are the important people in your life?',
-      'Is there anything about your home that matters to you?',
+      'How have things been since you came home?',
     ],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 5, highlight: "I've lived in this house forty years and I don't intend to leave it" },
-      { index: 4, highlight: "I'm his main point of contact — my number's 07980 077250" },
+      { index: 5, highlight: "I've lived in this house forty years and I intend to stay" },
+      { index: 4, highlight: "My number's 07980 077250" },
     ],
   },
   {
     id: 'section-2',
     title: 'Section 2 - Personal care and daily routine',
-    text: `I'm an early riser and usually up by about six. I like to wash and get dressed in my own time, without being rushed, and I can manage most of it myself — I just need a hand with shaving now as my hands aren't as steady as they were. If I seem a bit reluctant some mornings, please don't push me — just explain what you're doing and give me a minute, and I'll come round.
+    text: `My top half I can manage, but I can't manage my legs and feet since the hip, and dressing is a struggle — I'd rather a man helped me with that.
 
-I value my independence and my privacy, and I don't want to feel as though someone's taking over in my own home. Please let me do as much as I can for myself, and offer help rather than just getting on with it.
+I've always looked after myself and I don't want to feel like people are taking over — I'd like to stay as involved as I can, even where I need a hand with the parts I can't manage.
 
-Some afternoons I get a bit muddled with my memory and can seem confused or unsettled. Please don't correct me too bluntly if I've got something wrong — a calm, reassuring approach settles me much quicker than being corrected.
+I do get frustrated some days that I can't do what I used to, so please bear with me if I seem a bit short — it's not personal, I just miss being able to get on with things myself.
 
-I like to settle down for the night around half nine or ten, and I don't like being rushed into bed any more than I like being rushed in the mornings.
-
-Good Dementia Care Guidance for Staff
-- Don't rush me in the mornings or at bedtime — let me do things in my own time.
-- If I seem reluctant, explain what you're doing and give me a moment rather than pushing ahead.
-- If I get muddled or confused, reassure me calmly rather than correcting me bluntly.
-- Support me with shaving, but let me manage the rest of my washing and dressing myself.
-- Respect my independence and my home — I don't want to feel like anyone's taking over.`,
+Good Practice Guidance for Staff
+- Support with washing and dressing the lower half and feet; let me manage my top half myself.
+- Male carer preferred for personal care.
+- Explain what you're doing and let me help where I can, rather than just taking over.
+- Be patient if I seem frustrated — it's the loss of independence, not the carer.`,
     promptingQuestions: [
-      'What time do you usually get up in the morning?',
-      'How are you managing with washing, showering and getting dressed?',
-      'Do you need any support with personal grooming, like shaving?',
-      'Is there a particular way we should approach you if you seem reluctant about support?',
-      'How should carers respond if you seem confused or muddled?',
-      'What time do you usually go to bed?',
-      'Is there anything about your routine that helps you feel comfortable and settled?',
+      'How are you managing with washing and dressing?',
+      'Do you have a preference for a male or female carer?',
+      'Is there a particular way we should approach you if you seem frustrated?',
     ],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 15, highlight: "I like to get myself up and washed in my own time — I'm an early riser, up about six" },
-      { index: 19, highlight: "Just don't rush me, and explain what you're doing first" },
-      { index: 20, highlight: 'best is just to reassure him gently rather than correct him' },
-      { index: 22, highlight: "Half nine, ten o'clock usually" },
+      { index: 10, highlight: "My top half I'm alright, but I can't manage my legs and feet since the hip, and dressing is a struggle. I'd rather a man helped me with that" },
     ],
   },
   {
     id: 'section-3',
     title: 'Section 3 - Activities, exercise and socialising',
-    text: `I enjoy watching the football and cricket on the television, and spending time outdoors when I'm able. My garden means a great deal to me, and so does my bird table — I like to watch the birds from the window even on the days I can't get out there myself. I'd like my carers to support me to spend time in the garden, and to get out for a short walk with my frame, whenever it's safe and practical to do so. Getting outside helps me stay active, maintain my independence, enjoy meaningful occupation and carry on with the things that bring me comfort, purpose and happiness. Playing cards with my neighbour Reg most Thursdays, and having company for the football, also help me stay connected to my community and support my wellbeing.
-
-At times I may become anxious, distressed or unsettled, and ask after my mum and dad, or my late wife. Rather than correcting me, please focus on the feelings behind what I'm saying and provide reassurance — for example, by telling me they've popped out to the shops, or gone to visit my daughter Lorraine. Consistent, calm and compassionate responses help reduce my anxiety and help me feel safe and secure.
-
-I benefit from positive social interaction, reassurance and opportunities to engage in activities that are meaningful and familiar to me. Taking the time to listen to me, validate my feelings and support my choices helps me maintain my wellbeing, independence and quality of life.
-
-I usually like to settle for bed around half nine to ten. Supporting my preferred bedtime routine helps me feel relaxed, comfortable and ready for a good night's sleep.
-
-Good Dementia Care Guidance for Staff
-- Recognise and support the things that matter most to me, including spending time in my garden, watching the birds, playing cards with Reg, and following the football.
-- Focus on my emotional wellbeing rather than factual accuracy when I'm distressed or confused.
-- Use validation, reassurance and redirection rather than correction.
-- Offer choices wherever possible to support my independence, control and decision-making.
-- Encourage and enable me to do as much as I can for myself.
-- Use a calm, patient, compassionate and unhurried approach.
-- Support me to take part in meaningful activities that promote my wellbeing, identity and sense of purpose.
-- Respect my life history, preferences, routines, dignity and individuality at all times.
-- Consider what may be causing any distress or change in behaviour, and respond to the unmet need rather than the behaviour itself.
-- Promote positive risk-taking by supporting me to remain active, independent and engaged in activities that matter to me, whilst managing any identified risks appropriately.`,
+    text: "Enjoys a game of cards, though finds it slower going since his arthritis, and listens to the radio regularly. Values his son David's evening visits. Previously played cards with his neighbour Reg every Thursday but has not been able to go since the fall. Would welcome someone to accompany him back for the first few sessions while he regains his confidence.",
     promptingQuestions: [
-      'What activities do you enjoy participating in daily?',
-      'Are there any activities or hobbies you used to enjoy but stopped doing? If so, why?',
-      'Do you engage in any regular exercise or physical activity? If so, what activities do you enjoy?',
-      'How often do you interact with others socially, either in person or virtually?',
-      'What types of social activities do you enjoy participating in? (e.g. gatherings, outings, group activities)',
-      'Are you involved in any community events, groups, or organisations?',
-      'Have you participated in any community events or activities in the past? If so, what did you enjoy about them?',
-      'Would you like support in finding or participating in community events or groups?',
-      'Do you require any assistance or accommodations to participate in activities, exercise, or socialising?',
-      'How can we support you in maintaining or increasing your engagement in activities and socialising?',
+      'What do you enjoy doing day to day?',
+      'Do you see friends, family or neighbours regularly?',
+      'Would you like any support to keep doing the things you enjoy?',
     ],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 24, highlight: 'I play cards with my neighbour, Reg, most Thursdays' },
-      { index: 27, highlight: "I'd like a bit of help in the garden if that's possible, and maybe someone to sit with me for the football sometimes" },
+      { index: 17, highlight: "I like a game of cards, though my hands aren't as quick as they were with the arthritis" },
+      { index: 20, highlight: "I would, if someone wouldn't mind coming with me the first few times" },
     ],
   },
   {
     id: 'section-4',
     title: 'Section 4 - Nutrition and hydration',
-    text: 'Requires support to prepare lunch and would like a snack plate left out. Due to memory difficulties Arthur may forget whether he has eaten, and has on occasion taken out more than one ready meal. Carer to prepare lunch, offer a snack plate, and look for evidence he has eaten, recording intake in the notes.',
+    text: 'Unable to stand long enough to prepare meals since the fall and has been under-eating (mainly biscuits). Poor fluid intake and forgets to drink. Requires a prepared breakfast and lunch, encouragement with food and fluids, and a drink left within reach. Son covers evening meals.',
     promptingQuestions: [
-      'How are you doing with food and drink?',
-      'Do you need any support preparing meals?',
+      'How are you managing with meals and drinks?',
+      'Are you able to prepare food for yourself?',
     ],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 10, highlight: "I manage a bit but I'd like someone to make me some lunch and maybe leave a snack plate out" },
+      { index: 11, highlight: "I can't stand long enough to cook now. I've been having biscuits and not much else" },
+      { index: 12, highlight: 'make him a proper breakfast and lunch and leave a drink out' },
     ],
   },
   {
     id: 'section-5',
     title: 'Section 5 - Mobility',
-    text: 'Mobilises independently indoors. Uses a wheeled frame outdoors and is wary of the front step — supervision recommended when leaving the property. Enjoys getting outside in good weather.',
+    text: 'Uses a walking frame indoors and is unsteady. Assessed by physiotherapy as a high falls risk. Cannot safely manage the two steps to the back door unaided and needs support and supervision when moving around, particularly with transfers.',
     promptingQuestions: [
-      'How are you getting around the house and outside?',
-      'Do you use any walking aids?',
+      'How do you get around indoors and outdoors?',
+      'Have you had any falls recently?',
     ],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 13, highlight: "Outside I use my frame and I'm a bit wary on the front step" },
+      { index: 13, highlight: 'I use my frame indoors. There are two steps down to the back door' },
+      { index: 14, highlight: "The physio said he's a high falls risk" },
+    ],
+  },
+  {
+    id: 'section-6',
+    title: 'Section 6 - Health and medication',
+    text: 'Osteoarthritis affecting hands, knees and now the hip, with ongoing pain. Prescribed amlodipine for hypertension and co-codamol PRN for pain. Does not reliably remember to take medication and requires prompting and recording. Consistent with his existing memory difficulties, most noticeable in the afternoons — to be monitored.',
+    promptingQuestions: [
+      'Can you tell me about your health?',
+      'What medication are you taking, and do you remember to take it?',
+    ],
+    reviewed: false,
+    sourceLines: [
+      { index: 7, highlight: "I take a tablet for my blood pressure — amlodipine — and some co-codamol when the pain's bad" },
+      { index: 8, highlight: "he forgets his tablets, and sometimes forgets whether he's eaten" },
     ],
   },
   {
     id: 'section-7',
     title: 'Section 7 - Domestic support',
-    text: 'Would like light domestic help: washing up dishes, checking the fridge for out-of-date food and disposing of it, and occasional ironing. Support should be offered sensitively given Arthur is house-proud and independent.',
+    text: 'Unable to carry items while using his frame. Requires help with laundry and changing bed linen. Support to be offered in a way that respects his independence and pride in his home.',
     promptingQuestions: [
-      'Would you like any help with washing up or housework?',
-      'Is there anything around the home you find harder to manage?',
+      'Is there any help you need around the home, like laundry?',
+      'Are you able to carry things safely with your frame?',
     ],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 11, highlight: 'checked the fridge for out-of-date food too, and washed up any dishes' },
+      { index: 15, highlight: "The laundry and changing my bed too — I can't carry things with the frame" },
     ],
   },
 ];
@@ -313,36 +300,20 @@ const SEXUAL_ORIENTATION_OPTIONS = ['Heterosexual/Straight', 'Gay/Lesbian', 'Bis
 const SMOKER_OPTIONS = ['Non-smoker', 'Smoker', 'Ex-smoker', 'Prefer not to say'];
 const PETS_OPTIONS = ['None', 'Dog(s)', 'Cat(s)', 'Other pets'];
 
-// Fields the recording actually covered are marked `reviewed: true` — this
-// visit happened in the past, so everything CareBridge drafted from it has
-// since been reviewed and accepted by a supervisor. Fields it didn't cover
-// are left uncaptured, ready for the reviewer to fill in themselves.
+// Fields the recording actually covered are marked `reviewed: false` — an
+// AI draft awaiting a reviewer's Accept, matching the pending-review demo
+// state this assessment exists to show off. Fields it didn't cover (e.g.
+// DNACPR was never raised at this visit) are left uncaptured, ready for the
+// reviewer to fill in themselves.
 const ARTHUR_PERSONAL_DETAILS: FormField[] = [
   { id: 'language', label: 'What language would you prefer this assessment to be carried out in?', type: 'select', options: LANGUAGE_OPTIONS },
-  { id: 'known-as', label: 'Known as', type: 'text', value: 'Arthur', reviewed: true, sourceLines: [{ index: 1, highlight: 'Arthur' }] },
-  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'He/Him', reviewed: true, sourceLines: [{ index: 7, highlight: 'His' }] },
-  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Man', reviewed: true, sourceLines: [{ index: 7, highlight: 'Dad' }] },
+  { id: 'known-as', label: 'Known as', type: 'text', value: 'Arthur', reviewed: false, sourceLines: [{ index: 1, highlight: 'Arthur' }] },
+  { id: 'pronouns', label: 'Preferred pronouns', type: 'select', options: PRONOUN_OPTIONS, value: 'He/Him', reviewed: false, sourceLines: [{ index: 4, highlight: 'Dad' }] },
+  { id: 'gender-description', label: 'Which of these most accurately describes you?', type: 'select', options: GENDER_DESCRIPTION_OPTIONS, value: 'Man', reviewed: false, sourceLines: [{ index: 4, highlight: 'Dad' }] },
   { id: 'sexual-orientation', label: 'Sexual orientation', type: 'select', options: SEXUAL_ORIENTATION_OPTIONS },
   { id: 'allergies', label: 'Allergies', type: 'table', columns: ['Allergy', 'Symptoms experienced', 'Rescue medication'] },
-  {
-    id: 'dnar',
-    label: 'Is there a DNAR/TEP (e.g. RESPECT form) in place?',
-    type: 'radio',
-    value: 'Yes',
-    reviewed: true,
-    sourceLines: [
-      { index: 16, highlight: 'DNACPR or RESPECT form in place' },
-      { index: 17, highlight: "Yes, there's a DNACPR" },
-    ],
-  },
-  {
-    id: 'dnar-location',
-    label: 'If yes, where can this be found?',
-    type: 'text',
-    value: 'Yellow envelope, living room table',
-    reviewed: true,
-    sourceLines: [{ index: 17, highlight: 'in the yellow envelope on the table in the living room' }],
-  },
+  { id: 'dnar', label: 'Is there a DNAR/TEP (e.g. RESPECT form) in place?', type: 'radio' },
+  { id: 'dnar-location', label: 'If yes, where can this be found?', type: 'text' },
   { id: 'smoker', label: 'Smoker status', type: 'select', options: SMOKER_OPTIONS },
   { id: 'pets', label: 'Pets', type: 'select', options: PETS_OPTIONS },
   { id: 'dietary', label: 'Dietary requirements', type: 'text' },
@@ -352,10 +323,10 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
     type: 'table',
     columns: ['Name', 'Relationship', 'Phone number', 'Decision maker'],
     rows: [['David Barrington', 'Son', '07980 077250', 'Yes']],
-    reviewed: true,
+    reviewed: false,
     sourceLines: [
-      { index: 2, highlight: "David, Arthur's son" },
-      { index: 4, highlight: "I'm his main point of contact — my number's 07980 077250" },
+      { index: 2, highlight: "I'm David, Arthur's son" },
+      { index: 4, highlight: "My number's 07980 077250" },
     ],
   },
   { id: 'poa', label: 'Is there a PoA or alternative decision maker in place?', type: 'radio' },
@@ -366,119 +337,6 @@ const ARTHUR_PERSONAL_DETAILS: FormField[] = [
   { id: 'additional-details', label: 'Additional important details', type: 'text' },
 ];
 
-const MEDICATION_PRESCRIBED_OPTIONS = [
-  'Blood thinners',
-  'Controlled drugs',
-  "PRN/'As required' medications",
-  'Fluctuating dose/sliding dose',
-  'Rescue medications',
-  'Insulin',
-  'Prescriber medication plan',
-  'None of the above',
-  'Not disclosed',
-];
-const MEDICATION_SUPPORT_LEVEL_OPTIONS = ['Administer', 'Prompt', 'Assist', 'Self-administer', 'Specialist administration'];
-
-// Section 6, rebuilt the same way as Personal details — a real multi-field
-// form rather than one prose paragraph. Only what the recording actually
-// covered (the Hydromol ointment support) is filled in; the medication
-// screening checklist and any other prescribed medications weren't discussed
-// at this visit, so they're left "Not yet captured" rather than invented.
-const ARTHUR_SECTION6_FIELDS: FormField[] = [
-  {
-    id: 'additional-information',
-    label: 'Additional information',
-    type: 'textarea',
-    helpText: 'Outline any support that is given to the customer from their care professionals that is not already included in their medical history.',
-    promptingQuestions: ['Are you currently receiving any ongoing medical care, follow up appointments or specialist support with medications?'],
-  },
-  {
-    id: 'prescribed-checks',
-    label: 'Are any of the following prescribed?',
-    type: 'checkbox-group',
-    options: MEDICATION_PRESCRIBED_OPTIONS,
-    helpText: 'If you have checked any of the boxes then this must be included in the support details and medication risk assessment.',
-  },
-  {
-    id: 'support-level',
-    label: 'Medication support level',
-    type: 'checkbox-group',
-    options: MEDICATION_SUPPORT_LEVEL_OPTIONS,
-    values: ['Administer'],
-    helpText: 'If you have checked more than one box, explain why in the details.',
-    reviewed: true,
-    sourceLines: [
-      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
-      { index: 9, highlight: 'We can have the carer apply that for you and keep an eye on your skin.' },
-    ],
-  },
-  {
-    id: 'detail',
-    label: 'Detail',
-    type: 'textarea',
-    value: "I would like my carers to support me with applying my Hydromol ointment to both legs, twice a day, as I can't always manage this myself. Having this support helps me look after my skin and reduces the risk of it being missed.",
-    reviewed: true,
-    promptingQuestions: [
-      'How consistent are you with taking your medications as prescribed?',
-      'Do you have difficulties in remembering to take your medications, or do you encounter any other barriers?',
-      'Do you require assistance or reminders to manage your medications effectively? (does the customer need assistance/prompting/administer?)',
-    ],
-    sourceLines: [
-      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
-    ],
-  },
-  {
-    id: 'support-look-like',
-    label: 'What will medication support look like?',
-    type: 'textarea',
-    value: `I would like my carers to support me with applying my Hydromol ointment, to help me look after my skin and wellbeing.
-
-Carers will:
-
-Apply Hydromol ointment to both lower legs twice daily, as prescribed and in line with my care plan.
-Explain what they are doing and offer reassurance in a calm and respectful manner.
-Encourage me to stay involved as much as I'm able, and support my understanding of what's happening.
-Monitor my skin for any changes, redness or soreness and report concerns through the appropriate channels.
-Report and document any refusals or concerns in line with organisational procedures.
-Order sufficient supplies of Hydromol when required and communicate any concerns about stock levels to my family or the office, as agreed.
-Store my ointment and medication safely and securely in line with policy and guidance.
-
-Good Dementia Care Considerations
-
-Approach me calmly and at my pace.
-Offer reassurance if I appear anxious, confused or reluctant.
-Explain each step using clear and simple language.
-Allow me time to process information and make decisions.
-Respect my choices and preferences whilst ensuring any refusals or concerns are managed appropriately.
-Focus on my wellbeing and comfort, maintaining my dignity throughout.`,
-    reviewed: true,
-    promptingQuestions: [
-      'How will the customer consent?',
-      'Where is medication stored?',
-      'Have you experienced any adverse reactions or intolerances to medications in the past?',
-      'How can we best support you in managing your medications while respecting your preferences and autonomy?',
-      'How is your medication ordered and delivered?',
-      'What is the frequency of delivery of your medications and who orders them?',
-    ],
-    sourceLines: [
-      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day. I can't always manage it myself." },
-      { index: 9, highlight: 'We can have the carer apply that for you and keep an eye on your skin.' },
-    ],
-  },
-  {
-    id: 'medication-list',
-    label: 'Medication list',
-    type: 'table',
-    columns: ['Name of medication', 'Daily dose'],
-    rows: [['Hydromol ointment', 'Apply to both lower legs, twice daily']],
-    helpText: 'OPTIONAL: If required list any medications that are not included on the MAR chart that you need to know about.',
-    reviewed: true,
-    sourceLines: [
-      { index: 8, highlight: "I've got this ointment — Hydromol — for my legs, twice a day" },
-    ],
-  },
-];
-
 interface OutcomeSuggestion {
   id: string;
   title: string;
@@ -486,26 +344,10 @@ interface OutcomeSuggestion {
 }
 
 const SUGGESTED_OUTCOMES: OutcomeSuggestion[] = [
-  {
-    id: 'o-dementia',
-    title: 'Management of Dementia Related Behaviour',
-    text: 'Arthur has memory difficulties and increased confusion in the afternoons. Communicate patiently, allow time to express himself, and provide reassurance. Support daily tasks he now finds harder while preserving his sense of independence.',
-  },
-  {
-    id: 'o-nutrition',
-    title: 'Maintain Adequate Dietary & Fluid Intake',
-    text: 'Support Arthur to prepare and enjoy meals and drinks, encouraging regular intake. Look for evidence he has eaten and gently prevent duplicate ready meals being taken out.',
-  },
-  {
-    id: 'o-daily-living',
-    title: 'Support with Daily Living to Remain at Home',
-    text: 'Carry out light housekeeping so Arthur can remain comfortably in his own home. Always ask before starting tasks and respect his house-proud, independent nature.',
-  },
-  {
-    id: 'o-medication',
-    title: 'Management of Medical Conditions and Medication',
-    text: 'Support Arthur with prescribed medication, including applying Hydromol ointment to both lower legs twice daily. Monitor skin condition and blood pressure management, and report any concerns to the office.',
-  },
+  { id: 'o-falls', title: 'Maintain Safe Mobility & Reduce Falls Risk', text: 'Arthur is a high falls risk following a hip fracture. Support safe transfers and movement around the house, supervise use of the walking frame, and do not attempt the back-door steps unaided. Keep the environment clear of hazards.' },
+  { id: 'o-personal', title: 'Support with Personal Care & Dignity', text: 'Assist Arthur to wash his lower body and feet and to dress, promoting as much independence as possible while preserving dignity. Provide a male carer in line with his preference.' },
+  { id: 'o-nutrition', title: 'Maintain Adequate Dietary & Fluid Intake', text: 'Prepare a nourishing breakfast and lunch, encourage food and regular fluids, and leave a drink within reach. Monitor appetite and intake and report concerns.' },
+  { id: 'o-medication', title: 'Management of Medical Conditions and Medication', text: "Prompt and record Arthur's amlodipine and PRN co-codamol, monitor pain and blood pressure, and watch for changes in memory or wellbeing, reporting to the office." },
 ];
 
 interface TaskSuggestion {
@@ -516,12 +358,12 @@ interface TaskSuggestion {
 }
 
 const SUGGESTED_TASKS: TaskSuggestion[] = [
-  { id: 't-med', title: 'Hydromol Ointment', category: 'Medications', text: 'Apply Hydromol ointment to both lower legs twice a day. Check skin integrity and report redness or swelling to the office.' },
-  { id: 't-lunch', title: 'Lunch', category: 'Nutrition', text: 'Prepare lunch with Arthur, checking whether a ready meal has already been taken out to avoid duplication.' },
-  { id: 't-snack', title: 'Snack Plate', category: 'Nutrition', text: 'Offer to leave a snack plate out and ask what he would like.' },
-  { id: 't-companion', title: 'Companionship', category: 'General', text: 'Sit and have a chat with Arthur — companionship is a priority for him alongside practical support.' },
-  { id: 't-fridge', title: 'Fridge Dates', category: 'General', text: 'Check the fridge for out-of-date food and dispose of anything past its date.' },
-  { id: 't-dishes', title: 'Dishes', category: 'General', text: 'Wash any dishes that have been left out.' },
+  { id: 't-personal', title: 'Personal Care Support', category: 'General', text: 'Assist Arthur to wash his lower half and feet and to dress. Male carer preferred. Promote independence and dignity.' },
+  { id: 't-meals', title: 'Prepare Breakfast & Lunch', category: 'Nutrition', text: 'Prepare a nourishing breakfast and lunch and encourage Arthur to eat. Note intake in the care record.' },
+  { id: 't-fluids', title: 'Encourage Fluids', category: 'Hydration', text: 'Offer and encourage regular drinks, and leave a drink within reach before leaving.' },
+  { id: 't-med', title: 'Medication Prompt', category: 'Medications', text: 'Prompt amlodipine and offer PRN co-codamol for pain as prescribed. Record what is taken and report refusals or concerns.' },
+  { id: 't-mobility', title: 'Mobility & Falls Check', category: 'General', text: 'Supervise transfers and movement with the walking frame. Do not attempt the back-door steps unaided. Check for trip hazards.' },
+  { id: 't-laundry', title: 'Laundry & Bed Change', category: 'General', text: 'Help with laundry and changing bed linen, which Arthur cannot manage with his frame.' },
 ];
 
 interface ChatMessage {
@@ -532,12 +374,12 @@ interface ChatMessage {
 const CHAT: ChatMessage[] = [
   { from: 'ai', text: "I've summarised the assessment visit into draft sections for the Care & Support Plan, plus suggested Outcomes and Tasks. Review and edit anything, or ask me to refine a section." },
   { from: 'ai', text: "This visit also covered consent, receipt of your documents, the Privacy Policy, Terms and Conditions, and the Customer Guide — I've drafted those too. See the secondary sections below the Care Plan." },
-  { from: 'user', text: 'Can you expand the Mobility section — Arthur mentioned he uses a frame outdoors and is wary of the front step.' },
-  { from: 'ai', text: 'Done. Mobility now notes he mobilises independently indoors, uses a wheeled frame outdoors, and needs supervision on the front step. See the updated card.' },
+  { from: 'user', text: 'Add that the physio assessed him as a high falls risk to the mobility section.' },
+  { from: 'ai', text: 'Done — the Mobility section now notes he was assessed by physiotherapy as a high falls risk and cannot manage the back-door steps unaided.' },
+  { from: 'user', text: "He'd prefer a male carer for personal care — make sure that's captured." },
+  { from: 'ai', text: 'Captured — the Personal care section and the personal care outcome both now state that a male carer is preferred.' },
   { from: 'user', text: "Add David's number as the emergency contact in the profile section." },
-  { from: 'ai', text: 'Added — David (son, in Florida) on 07980 077250 is listed as primary contact under Profile & background.' },
-  { from: 'user', text: 'The medication outcome should mention the Hydromol ointment specifically.' },
-  { from: 'ai', text: 'Updated the Medication outcome to reference applying Hydromol ointment to both lower legs twice daily.' },
+  { from: 'ai', text: 'Added — David (son) on 07980 077250 is listed as primary contact under Profile & background.' },
 ];
 
 // ─── Arthur — everything else covered in the same initial visit ─────────────
@@ -637,11 +479,13 @@ const BP_MONITORING_TASK: TaskSuggestion = {
 };
 
 // ─── New enquiry — Mrs Edith Caldwell's assessment ──────────────────────────────
-// Mirrors the same full initial-visit structure as Arthur's (all Care Plan
-// sections, the Personal details form, and every secondary document), but
-// this is a genuinely partial assessment — a single visit, nothing yet
-// accepted — using Edith's own established story (hip fracture, arthritis,
-// falls risk, female-carer preference, daughter Susan visiting evenings).
+// Same shape as Arthur's own initial assessment above (all Care Plan
+// sections, the Personal details form, and every secondary document), both
+// genuinely partial — a single visit, nothing yet accepted — since Arthur's
+// is this same story re-skinned to his own name/family/gender (see the
+// comment above TRANSCRIPT): hip fracture, arthritis, falls risk,
+// male-carer preference for Arthur, female-carer preference here, daughter
+// Susan visiting evenings.
 
 const EDITH_TRANSCRIPT: TranscriptLine[] = [
   { speaker: 'Alison (Assessor)', role: 'assessor', time: '13:59', text: "Before I get started properly, would you both mind saying your names for the recording? I'll start — I'm Alison, from the care team." },
@@ -1047,7 +891,7 @@ const RECORDINGS: Record<string, Recording[]> = {
       focusSections: ASSESSMENT_SECTIONS,
       focusOutcomes: SUGGESTED_OUTCOMES,
       focusTasks: SUGGESTED_TASKS,
-      formSections: { 'personal-details': ARTHUR_PERSONAL_DETAILS, 'section-6': ARTHUR_SECTION6_FIELDS },
+      formSections: { 'personal-details': ARTHUR_PERSONAL_DETAILS },
       secondary: [
         { id: 'consent-care', name: 'Consent to Care', sections: CONSENT_SECTIONS_ARTHUR },
         { id: 'confirm-receipt', name: 'Confirmation of Receipt', sections: RECEIPT_SECTIONS_ARTHUR },
@@ -1056,7 +900,8 @@ const RECORDINGS: Record<string, Recording[]> = {
         { id: 'customer-guide', name: 'Customer Guide – Windsor & Maidenhead', sections: GUIDE_SECTIONS_ARTHUR },
       ],
       chat: CHAT,
-      edits: { focus: 4 },
+      edits: { focus: 3 },
+      isNew: true,
     },
     {
       id: 'review6',
