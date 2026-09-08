@@ -594,12 +594,18 @@ function CarePlanDraftSourcePicker({
   );
 }
 
+// items-start (not items-center) on all three of these — a title long
+// enough to wrap to two lines used to leave the icon floating dead centre
+// between them rather than sitting with the first line, which read as
+// misaligned rather than deliberate. `mt-0.5` nudges the now-bigger icon
+// down slightly so it lines up with the text's cap-height instead of the
+// flex container's own top edge.
 export function TaskBadge({ title, category }: { title: string; category: TaskCategory }) {
   const c = CATEGORY_CONFIG[category];
   const { Icon } = c;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium border ${c.bg} ${c.text} ${c.border}`}>
-      <Icon className="w-3 h-3" />
+    <span className={`inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-sm font-medium border ${c.bg} ${c.text} ${c.border}`}>
+      <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
       {title}
     </span>
   );
@@ -607,8 +613,8 @@ export function TaskBadge({ title, category }: { title: string; category: TaskCa
 
 export function VisitBadge({ title }: { title: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium border bg-sky-50 text-sky-800 border-sky-200">
-      <CalendarSolidIcon className="w-3 h-3 text-sky-600" />
+    <span className="inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-sm font-medium border bg-sky-50 text-sky-800 border-sky-200">
+      <CalendarSolidIcon className="w-4 h-4 mt-0.5 flex-shrink-0 text-sky-600" />
       {title}
     </span>
   );
@@ -616,8 +622,8 @@ export function VisitBadge({ title }: { title: string }) {
 
 export function OutcomeBadge({ title }: { title: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium border text-amber-800" style={{ backgroundColor: '#feefdc', borderColor: '#fcd9a8' }}>
-      <StarSolidIcon className="w-3 h-3 text-amber-600" />
+    <span className="inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-sm font-medium border text-amber-800" style={{ backgroundColor: '#feefdc', borderColor: '#fcd9a8' }}>
+      <StarSolidIcon className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600" />
       {title}
     </span>
   );

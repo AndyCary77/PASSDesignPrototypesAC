@@ -1,0 +1,91 @@
+/* ── Password gate ─────────────────────────────────────────────
+   Sits above everything, including PhoneFrame — this is a meta/admin
+   screen, not part of the app being demoed, so it deliberately doesn't try
+   to look "in character" (no phone bezel, no platform chrome). */
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--greyscale-14-grey-95);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 320px;
+  background: #fff;
+  border: 1px solid var(--ui-purple-6-lavendar-grey);
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.auth-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.auth-title {
+  font-family: Barlow, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.auth-subtitle {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  color: var(--greyscale-6-grey-50);
+  margin: 4px 0 16px;
+}
+
+.auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--ui-purple-4-lavendar);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.auth-input:focus { border-color: var(--brand-purple-6-purple-4); }
+.auth-input--error, .auth-input--error:focus { border-color: var(--rag-red-red-overdue); }
+
+.auth-error {
+  font-family: Barlow, sans-serif;
+  font-size: 12.5px;
+  color: var(--rag-red-red-overdue);
+  margin: 6px 0 0;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 16px;
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 0;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.auth-submit:active { background: var(--brand-purple-1-purple-0); }
