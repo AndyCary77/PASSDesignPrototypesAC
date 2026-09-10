@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { Stethoscope, Calendar, Check, Search, ChevronRight, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { useCustomer } from '../../data/CustomerContext';
-import { EmptyTab } from './caremanagement/shared';
+import { EmptyTab, DiscardButton } from './caremanagement/shared';
 import { TranscriptCheckPopover, resolveRecording, type TranscriptLine } from './CareBridgePage';
 import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
 import { triggerPassGeniusHover } from '../icons/passgenius';
@@ -134,15 +134,17 @@ function DiagnosisCard({
   transcript,
   audioUrl,
   onAccept,
+  onReject,
 }: {
   d: Diagnosis;
   transcript: TranscriptLine[];
   audioUrl?: string;
   onAccept: () => void;
+  onReject: () => void;
 }) {
   const pending = d.reviewed === false;
   return (
-    <div className={`bg-white rounded-[10px] border overflow-hidden ${pending ? 'border-amber-300' : 'border-red-200'}`}>
+    <div className="bg-white rounded-[10px] border border-red-200 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-3 bg-red-50 border-b border-red-200">
         <div className="flex items-center gap-2 min-w-0">
           <Stethoscope className="w-4 h-4 text-red-800 flex-shrink-0" />
@@ -163,6 +165,14 @@ function DiagnosisCard({
                 </button>
               </TranscriptCheckPopover>
             )}
+            {/* Unlike a personal-care preference, a suggested diagnosis can
+                just be wrong or not actually relevant — worth a real way to
+                remove it entirely, not just leave it unaccepted. Reuses the
+                same Discard confirm dialog Care Management already uses for
+                a drafted Outcome/Task, rather than inventing new copy for
+                the identical "AI suggested this, take it out for good"
+                action. */}
+            <DiscardButton onDiscard={onReject} itemLabel="diagnosis" />
             <button type="button" onClick={onAccept} className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer">
               <Check className="w-3.5 h-3.5" /> Accept
             </button>
@@ -196,6 +206,13 @@ export function MedicalHistoryPage() {
 
   const acceptDiagnosis = (id: string) => {
     setDiagnoses(prev => prev.map(d => (d.id === id ? { ...d, reviewed: true } : d)));
+  };
+
+  // Removes the suggestion outright rather than just marking it reviewed —
+  // rejecting a diagnosis means "this doesn't belong on the record", not
+  // "correct but not yet confirmed".
+  const rejectDiagnosis = (id: string) => {
+    setDiagnoses(prev => prev.filter(d => d.id !== id));
   };
 
   return (
@@ -300,6 +317,7 @@ export function MedicalHistoryPage() {
               transcript={linkedRecording?.transcript ?? []}
               audioUrl={linkedRecording?.audioUrl}
               onAccept={() => acceptDiagnosis(d.id)}
+              onReject={() => rejectDiagnosis(d.id)}
             />
           ))}
         </div>
