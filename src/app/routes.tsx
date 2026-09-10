@@ -22,7 +22,8 @@ import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 import { LandingPage } from './components/LandingPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
-import { AboutMePage, AboutMeSubnav } from './components/customer/AboutMePage';
+import { AboutMePage, AboutMeSubnav, AboutMeProvider } from './components/customer/AboutMePage';
+import { MedicalHistoryPage } from './components/customer/MedicalHistoryPage';
 import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './components/customer/CareBridgePage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { TagsManagementPage } from './components/office/TagsManagementPage';
@@ -150,6 +151,16 @@ function CustomerDetailsLayout() {
   );
 }
 
+function MedicalHistoryLayout() {
+  return (
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <MedicalHistoryPage />
+      </AppShell>
+    </CustomerProvider>
+  );
+}
+
 function CareManagementLayout() {
   return (
     <CustomerProvider>
@@ -247,9 +258,11 @@ function MARChartLayout() {
 function AboutMeLayout() {
   return (
     <CustomerProvider>
-      <AppShell infoBar={<><CustomerInfo /><AboutMeSubnav /></>}>
-        <AboutMePage />
-      </AppShell>
+      <AboutMeProvider>
+        <AppShell infoBar={<><CustomerInfo /><AboutMeSubnav /></>}>
+          <AboutMePage />
+        </AppShell>
+      </AboutMeProvider>
     </CustomerProvider>
   );
 }
@@ -334,6 +347,10 @@ export const router = createBrowserRouter([
   {
     path: "/customers/:customerId/aboutme",
     Component: AboutMeLayout,
+  },
+  {
+    path: "/customers/:customerId/medicalhistory",
+    Component: MedicalHistoryLayout,
   },
   {
     path: "/customers/:customerId/details",

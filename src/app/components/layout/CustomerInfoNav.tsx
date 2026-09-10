@@ -191,7 +191,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
             <a href="#" className={inactiveTabClass}>Checklists</a>
             <Link to={base} className={pathname === base ? activeTabClass : inactiveTabClass}>Rostering</Link>
             <a href="#" className={inactiveTabClass}>Communications</a>
-            <a href="#" className={inactiveTabClass}>Medical History</a>
+            <Link to={`${base}/medicalhistory`} className={tabClass(pathname, `${base}/medicalhistory`)}>Medical History</Link>
             <a href="#" className={inactiveTabClass}>Customer File</a>
           </nav>
         </div>

@@ -1,7 +1,13 @@
-import { Printer, Calendar } from 'lucide-react';
+import { createContext, useContext as useReactContext, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { Printer, Calendar, ChevronRight, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
+import type { CustomerProfile } from '../../data/customers';
+import { FormFieldsView, isFieldCaptured, resolveRecording, type FormField, type Recording } from './CareBridgePage';
+import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
+import { triggerPassGeniusHover } from '../icons/passgenius';
 
 const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
 const inputClass =
@@ -21,21 +27,11 @@ interface AboutMeRecord {
   fields: AboutMeField[];
 }
 
+// Arthur no longer lives here as plain prose — see ARTHUR_ABOUT_ME_FIELDS
+// below, drafted from his Personal Care / Moving and Handling recording.
+// This record now only covers customers with no Assessment Hero draft
+// behind their About Me.
 const ABOUT_ME: Record<string, AboutMeRecord> = {
-  'arthur-barrington': {
-    updatedDate: '14/10/2025',
-    updatedBy: 'Sharon Hunter',
-    supportedBy: 'Sharon Hunter',
-    fields: [
-      { id: 'importantToMe', label: 'What is most important to me', rows: 3, value: 'Being supported in my own home and maintaining my independence as much as possible.' },
-      { id: 'importantPeople', label: 'People who are important to me', rows: 3, value: 'My children Christopher, Lorraine and David. Lorraine lives in Seghill, Christopher lives in Leicester and David lives in Florida.' },
-      { id: 'communication', label: 'How I communicate and how to communicate with me', rows: 3, value: 'I communicate verbally and I would like my carer to communicate with me the same way. Please speak clearly as my hearing is not as sharp as it used to be.' },
-      { id: 'wellness', label: 'My wellness', rows: 4, value: 'I am a very positive man. I have been living with vascular dementia which can affect my memory and sometimes causes periods of confusion, particularly later in the day. I also have hypertension which I manage with medication. I try to stay active and keep a positive outlook.' },
-      { id: 'doAndDont', label: 'Please do and please don\'t', rows: 3, value: 'Please don\'t come into my home and take over. I am very house proud and value my independence. Please do ask me what I would like help with before starting — I like things done a certain way.' },
-      { id: 'howToSupportMe', label: 'How and when to support me', rows: 4, value: 'I would like a carer to visit me regularly to help with daily tasks and companionship. I may decide I would like help with household chores such as hoovering or polishing. I may also decide to go shopping. My son David\'s contact number is 07980 077250 — please call him if there are any concerns.' },
-      { id: 'alsoWorthKnowing', label: 'Also worth knowing about me', rows: 5, value: 'I was born in Birmingham and have lived in Sutton Coldfield for most of my adult life. I worked as a mechanical engineer for over thirty years before retiring. I have three children — Lorraine, Christopher and David. David emigrated to Florida many years ago but we stay in regular contact. I enjoy watching football and cricket and like to keep up with the news each day. In my younger years I was very active and enjoyed gardening and walking. I still try to get outside when I am able.' },
-    ],
-  },
   'edith-caldwell': {
     updatedDate: '07/07/2026',
     updatedBy: 'Alison Reed',
@@ -76,10 +72,155 @@ function getAboutMe(customerId: string): AboutMeRecord {
   return ABOUT_ME[customerId] ?? EMPTY_ABOUT_ME;
 }
 
+// ─── Arthur's About Me — an Assessment Hero draft ────────────────────────
+// Drafted from the same recording as PersonalCareMovingHandlingDocumentPage
+// (Claire Doyle, 5 Sep 2026 — see ARTHUR_PERSONAL_CARE_TRANSCRIPT in
+// CareBridgePage.tsx) — demonstrates Assessment Hero drafting a second,
+// quite different document from the one recording. That visit was about
+// personal care and moving and handling specifically, not a life-story
+// conversation, so only the fields it actually touched on are filled in;
+// `importantPeople` and `communication` weren't covered at all and are left
+// genuinely uncaptured rather than inventing content — same honest-gaps
+// rule every other drafted field in this app follows.
+const ARTHUR_ABOUT_ME_FIELDS: FormField[] = [
+  {
+    id: 'importantToMe',
+    label: 'What is most important to me',
+    type: 'textarea',
+    value: "Arthur wants to manage as much of his own personal care as he can — he washes at the sink, showers standing at the rail, and brushes his own teeth — and only wants a hand with the specific bits he genuinely can't manage, like reaching his back or opening a stiff toothpaste tube.",
+    reviewed: false,
+    sourceLines: [
+      { index: 4, highlight: 'The rest of the washing I can manage fine at the sink.' },
+      { index: 10, highlight: "I can stand at the rail and do most of it myself" },
+      { index: 14, highlight: 'I can brush them fine' },
+    ],
+  },
+  {
+    id: 'importantPeople',
+    label: 'People who are important to me',
+    type: 'textarea',
+  },
+  {
+    id: 'communication',
+    label: 'How I communicate and how to communicate with me',
+    type: 'textarea',
+  },
+  {
+    id: 'wellness',
+    label: 'My wellness',
+    type: 'textarea',
+    value: "Arthur mentioned his hip has been playing up, and his shoulder has been bad for a few weeks — flagged separately for a professional to take a look at.",
+    reviewed: false,
+    sourceLines: [
+      { index: 2, highlight: 'my hip was playing up' },
+      { index: 22, highlight: "that's been bad for a few weeks now" },
+    ],
+  },
+  {
+    id: 'doAndDont',
+    label: "Please do and please don't",
+    type: 'textarea',
+    value: "Please let Arthur do what he can for himself — washing at the sink, showering at the rail, brushing his own teeth — and only step in for the parts he's asked for help with, like his back, buttons when his fingers are stiff with the cold, or opening the toothpaste.",
+    reviewed: false,
+    sourceLines: [
+      { index: 4, highlight: "I can't twist round to do it myself anymore" },
+      { index: 12, highlight: "My fingers just won't do what I tell them some mornings, especially if it's cold." },
+    ],
+  },
+  {
+    id: 'howToSupportMe',
+    label: 'How and when to support me',
+    type: 'textarea',
+    value: "Help washing his back, at the sink and in the shower; getting in and out of the bath on Sundays — especially getting back up; standing nearby while he showers in case he goes dizzy (has happened once or twice); a hand with shirt buttons and getting his arms into a jumper or jacket when his shoulder's stiff; opening his toothpaste tube; and checking and changing continence pads.",
+    reviewed: false,
+    sourceLines: [
+      { index: 4 },
+      { index: 8 },
+      { index: 10, highlight: "someone just being nearby in case I go a bit dizzy, it's happened once or twice" },
+      { index: 12 },
+      { index: 14 },
+      { index: 20 },
+    ],
+  },
+  {
+    id: 'alsoWorthKnowing',
+    label: 'Also worth knowing about me',
+    type: 'textarea',
+    value: "Arthur likes a bath on Sundays. He can occasionally feel a little dizzy in the shower, so carers should stay nearby while he's washing. He also uses an electric razor and a hairdryer, but needs a hand holding the mirror steady and with the hairdryer's plug.",
+    reviewed: false,
+    sourceLines: [
+      { index: 6, highlight: 'I like a bath on a Sunday' },
+      { index: 10, highlight: "someone just being nearby in case I go a bit dizzy" },
+      { index: 16, highlight: "I need someone to hold the mirror steady, and switch it on for me" },
+    ],
+  },
+];
+
+const ARTHUR_ABOUT_ME_META = { updatedDate: '05/09/2026', updatedBy: 'Claire Doyle', supportedBy: 'Claire Doyle' };
+
+// ─── Shared state for both the subnav and the page content ──────────────
+// Only Arthur has a linked recording (see `isDraft`/`linkedRecording`
+// below) — every other customer's fields/pendingReview/etc. sit unused,
+// same shape either way so both consumers can read one context regardless
+// of which customer is loaded.
+
+interface AboutMeState {
+  customer: CustomerProfile;
+  navigate: ReturnType<typeof useNavigate>;
+  record: AboutMeRecord;
+  isDraft: boolean;
+  linkedRecording: Recording | null;
+  fields: FormField[];
+  setFields: (fields: FormField[]) => void;
+  dirty: boolean;
+  setDirty: (dirty: boolean) => void;
+  published: boolean;
+  setPublished: (published: boolean) => void;
+  pendingReview: boolean;
+  pendingCount: number;
+  passgeniusRef: React.RefObject<HTMLObjectElement | null>;
+}
+
+const AboutMeContext = createContext<AboutMeState | null>(null);
+
+function useAboutMe(): AboutMeState {
+  const ctx = useReactContext(AboutMeContext);
+  if (!ctx) throw new Error('useAboutMe must be used within AboutMeProvider');
+  return ctx;
+}
+
+export function AboutMeProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const customer = useCustomer();
+  const isDraft = customer.id === 'arthur-barrington';
+  const record = isDraft
+    ? { ...ARTHUR_ABOUT_ME_META, fields: [] as AboutMeField[] } // fields unused in draft mode — see ARTHUR_ABOUT_ME_FIELDS
+    : getAboutMe(customer.id);
+  const [fields, setFields] = useState<FormField[]>(ARTHUR_ABOUT_ME_FIELDS);
+  const [dirty, setDirty] = useState(false);
+  const [published, setPublished] = useState(false);
+  const passgeniusRef = useRef<HTMLObjectElement>(null);
+  const linkedRecording = isDraft ? resolveRecording(customer.id, 'personal-care') ?? null : null;
+
+  // isFieldCaptured (not a plain `!!f.value` check) for consistency with
+  // every other Assessment Hero draft page, even though every field here
+  // happens to be a plain textarea.
+  const pendingFields = fields.filter(f => isFieldCaptured(f) && f.reviewed === false);
+  const pendingReview = pendingFields.length > 0;
+  const pendingCount = pendingFields.length;
+
+  return (
+    <AboutMeContext.Provider
+      value={{ customer, navigate, record, isDraft, linkedRecording, fields, setFields, dirty, setDirty, published, setPublished, pendingReview, pendingCount, passgeniusRef }}
+    >
+      {children}
+    </AboutMeContext.Provider>
+  );
+}
+
 export function AboutMeSubnav() {
   const scrolled = useScrolled();
-  const customer = useCustomer();
-  const record = getAboutMe(customer.id);
+  const { record, isDraft, dirty, setDirty, published } = useAboutMe();
   return (
     <div className="bg-gray-50 border-b border-gray-200">
       {/* Same max-w-5xl w-full mx-auto (no extra px) as CareManagementSubnav —
@@ -93,40 +234,135 @@ export function AboutMeSubnav() {
         </span>
         <div className="flex items-center gap-3">
           <Button variant="tertiary" icon={<Printer className="w-4 h-4" />}>Print</Button>
-          <Button>Save</Button>
+          {/* "Save Draft" while it's still a draft, same wording switch as
+              the other Assessment Hero document pages — plain "Save" for
+              every customer without one. */}
+          <Button disabled={isDraft && published && !dirty} onClick={() => setDirty(false)}>
+            {isDraft ? (published ? 'Save' : 'Save Draft') : 'Save'}
+          </Button>
         </div>
       </div>
     </div>
   );
 }
 
+/** The purple "Assessment Hero Draft" banner — same shell as every other drafted document (see PersonalCareMovingHandlingDocumentPage). Only ever shown for Arthur. */
+function AssessmentHeroDraftBanner() {
+  const { customer, navigate, linkedRecording, published, setPublished, pendingReview, pendingCount, passgeniusRef } = useAboutMe();
+
+  if (published) {
+    return (
+      <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+        <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+        </div>
+        <div>
+          <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
+          <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+            This document has been published from the Assessment Hero draft — it's now a saved document and is no
+            longer tracked as a draft.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-lg border border-purple-200 shadow overflow-hidden"
+      onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
+      onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
+    >
+      <div className="flex items-start gap-3 bg-white px-4 py-3">
+        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
+          <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">
+            Assessment Hero Draft
+            {pendingCount > 0 && (
+              <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                {pendingCount} {pendingCount === 1 ? 'field' : 'fields'} to review
+              </span>
+            )}
+          </p>
+
+          {linkedRecording && (
+            <p className="text-sm text-purple-800 mt-0.5">
+              Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
+              <strong>
+                {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
+                {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
+              </strong>{' '}
+              by <strong>{linkedRecording.recordedBy}</strong> — review the fields below and accept them to confirm
+              they're correct before they're saved to the customer file.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
+        {linkedRecording ? (
+          <button
+            type="button"
+            onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
+            className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+          >
+            View recording
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        ) : <span />}
+
+        <Button
+          icon={<Send className="w-4 h-4" />}
+          disabled={pendingReview}
+          title={pendingReview ? 'Accept the outstanding drafted fields before publishing' : undefined}
+          onClick={() => setPublished(true)}
+        >
+          Publish
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function AboutMePage() {
-  const customer = useCustomer();
-  const record = getAboutMe(customer.id);
+  const { record, isDraft, fields, setFields, linkedRecording, setDirty } = useAboutMe();
 
   return (
     // Same max-w-5xl mx-auto as CareManagementPage's own content wrapper —
     // centred and the same width as the subnav bar above it, rather than the
     // card sitting left-aligned at its own arbitrary width.
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto space-y-4">
+      {isDraft && <AssessmentHeroDraftBanner />}
+
       {/* Form card — rendered blank (see EMPTY_ABOUT_ME) rather than swapped
           out for a placeholder when nothing's been recorded yet, so the form
           itself is what a reviewer sees before any detail exists. */}
-      <div className="bg-white rounded-[10px] border border-gray-200 p-6 space-y-5">
+      <div className="bg-white rounded-[10px] border border-gray-200 p-6 space-y-5" onChange={() => setDirty(true)}>
         <h2 className="text-base font-semibold text-gray-900">About me</h2>
 
-        {record.fields.map(field => (
-          <div key={field.id}>
-            <label htmlFor={field.id} className={labelClass}>{field.label}</label>
-            <textarea
-              id={field.id}
-              defaultValue={field.value}
-              placeholder="Not yet recorded"
-              rows={field.rows}
-              className={`${inputClass} resize-none`}
-            />
-          </div>
-        ))}
+        {isDraft ? (
+          <FormFieldsView
+            fields={fields}
+            onChange={updated => setFields(fields.map(f => updated.find(u => u.id === f.id) ?? f))}
+            transcript={linkedRecording?.transcript ?? []}
+            audioUrl={linkedRecording?.audioUrl}
+          />
+        ) : (
+          record.fields.map(field => (
+            <div key={field.id}>
+              <label htmlFor={field.id} className={labelClass}>{field.label}</label>
+              <textarea
+                id={field.id}
+                defaultValue={field.value}
+                placeholder="Not yet recorded"
+                rows={field.rows}
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+          ))
+        )}
 
         {/* Date + Supported by */}
         <div className="grid grid-cols-2 gap-5">

@@ -78,7 +78,7 @@ const SECTION_INTROS: Partial<Record<string, string>> = {
 // untouched — they never referenced Edith's specific story and were already
 // genuinely Arthur's own.
 
-interface TranscriptLine {
+export interface TranscriptLine {
   speaker: string;
   role: 'assessor' | 'customer' | 'family';
   time: string;
@@ -1572,7 +1572,7 @@ const SNIPPET_LEAD_IN = 0.6;
  * modal) so it reads as a callout from that specific link rather than a
  * disconnected overlay — the arrow ties it visually back to its trigger.
  */
-function TranscriptCheckPopover({
+export function TranscriptCheckPopover({
   fieldLabel,
   transcript,
   references,
