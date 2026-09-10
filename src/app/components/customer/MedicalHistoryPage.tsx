@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Stethoscope, Calendar, Check, Search, ChevronRight, CheckCircle2, Send } from 'lucide-react';
-import { Button } from '../buttons/Button';
+import { Stethoscope, Calendar, Check, Search, ChevronRight } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
 import { EmptyTab, DiscardButton } from './caremanagement/shared';
 import { TranscriptCheckPopover, resolveRecording, type TranscriptLine } from './CareBridgePage';
@@ -133,13 +132,13 @@ function DiagnosisCard({
   d,
   transcript,
   audioUrl,
-  onAccept,
+  onPublish,
   onReject,
 }: {
   d: Diagnosis;
   transcript: TranscriptLine[];
   audioUrl?: string;
-  onAccept: () => void;
+  onPublish: () => void;
   onReject: () => void;
 }) {
   const pending = d.reviewed === false;
@@ -173,8 +172,14 @@ function DiagnosisCard({
                 the identical "AI suggested this, take it out for good"
                 action. */}
             <DiscardButton onDiscard={onReject} itemLabel="diagnosis" />
-            <button type="button" onClick={onAccept} className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer">
-              <Check className="w-3.5 h-3.5" /> Accept
+            {/* "Publish" rather than "Accept" — each diagnosis is its own
+                independent record (added, and removable, one at a time via
+                Discard above), not a field in one larger document that
+                gets signed off as a whole. Confirming this one commits it
+                to the customer's medical history immediately; it isn't
+                held back by whatever's still pending on the others. */}
+            <button type="button" onClick={onPublish} className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer">
+              <Check className="w-3.5 h-3.5" /> Publish
             </button>
           </div>
         )}
@@ -184,7 +189,7 @@ function DiagnosisCard({
         {d.reviewed === true && (
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[rgb(232,247,232)] border border-[rgb(178,224,178)] px-2.5 py-1">
             <Check className="w-3 h-3 text-[rgb(33,166,33)] flex-shrink-0" />
-            <span className="text-sm text-[rgb(16,100,16)]">Accepted</span>
+            <span className="text-sm text-[rgb(16,100,16)]">Published</span>
           </div>
         )}
       </div>
@@ -197,14 +202,14 @@ export function MedicalHistoryPage() {
   const navigate = useNavigate();
   const isDraft = customer.id === 'arthur-barrington';
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>(() => getMedicalHistory(customer.id));
-  const [published, setPublished] = useState(false);
   const passgeniusRef = useRef<HTMLObjectElement>(null);
   const linkedRecording = isDraft ? resolveRecording(customer.id, 'personal-care') ?? null : null;
 
   const pendingCount = diagnoses.filter(d => d.reviewed === false).length;
-  const pendingReview = pendingCount > 0;
 
-  const acceptDiagnosis = (id: string) => {
+  // Publishes just this one diagnosis — there's no document-level Publish
+  // gating everything else, see the note on the per-card button below.
+  const publishDiagnosis = (id: string) => {
     setDiagnoses(prev => prev.map(d => (d.id === id ? { ...d, reviewed: true } : d)));
   };
 
@@ -217,77 +222,59 @@ export function MedicalHistoryPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
+      {/* No document-level Publish here (see publishDiagnosis) — this banner
+          is purely informational now: where the drafted entries came from,
+          and how many are still outstanding. It stays up even once nothing's
+          pending, since "generated from this recording" is worth being able
+          to trace back to at any point, not just while there's review work
+          left to do. */}
       {isDraft && (
-        published ? (
-          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+        <div
+          className="rounded-lg border border-purple-200 shadow overflow-hidden"
+          onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
+          onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
+        >
+          <div className="flex items-start gap-3 bg-white px-4 py-3">
+            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
+              <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
             </div>
-            <div>
-              <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-                This document has been published from the Assessment Hero draft — it's now a saved document and is no
-                longer tracked as a draft.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="rounded-lg border border-purple-200 shadow overflow-hidden"
-            onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-            onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-          >
-            <div className="flex items-start gap-3 bg-white px-4 py-3">
-              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-                <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">
-                  Assessment Hero Draft
-                  {pendingCount > 0 && (
-                    <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
-                      {pendingCount} {pendingCount === 1 ? 'field' : 'fields'} to review
-                    </span>
-                  )}
-                </p>
-                {linkedRecording && (
-                  <p className="text-sm text-purple-800 mt-0.5">
-                    Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
-                    <strong>
-                      {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
-                      {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
-                    </strong>{' '}
-                    by <strong>{linkedRecording.recordedBy}</strong> — a conversation about personal care doesn't
-                    name diagnoses outright, so review each flagged entry below; some point straight to what was
-                    said, others are a judgement call worth double-checking.
-                  </p>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">
+                Assessment Hero Draft
+                {pendingCount > 0 && (
+                  <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                    {pendingCount} {pendingCount === 1 ? 'field' : 'fields'} to review
+                  </span>
                 )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
-              {linkedRecording ? (
-                <button
-                  type="button"
-                  onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
-                >
-                  View recording
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              ) : <span />}
-
-              <Button
-                icon={<Send className="w-4 h-4" />}
-                disabled={pendingReview}
-                title={pendingReview ? 'Accept the outstanding flagged entries before publishing' : undefined}
-                onClick={() => setPublished(true)}
-              >
-                Publish
-              </Button>
+              </p>
+              {linkedRecording && (
+                <p className="text-sm text-purple-800 mt-0.5">
+                  Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
+                  <strong>
+                    {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
+                    {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
+                  </strong>{' '}
+                  by <strong>{linkedRecording.recordedBy}</strong> — a conversation about personal care doesn't
+                  name diagnoses outright, so review each flagged entry below; some point straight to what was
+                  said, others are a judgement call worth double-checking.
+                </p>
+              )}
             </div>
           </div>
-        )
+
+          {linkedRecording && (
+            <div className="bg-purple-50 border-t border-purple-200 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
+                className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+              >
+                View recording
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {diagnoses.length === 0 ? (
@@ -316,7 +303,7 @@ export function MedicalHistoryPage() {
               d={d}
               transcript={linkedRecording?.transcript ?? []}
               audioUrl={linkedRecording?.audioUrl}
-              onAccept={() => acceptDiagnosis(d.id)}
+              onPublish={() => publishDiagnosis(d.id)}
               onReject={() => rejectDiagnosis(d.id)}
             />
           ))}
