@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Stethoscope, Calendar, Check, Search, ChevronRight } from 'lucide-react';
+import { Stethoscope, Calendar, Check, Search } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
 import { EmptyTab, DiscardButton } from './caremanagement/shared';
-import { TranscriptCheckPopover, resolveRecording, type TranscriptLine } from './CareBridgePage';
+import { TranscriptCheckPopover, RecordingsLink, resolveRecording, type Recording } from './CareBridgePage';
 import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
 import { triggerPassGeniusHover } from '../icons/passgenius';
 
@@ -14,7 +14,9 @@ interface Diagnosis {
   dateOfDiagnosis: string;
   /** false = Assessment Hero drafted/flagged this from a recording and it hasn't been accepted yet. Undefined for a plain, non-drafted entry (every customer except Arthur, for now). */
   reviewed?: boolean;
-  /** Where in the linked recording's transcript this ties back to — omitted where there's genuinely nothing to point at, in which case the field still shows Accept, just no "Check transcript". */
+  /** Which recording sourceLines below indexes into — a document can draw on more than one (see the note above MEDICAL_HISTORY). Defaults to 'personal-care' when a pending diagnosis omits it. */
+  recordingId?: string;
+  /** Where in that recording's transcript this ties back to — omitted where there's genuinely nothing to point at, in which case the field still shows Publish, just no "Check transcript". */
   sourceLines?: { index: number; highlight?: string }[];
 }
 
@@ -37,15 +39,21 @@ interface Diagnosis {
 // content is also deliberately absent — see project_arthur_about_me_draft's
 // note on why that thread isn't being carried forward into new content.
 //
-// `reviewed`/`sourceLines` (2026-09-10): demonstrating Assessment Hero
-// drafting this tab too, from the same recording as the About Me and
-// Personal Care documents. Honestly mixed rather than uniformly confident —
-// a conversation about personal care doesn't actually name diagnoses, so
-// only the three fields with a real, specific line to point at get "Check
-// transcript" (Fractured Hip, Benign Prostatic Hypertrophy, Type 2
-// Diabetes); the other three are flagged pending too (Assessment Hero
-// judged them relevant) but with nothing concrete to cite, same as any
-// other field with reviewed:false and no sourceLines elsewhere in this app.
+// `reviewed`/`sourceLines`/`recordingId` (2026-09-10): demonstrating
+// Assessment Hero drafting this tab too — and, from two different
+// recordings, not just the one Personal Care/About Me draw from. Arthur's
+// original 'initial' assessment already has him naming his arthritis and
+// blood pressure tablet in the same breath (TRANSCRIPT index 7 in
+// CareBridgePage.tsx: "I've arthritis in my hands and knees, and now the
+// hip. I take a tablet for my blood pressure — amlodipine..."), so
+// Osteoarthritis and Essential Hypertension cite that recording instead of
+// Personal Care. Fractured Hip, Benign Prostatic Hypertrophy and Type 2
+// Diabetes still cite Personal Care as before. Ischemic Stroke has no real
+// line in *either* recording, so it stays uncited — a conversation about
+// personal care doesn't name diagnoses outright, and honestly, neither
+// visit ever mentions a stroke — same "flagged pending, nothing concrete
+// to cite" pattern used everywhere else a field has reviewed:false and no
+// sourceLines.
 const MEDICAL_HISTORY: Record<string, Diagnosis[]> = {
   'arthur-barrington': [
     {
@@ -54,6 +62,7 @@ const MEDICAL_HISTORY: Record<string, Diagnosis[]> = {
       notes: "I fractured my hip in a fall at home and spent three weeks in hospital. It's healed now, but it still gives me some trouble now and again — I can have a rough night with it, and I use a wheeled frame to get around outside as a result.",
       dateOfDiagnosis: 'August 2025',
       reviewed: false,
+      recordingId: 'personal-care',
       sourceLines: [{ index: 2, highlight: 'my hip was playing up' }],
     },
     {
@@ -62,6 +71,8 @@ const MEDICAL_HISTORY: Record<string, Diagnosis[]> = {
       notes: "I have osteoarthritis in my hands, knees and hip, which causes ongoing joint pain and stiffness. My grip isn't as strong as it used to be, and my fingers can seize up first thing or when it's cold, which makes fiddly things like buttons harder than they used to be.",
       dateOfDiagnosis: 'March 2016',
       reviewed: false,
+      recordingId: 'initial',
+      sourceLines: [{ index: 7, highlight: "I've arthritis in my hands and knees, and now the hip." }],
     },
     {
       id: 'bph',
@@ -69,6 +80,7 @@ const MEDICAL_HISTORY: Record<string, Diagnosis[]> = {
       notes: 'Benign prostatic hypertrophy is also called an enlarged prostate — a non-cancerous growth of the prostate gland that presses on the urethra and makes it harder to urinate. I had an operation for this in July 2026, which has left me needing to wear continence pads day and night since — carers help me check and change these.',
       dateOfDiagnosis: 'November 2015',
       reviewed: false,
+      recordingId: 'personal-care',
       sourceLines: [{ index: 20, highlight: 'I wear pads, day and night now, since the operation' }],
     },
     {
@@ -84,6 +96,8 @@ const MEDICAL_HISTORY: Record<string, Diagnosis[]> = {
       notes: 'Essential hypertension is high blood pressure with no single known cause. I can get headaches, or feel a bit dizzy or light-headed with it sometimes. I take Amlodipine 5mg daily to manage it.',
       dateOfDiagnosis: 'November 2010',
       reviewed: false,
+      recordingId: 'initial',
+      sourceLines: [{ index: 7, highlight: 'I take a tablet for my blood pressure — amlodipine' }],
     },
     {
       id: 'diabetes',
@@ -91,6 +105,7 @@ const MEDICAL_HISTORY: Record<string, Diagnosis[]> = {
       notes: "I've been diagnosed with type 2 diabetes — my body doesn't make enough insulin, or the insulin it makes doesn't work properly, so sugar builds up in my blood. I can get very dry skin because of it, especially on my legs, and cuts or sores can take longer to heal, so carers keep an eye on my skin. I take Metformin 500mg daily to manage this.",
       dateOfDiagnosis: 'June 2008',
       reviewed: false,
+      recordingId: 'personal-care',
       sourceLines: [{ index: 18, highlight: "my legs get ever so dry, especially in winter, cracks a bit round the ankles" }],
     },
   ],
@@ -130,14 +145,13 @@ function getMedicalHistory(customerId: string): Diagnosis[] {
 
 function DiagnosisCard({
   d,
-  transcript,
-  audioUrl,
+  recording,
   onPublish,
   onReject,
 }: {
   d: Diagnosis;
-  transcript: TranscriptLine[];
-  audioUrl?: string;
+  /** The specific recording d.sourceLines indexes into — not necessarily the same one every other card on this page uses, see the note above MEDICAL_HISTORY. */
+  recording: Recording | null;
   onPublish: () => void;
   onReject: () => void;
 }) {
@@ -158,7 +172,7 @@ function DiagnosisCard({
         {pending && (
           <div className="flex items-center justify-end gap-3 mb-2">
             {!!d.sourceLines?.length && (
-              <TranscriptCheckPopover fieldLabel={d.name} transcript={transcript} references={d.sourceLines} audioUrl={audioUrl}>
+              <TranscriptCheckPopover fieldLabel={d.name} transcript={recording?.transcript ?? []} references={d.sourceLines} audioUrl={recording?.audioUrl}>
                 <button type="button" className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
                   <Search className="w-3.5 h-3.5" /> Check transcript
                 </button>
@@ -203,7 +217,23 @@ export function MedicalHistoryPage() {
   const isDraft = customer.id === 'arthur-barrington';
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>(() => getMedicalHistory(customer.id));
   const passgeniusRef = useRef<HTMLObjectElement>(null);
-  const linkedRecording = isDraft ? resolveRecording(customer.id, 'personal-care') ?? null : null;
+
+  // Which recording backs a given diagnosis — defaults to 'personal-care'
+  // so existing entries that predate `recordingId` don't need updating.
+  const recordingFor = (d: Diagnosis): Recording | null =>
+    isDraft ? resolveRecording(customer.id, d.recordingId ?? 'personal-care') ?? null : null;
+
+  // Every distinct recording actually cited by something on this page —
+  // one when everything traces back to the same visit, more once a second
+  // recording (like Arthur's original 'initial' assessment) also
+  // contributes. Order: whichever's cited by the most entries first, so
+  // the single-recording case still shows the more relevant one first once
+  // a second is added later.
+  const linkedRecordings: Recording[] = isDraft
+    ? Array.from(new Set(diagnoses.map(d => d.recordingId ?? 'personal-care')))
+        .map(id => resolveRecording(customer.id, id))
+        .filter((r): r is Recording => !!r)
+    : [];
 
   const pendingCount = diagnoses.filter(d => d.reviewed === false).length;
 
@@ -243,35 +273,39 @@ export function MedicalHistoryPage() {
                 Assessment Hero Draft
                 {pendingCount > 0 && (
                   <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
-                    {pendingCount} {pendingCount === 1 ? 'field' : 'fields'} to review
+                    {pendingCount} {pendingCount === 1 ? 'item' : 'items'} to review
                   </span>
                 )}
               </p>
-              {linkedRecording && (
+              {/* Singular reads exactly as it did before this page ever
+                  cited more than one recording; plural deliberately drops
+                  the specific date/recordedBy from the sentence — there's
+                  no single answer to "recorded when, by whom" any more —
+                  and pushes those specifics into the link below instead,
+                  which names each one. */}
+              {linkedRecordings.length === 1 && (
                 <p className="text-sm text-purple-800 mt-0.5">
-                  Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
+                  Generated from <strong>{linkedRecordings[0].label}</strong>, recorded{' '}
                   <strong>
-                    {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
-                    {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
+                    {linkedRecordings[0].recordingMeta.split(' · ')[0]} at{' '}
+                    {linkedRecordings[0].recordingMeta.split(' · ')[1].split('–')[0]}
                   </strong>{' '}
-                  by <strong>{linkedRecording.recordedBy}</strong> — a conversation about personal care doesn't
-                  name diagnoses outright, so review each flagged entry below; some point straight to what was
-                  said, others are a judgement call worth double-checking.
+                  by <strong>{linkedRecordings[0].recordedBy}</strong> — not every entry is a direct quote, so
+                  please review before accepting.
+                </p>
+              )}
+              {linkedRecordings.length > 1 && (
+                <p className="text-sm text-purple-800 mt-0.5">
+                  Generated from <strong>{linkedRecordings.length} recordings</strong> — not every entry is a
+                  direct quote, so please review before accepting.
                 </p>
               )}
             </div>
           </div>
 
-          {linkedRecording && (
+          {linkedRecordings.length > 0 && (
             <div className="bg-purple-50 border-t border-purple-200 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
-              >
-                View recording
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+              <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
             </div>
           )}
         </div>
@@ -301,8 +335,7 @@ export function MedicalHistoryPage() {
             <DiagnosisCard
               key={d.id}
               d={d}
-              transcript={linkedRecording?.transcript ?? []}
-              audioUrl={linkedRecording?.audioUrl}
+              recording={recordingFor(d)}
               onPublish={() => publishDiagnosis(d.id)}
               onReject={() => rejectDiagnosis(d.id)}
             />

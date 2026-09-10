@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, Play, Pause, Download, X, Check, Search } from 'lucide-react';
+import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, Search } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import {
   DropdownMenu,
@@ -1705,6 +1705,80 @@ export function TranscriptCheckPopover({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * "View recording" — but a document like About Me or Medical History can
+ * plausibly be drafted from more than one recording (a later visit adding
+ * to what an earlier one already covered), unlike Personal Care/WIITM
+ * which are always tied to exactly one. A single recording renders exactly
+ * as before; two or more become a real choice, not just a name-only "N
+ * recordings" citation the way DraftSourcesNote shows inline in Care
+ * Management prose — this is the page's main way *into* a recording, so it
+ * earns an actual picker, reusing the same "Choose a recording" dropdown
+ * shape already used for Replace/Add-a-recording elsewhere. The `title`
+ * attribute previews every name on hover before a reviewer commits to
+ * opening the menu — a native tooltip rather than a Radix one layered on
+ * top of the dropdown trigger, which is simpler and avoids the two
+ * fighting each other over the same hover/focus target.
+ */
+export function RecordingsLink({
+  customerId,
+  recordings,
+  navigate,
+}: {
+  customerId: string;
+  recordings: Recording[];
+  navigate: (path: string) => void;
+}) {
+  if (recordings.length === 0) return null;
+
+  if (recordings.length === 1) {
+    const r = recordings[0];
+    return (
+      <button
+        type="button"
+        onClick={() => navigate(`/customers/${customerId}/documents/recording/${r.id}`)}
+        className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+      >
+        View recording
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          title={recordings.map(r => r.label).join(', ')}
+          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+        >
+          View recordings ({recordings.length})
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-72">
+        <DropdownMenuLabel>Choose a recording</DropdownMenuLabel>
+        {recordings.map(r => (
+          <DropdownMenuItem
+            key={r.id}
+            onSelect={() => navigate(`/customers/${customerId}/documents/recording/${r.id}`)}
+            className="flex items-center justify-between gap-3 py-2"
+          >
+            <span className="flex items-center gap-2 text-gray-900">
+              <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+              {r.label}
+            </span>
+            <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
+              {r.recordingMeta.split(' · ')[0]}
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

@@ -1,11 +1,11 @@
 import { createContext, useContext as useReactContext, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Printer, Calendar, ChevronRight, CheckCircle2, Send } from 'lucide-react';
+import { Printer, Calendar, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
 import type { CustomerProfile } from '../../data/customers';
-import { FormFieldsView, isFieldCaptured, resolveRecording, type FormField, type Recording } from './CareBridgePage';
+import { FormFieldsView, isFieldCaptured, resolveRecording, RecordingsLink, type FormField, type Recording } from './CareBridgePage';
 import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
 import { triggerPassGeniusHover } from '../icons/passgenius';
 
@@ -294,24 +294,21 @@ function AssessmentHeroDraftBanner() {
                 {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
                 {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
               </strong>{' '}
-              by <strong>{linkedRecording.recordedBy}</strong> — review the fields below and accept them to confirm
-              they're correct before they're saved to the customer file.
+              by <strong>{linkedRecording.recordedBy}</strong> — please review before accepting.
             </p>
           )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
-        {linkedRecording ? (
-          <button
-            type="button"
-            onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-            className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
-          >
-            View recording
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        ) : <span />}
+        {/* RecordingsLink degrades to today's plain "View recording" link
+            for the single-source case this page always has right now —
+            it's shared with Medical History (which does draw on two) so
+            that if About Me ever cites a second recording too, it picks up
+            the same "N recordings" picker for free rather than needing its
+            own copy built later. */}
+        <RecordingsLink customerId={customer.id} recordings={linkedRecording ? [linkedRecording] : []} navigate={navigate} />
+        {!linkedRecording && <span />}
 
         <Button
           icon={<Send className="w-4 h-4" />}

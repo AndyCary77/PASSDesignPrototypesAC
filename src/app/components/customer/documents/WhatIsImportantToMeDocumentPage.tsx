@@ -362,13 +362,12 @@ export function WiitmDocumentContent() {
                     {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
                     {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
                   </strong>{' '}
-                  by <strong>{linkedRecording.recordedBy}</strong> — review the fields below and accept them to
-                  confirm they're correct before they're saved to the customer file.
+                  by <strong>{linkedRecording.recordedBy}</strong> — please review before accepting.
                 </p>
               ) : (
                 <p className="text-sm text-purple-800 mt-0.5">
-                  Generated from the uploaded recording <strong>{linkedSource.fileName}</strong> — review the fields
-                  below and accept them to confirm they're correct before they're saved to the customer file.
+                  Generated from the uploaded recording <strong>{linkedSource.fileName}</strong> — please review
+                  before accepting.
                 </p>
               )}
             </div>
