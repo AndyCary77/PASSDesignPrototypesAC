@@ -1981,6 +1981,50 @@ export function ChangeRecordingsButton({
 }
 
 /**
+ * The "stripped back" banner shown once a document is published — sits
+ * alongside the plain green "Published" confirmation, not instead of it
+ * (that still confirms the action succeeded; this is about what happens
+ * next). A condensed version of the Assessment Hero Draft banner: no
+ * pending-count pill, no "please review" copy, no Publish button — nothing
+ * here is still pending, so none of that applies — just enough to keep
+ * Assessment Hero from being a one-shot, pre-publish-only tool. Reopening
+ * "Change recording(s)" from here works exactly as it does pre-publish: a
+ * new/updated recording can still mark specific fields back to pending
+ * review, even on an already-published document.
+ */
+export function AssessmentHeroReuseBanner({
+  customerId,
+  linkedRecordings,
+  linkedRecordingIds,
+  onConfirm,
+  navigate,
+}: {
+  customerId: string;
+  linkedRecordings: Recording[];
+  linkedRecordingIds: string[];
+  onConfirm: (ids: string[], mode: RecordingSelectionMode) => void;
+  navigate: (path: string) => void;
+}) {
+  // Nothing to reuse if this document never had a recording behind it in
+  // the first place (shouldn't happen in practice — only rendered for
+  // documents that were Assessment Hero drafts to begin with).
+  if (linkedRecordings.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
+      <div className="flex items-center gap-2 min-w-0">
+        <Sparkles className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0" />
+        <p className="text-sm text-purple-900">Drafted by Assessment Hero — still available to refresh from a recording.</p>
+      </div>
+      <div className="flex items-center gap-4 flex-shrink-0">
+        <RecordingsLink customerId={customerId} recordings={linkedRecordings} navigate={navigate} />
+        <ChangeRecordingsButton customerId={customerId} linkedRecordingIds={linkedRecordingIds} onConfirm={onConfirm} />
+      </div>
+    </div>
+  );
+}
+
+/**
  * Renders a genuinely multi-field section (e.g. Personal details) as real,
  * editable form controls. Fields CareBridge drafted from the recording start
  * flagged for manual review (amber) until accepted individually, or

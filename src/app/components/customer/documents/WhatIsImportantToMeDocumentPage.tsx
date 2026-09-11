@@ -1,6 +1,6 @@
 import { createContext, useContext as useReactContext, useState, useRef, useEffect, Fragment } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, CheckCircle2, Send, Check, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, CheckCircle2, Send, Check, Loader2, Info, Sparkles } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import {
   DropdownMenu,
@@ -16,8 +16,7 @@ import { FormFieldsView, resolveRecording, resolveRecordings, type FormField, ty
 import { DocumentTabs } from './DocumentTabs';
 import { WIITM_FIELDS_BLANK, WIITM_FIELDS_DRAFT, WIITM_FIELDS_COMPLETE, WIITM_GROUPS } from './whatIsImportantToMeData';
 import { useScrolled } from '../../../hooks/useScrolled';
-import passgeniusPurpleUrl from '../../icons/passgenius-purple.svg';
-import { triggerPassGeniusHover } from '../../icons/passgenius';
+import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
 // Same "what's currently feeding this draft" shape as CarePlanDocumentPage,
 // except this document starts with nothing linked at all — an incomplete,
@@ -69,7 +68,6 @@ interface WiitmDocumentState {
   pendingCount: number;
   processingStep: number | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  passgeniusRef: React.RefObject<HTMLObjectElement | null>;
   handleUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleUnlink: () => void;
   startProcessing: (source: LinkedSource) => void;
@@ -95,7 +93,6 @@ export function WiitmDocumentProvider({ children }: { children: React.ReactNode 
   const navigate = useNavigate();
   const customer = useCustomer();
   const [dirty, setDirty] = useState(false);
-  const passgeniusRef = useRef<HTMLObjectElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // A deep link from elsewhere (e.g. the recording/transcript page's "Linked
@@ -136,6 +133,13 @@ export function WiitmDocumentProvider({ children }: { children: React.ReactNode 
     setProcessingStep(0);
   };
 
+  // Un-publishes once the (simulated) processing run actually lands a new
+  // source — same reasoning as CarePlanDocumentPage's relinkRecording: a
+  // different/updated recording means this document needs review again,
+  // so it doesn't stay marked Published while quietly pointing at content
+  // nobody's looked at. This is what makes the post-publish
+  // AssessmentHeroReuseBanner (see WiitmDocumentContent) an actual
+  // "update" — picking a recording there runs this exact same pipeline.
   useEffect(() => {
     if (processingStep === null) return;
     const isComplete = processingStep === PROCESSING_STEPS.length;
@@ -145,6 +149,7 @@ export function WiitmDocumentProvider({ children }: { children: React.ReactNode 
         setLinkedSource(pendingSourceRef.current);
         setFields(WIITM_FIELDS_DRAFT);
         setProcessingStep(null);
+        setPublished(false);
       } else {
         setProcessingStep(s => (s ?? 0) + 1);
       }
@@ -163,6 +168,7 @@ export function WiitmDocumentProvider({ children }: { children: React.ReactNode 
     if (window.confirm(`Unlink "${name}" from this draft? The fields already accepted stay as they are, but nothing will sync from a recording until you link a new one.`)) {
       setLinkedSource(null);
       setFields(WIITM_FIELDS_BLANK);
+      setPublished(false);
     }
   };
 
@@ -174,7 +180,7 @@ export function WiitmDocumentProvider({ children }: { children: React.ReactNode 
     <WiitmDocumentContext.Provider
       value={{
         customer, navigate, dirty, setDirty, published, setPublished, linkedSource, linkedRecording,
-        otherRecordings, fields, pendingReview, pendingCount, processingStep, fileInputRef, passgeniusRef, handleUpload,
+        otherRecordings, fields, pendingReview, pendingCount, processingStep, fileInputRef, handleUpload,
         handleUnlink, startProcessing, updateGroupFields,
       }}
     >
@@ -238,11 +244,72 @@ export function WiitmDocumentSubnav() {
   );
 }
 
+/**
+ * The "Replace recording" dropdown for a document that already has one
+ * linked — pulled out so it renders identically in both the pre-publish
+ * Assessment Hero Draft banner and the post-publish stripped-back reuse
+ * banner (see WiitmDocumentContent) rather than duplicating this markup.
+ * Distinct from the "Add a recording" dropdown in the blank/no-source
+ * state below, which has no Unlink item and doesn't apply once published
+ * (nothing to reuse without a source to begin with).
+ */
+function RelinkDropdown() {
+  const { otherRecordings, fileInputRef, startProcessing, handleUnlink } = useWiitmDocument();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+        >
+          Replace recording
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-72">
+        <DropdownMenuLabel>Choose a recording</DropdownMenuLabel>
+        {otherRecordings.length > 0 ? (
+          otherRecordings.map(r => (
+            <DropdownMenuItem
+              key={r.id}
+              onSelect={() => startProcessing({ type: 'recording', id: r.id })}
+              className="flex items-center justify-between gap-3 py-2"
+            >
+              <span className="flex items-center gap-2 text-gray-900">
+                <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                {r.label}
+              </span>
+              <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
+                {r.recordingMeta.split(' · ')[0]}
+              </span>
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <DropdownMenuItem disabled className="text-gray-400">No other recordings for this customer</DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {/* Deferred a tick — Radix closes the menu and restores focus
+            right after onSelect, which can race with (and cancel) the
+            native file dialog if triggered in the same tick. */}
+        <DropdownMenuItem onSelect={() => setTimeout(() => fileInputRef.current?.click(), 0)} className="flex items-center gap-2">
+          <Upload className="w-3.5 h-3.5 text-gray-400" />
+          Upload a recording
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={handleUnlink} className="flex items-center gap-2 text-red-600 focus:text-red-600">
+          <Link2Off className="w-3.5 h-3.5" />
+          Unlink recording
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /** Everything below the pinned sub-nav — the CareBridge Draft/processing panel, title bar, History and the form itself. */
 export function WiitmDocumentContent() {
   const {
     customer, navigate, published, linkedSource, linkedRecording, otherRecordings, fields, pendingReview, pendingCount,
-    processingStep, fileInputRef, passgeniusRef, handleUpload, handleUnlink, startProcessing, updateGroupFields,
+    processingStep, fileInputRef, handleUpload, startProcessing, updateGroupFields,
     setDirty, setPublished,
   } = useWiitmDocument();
 
@@ -255,16 +322,41 @@ export function WiitmDocumentContent() {
       <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
 
       {isCompletedDocument ? null : published ? (
-        <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-          <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
+              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+                This document has been published from the Assessment Hero draft — it's now a saved document and is no
+                longer tracked as a draft.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-            <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-              This document has been published from the Assessment Hero draft — it's now a saved document and is no
-              longer tracked as a draft.
-            </p>
+          {/* Stripped-back reuse banner — same RelinkDropdown as the draft
+              banner below, so Assessment Hero isn't a one-shot, pre-publish-
+              only tool: picking a different/new recording here re-runs the
+              processing pipeline and re-opens this document as a draft. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0" />
+              <p className="text-sm text-purple-900">Drafted by Assessment Hero — still available to refresh from a recording.</p>
+            </div>
+            <div className="flex items-center gap-4 flex-shrink-0">
+              {linkedRecording && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
+                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                >
+                  View recording
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <RelinkDropdown />
+            </div>
           </div>
         </div>
       ) : processingStep !== null ? (
@@ -288,7 +380,7 @@ export function WiitmDocumentContent() {
           </div>
           <div className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 shadow">
           <div className="flex items-center gap-2.5 mb-4">
-            <object type="image/svg+xml" data={passgeniusPurpleUrl} className="w-6 h-6 flex-shrink-0" aria-label="PASSgenius" tabIndex={-1} />
+            <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
             <p className="text-sm font-semibold text-purple-900">Generating this draft from the recording…</p>
           </div>
           <div className="flex items-start px-1">
@@ -336,14 +428,10 @@ export function WiitmDocumentContent() {
         // confined to where it's actually branding something clickable. The
         // pending count gets its own amber badge up top, so the banner still
         // flags outstanding review work without fighting either half's colour.
-        <div
-          className="rounded-lg border border-purple-200 shadow overflow-hidden"
-          onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-          onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-        >
+        <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
           <div className="flex items-start gap-3 bg-white px-4 py-3">
             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-              <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+              <img src={assessmentHeroIconUrl} className="w-8 h-8" alt="Assessment Hero" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">
@@ -386,52 +474,7 @@ export function WiitmDocumentContent() {
                 </button>
               )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
-                  >
-                    Replace recording
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuLabel>Choose a recording</DropdownMenuLabel>
-                  {otherRecordings.length > 0 ? (
-                    otherRecordings.map(r => (
-                      <DropdownMenuItem
-                        key={r.id}
-                        onSelect={() => startProcessing({ type: 'recording', id: r.id })}
-                        className="flex items-center justify-between gap-3 py-2"
-                      >
-                        <span className="flex items-center gap-2 text-gray-900">
-                          <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                          {r.label}
-                        </span>
-                        <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
-                          {r.recordingMeta.split(' · ')[0]}
-                        </span>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled className="text-gray-400">No other recordings for this customer</DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  {/* Deferred a tick — Radix closes the menu and restores focus
-                      right after onSelect, which can race with (and cancel) the
-                      native file dialog if triggered in the same tick. */}
-                  <DropdownMenuItem onSelect={() => setTimeout(() => fileInputRef.current?.click(), 0)} className="flex items-center gap-2">
-                    <Upload className="w-3.5 h-3.5 text-gray-400" />
-                    Upload a recording
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={handleUnlink} className="flex items-center gap-2 text-red-600 focus:text-red-600">
-                    <Link2Off className="w-3.5 h-3.5" />
-                    Unlink recording
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RelinkDropdown />
             </div>
 
             <Button
@@ -447,13 +490,9 @@ export function WiitmDocumentContent() {
       ) : (
         // Nothing linked yet — no draft, no fields to publish. A slim single-line
         // banner rather than the full panel: just the pitch and a way to start.
-        <div
-          className="flex items-center justify-between gap-3 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2.5 shadow"
-          onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-          onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-        >
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2.5 shadow">
           <div className="flex items-center gap-2.5 min-w-0">
-            <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-6 h-6 flex-shrink-0" aria-label="PASSgenius" tabIndex={-1} />
+            <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
             <p className="text-sm font-medium text-purple-900 truncate">Assessment Hero - AI-powered document drafts from audio recordings</p>
           </div>
 

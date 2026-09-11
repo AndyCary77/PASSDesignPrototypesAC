@@ -60,6 +60,25 @@ interface CareManagementContextType {
   discardedIds: Set<string>;
   discard: (id: string) => void;
   /**
+   * Ids of outcomes/tasks whose `draftSource` has been cleared via
+   * CarePlanDraftBanner's "Change recording(s)" → Replace — same idea as
+   * Medical History's Diagnosis losing its `recordingId`/`sourceLines` when
+   * its source recording is deselected: the record itself stays (it's a
+   * real outcome/task, not a form field), it just goes back to being an
+   * uncited, plain pending item. Read/written by useCareData, which is the
+   * one place that actually knows how a `draftSource` string maps back to a
+   * recording.
+   */
+  clearedSourceIds: Set<string>;
+  setClearedSourceIds: React.Dispatch<React.SetStateAction<Set<string>>>;
+  /**
+   * Recordings merged into the plan's linked set via "Change recording(s)"
+   * → Merge that don't (yet) back any individual outcome/task — same role
+   * as Medical History's `extraLinkedRecordingIds`.
+   */
+  extraLinkedRecordingIds: string[];
+  setExtraLinkedRecordingIds: React.Dispatch<React.SetStateAction<string[]>>;
+  /**
    * Whether anything in the plan has changed since the last Save — field
    * edits in a detail view (bubbled up via a single onChange on the form's
    * container, same trick either way), accepting/discarding a draft, or
@@ -130,6 +149,10 @@ const CareManagementContext = createContext<CareManagementContextType>({
   accept: () => {},
   discardedIds: new Set(),
   discard: () => {},
+  clearedSourceIds: new Set(),
+  setClearedSourceIds: () => {},
+  extraLinkedRecordingIds: [],
+  setExtraLinkedRecordingIds: () => {},
   dirty: false,
   setDirty: () => {},
   draftStep: null,
@@ -155,6 +178,8 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   const [deleteFn, setDeleteFn] = useState<{ label: string; fn: () => void } | null>(null);
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [discardedIds, setDiscardedIds] = useState<Set<string>>(new Set());
+  const [clearedSourceIds, setClearedSourceIds] = useState<Set<string>>(new Set());
+  const [extraLinkedRecordingIds, setExtraLinkedRecordingIds] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
   const [draftStep, setDraftStep] = useState<number | null>(null);
   const [draftComplete, setDraftComplete] = useState(false);
@@ -227,6 +252,7 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
     () => ({
       activeTab, setActiveTab, backFn, registerBack, clearBack, addFn, registerAdd, clearAdd,
       deleteFn, registerDelete, clearDelete, acceptedIds, accept, discardedIds, discard, dirty, setDirty,
+      clearedSourceIds, setClearedSourceIds, extraLinkedRecordingIds, setExtraLinkedRecordingIds,
       draftStep, draftComplete, startCarePlanDraft, draftSourceDocuments, setDraftSourceDocuments,
       draftedOutcomesVisible, draftedTasksVisible,
       draftNoticeDismissed, dismissDraftNotice,
@@ -235,6 +261,7 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
     [
       activeTab, backFn, registerBack, clearBack, addFn, registerAdd, clearAdd,
       deleteFn, registerDelete, clearDelete, acceptedIds, accept, discardedIds, discard, dirty,
+      clearedSourceIds, extraLinkedRecordingIds,
       draftStep, draftComplete, startCarePlanDraft, draftSourceDocuments, draftedOutcomesVisible, draftedTasksVisible,
       draftNoticeDismissed, dismissDraftNotice,
       planPublished, publishPlan, planPublishedNoticeDismissed, dismissPlanPublishedNotice,

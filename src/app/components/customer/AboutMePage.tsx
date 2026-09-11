@@ -1,4 +1,4 @@
-import { createContext, useContext as useReactContext, useRef, useState } from 'react';
+import { createContext, useContext as useReactContext, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Printer, Calendar, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '../buttons/Button';
@@ -11,12 +11,12 @@ import {
   resolveRecording,
   RecordingsLink,
   ChangeRecordingsButton,
+  AssessmentHeroReuseBanner,
   type FormField,
   type Recording,
   type RecordingSelectionMode,
 } from './CareBridgePage';
-import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
-import { triggerPassGeniusHover } from '../icons/passgenius';
+import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 
 const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
 const inputClass =
@@ -189,7 +189,6 @@ interface AboutMeState {
   setPublished: (published: boolean) => void;
   pendingReview: boolean;
   pendingCount: number;
-  passgeniusRef: React.RefObject<HTMLObjectElement | null>;
 }
 
 const AboutMeContext = createContext<AboutMeState | null>(null);
@@ -210,7 +209,6 @@ export function AboutMeProvider({ children }: { children: React.ReactNode }) {
   const [fields, setFields] = useState<FormField[]>(ARTHUR_ABOUT_ME_FIELDS);
   const [dirty, setDirty] = useState(false);
   const [published, setPublished] = useState(false);
-  const passgeniusRef = useRef<HTMLObjectElement>(null);
   // 'personal-care' is the one recording every existing field's sourceLines
   // actually came from — kept as an explicit, changeable set (rather than a
   // single fixed id) so "Change recording(s)" below has something to act on.
@@ -224,12 +222,18 @@ export function AboutMeProvider({ children }: { children: React.ReactNode }) {
   // 'personal-care' (the recording every current sourceLines reference)
   // itself is dropped — in which case every field's citation is cleared
   // (honest gap, not the field's drafted value — we don't have alternate
-  // content to regenerate from) rather than left pointing at a transcript
-  // this document no longer draws on.
+  // content to regenerate from) and marked pending again, rather than left
+  // pointing at a transcript this document no longer draws on while still
+  // reading as reviewed. This is also what makes reopening "Change
+  // recording(s)" from AssessmentHeroReuseBanner (shown once published)
+  // actually useful rather than a dead end: dropping the source kicks the
+  // document back into draft/review, same as Publish being un-done — a
+  // pure Merge, which invalidates nothing, leaves `published` alone.
   const handleChangeRecordings = (ids: string[], mode: RecordingSelectionMode) => {
     if (mode === 'replace') {
       if (!ids.includes('personal-care')) {
-        setFields(prev => prev.map(f => ({ ...f, sourceLines: undefined })));
+        setFields(prev => prev.map(f => ({ ...f, sourceLines: undefined, reviewed: false })));
+        setPublished(false);
       }
       setLinkedRecordingIds(ids);
     } else {
@@ -246,7 +250,7 @@ export function AboutMeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AboutMeContext.Provider
-      value={{ customer, navigate, record, isDraft, linkedRecordings, linkedRecordingIds, handleChangeRecordings, fields, setFields, dirty, setDirty, published, setPublished, pendingReview, pendingCount, passgeniusRef }}
+      value={{ customer, navigate, record, isDraft, linkedRecordings, linkedRecordingIds, handleChangeRecordings, fields, setFields, dirty, setDirty, published, setPublished, pendingReview, pendingCount }}
     >
       {children}
     </AboutMeContext.Provider>
@@ -293,35 +297,39 @@ function AssessmentHeroDraftBanner() {
     setPublished,
     pendingReview,
     pendingCount,
-    passgeniusRef,
   } = useAboutMe();
 
   if (published) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-        <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-          <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+          <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
+            <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+              This document has been published from the Assessment Hero draft — it's now a saved document and is no
+              longer tracked as a draft.
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-          <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-            This document has been published from the Assessment Hero draft — it's now a saved document and is no
-            longer tracked as a draft.
-          </p>
-        </div>
+        <AssessmentHeroReuseBanner
+          customerId={customer.id}
+          linkedRecordings={linkedRecordings}
+          linkedRecordingIds={linkedRecordingIds}
+          onConfirm={handleChangeRecordings}
+          navigate={navigate}
+        />
       </div>
     );
   }
 
   return (
-    <div
-      className="rounded-lg border border-purple-200 shadow overflow-hidden"
-      onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-      onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-    >
+    <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
       <div className="flex items-start gap-3 bg-white px-4 py-3">
         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-          <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+          <img src={assessmentHeroIconUrl} className="w-8 h-8" alt="Assessment Hero" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Stethoscope, Calendar, Check, Search } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
@@ -11,8 +11,7 @@ import {
   type Recording,
   type RecordingSelectionMode,
 } from './CareBridgePage';
-import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
-import { triggerPassGeniusHover } from '../icons/passgenius';
+import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 
 interface Diagnosis {
   id: string;
@@ -228,7 +227,6 @@ export function MedicalHistoryPage() {
   // diagnoses' own recordingId so a merged-in recording still shows as
   // linked even before/unless anything on the page actually cites it.
   const [extraLinkedRecordingIds, setExtraLinkedRecordingIds] = useState<string[]>([]);
-  const passgeniusRef = useRef<HTMLObjectElement>(null);
 
   // Which recording backs a given diagnosis — defaults to 'personal-care'
   // so existing entries that predate `recordingId` don't need updating.
@@ -288,14 +286,10 @@ export function MedicalHistoryPage() {
           to trace back to at any point, not just while there's review work
           left to do. */}
       {isDraft && (
-        <div
-          className="rounded-lg border border-purple-200 shadow overflow-hidden"
-          onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-          onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-        >
+        <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
           <div className="flex items-start gap-3 bg-white px-4 py-3">
             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-              <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+              <img src={assessmentHeroIconUrl} className="w-8 h-8" alt="Assessment Hero" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">

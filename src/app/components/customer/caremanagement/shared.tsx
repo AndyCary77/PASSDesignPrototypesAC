@@ -1,16 +1,16 @@
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ChevronRight, Eye, Check, CheckCircle2, Info, Loader2, Send, Sparkles, X, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../ui/tooltip';
 import { Button } from '../../buttons/Button';
 import { Checkbox } from '../../ui/checkbox';
 import { useCareManagement, CARE_PLAN_DRAFT_STEPS } from './CareManagementContext';
-import { useCareData } from './useCareData';
+import { useCareData, recordingForSource } from './useCareData';
+import { RecordingsLink, ChangeRecordingsButton, AssessmentHeroReuseBanner, type Recording } from '../CareBridgePage';
 import { useCustomer } from '../../../data/CustomerContext';
 import { getCompletedDocuments } from '../../../data/mock-documents';
 import { StarSolidIcon, CalendarSolidIcon, TickSolidIcon, PlusSolidIcon, NutritionSolidIcon, HydrateSolidIcon } from '../../icons/CarePlanIcons';
-import passgeniusPurpleUrl from '../../icons/passgenius-purple.svg';
-import { triggerPassGeniusHover } from '../../icons/passgenius';
+import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 import {
   AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel,
@@ -243,42 +243,74 @@ export function CarePlanDraftBanner({
   const {
     planPublished, publishPlan, planPublishedNoticeDismissed, dismissPlanPublishedNotice, draftSourceDocuments,
   } = useCareManagement();
+  // Only for handleChangeRecordings — every other value here duplicates what
+  // the caller already computed and passed down as props (pendingOutcomes,
+  // pendingTasks, sources), so it'd be redundant to also destructure them
+  // from here.
+  const { handleChangeRecordings } = useCareData();
   // Whether `sources` names completed documents (picked in
   // CarePlanDraftSourcePicker) rather than recordings — changes the bottom
   // bar's link wording and where it points, since a document-drafted plan
   // has nothing recorded to view.
   const draftedFromDocuments = !!draftSourceDocuments;
-  // Hover-forwarded into the embedded PASSgenius mark, same trick as the
-  // Documents tab's own CareBridge Draft banner (see triggerPassGeniusHover).
-  const passgeniusRef = useRef<HTMLObjectElement>(null);
+  // Resolved back to real Recording objects (see recordingForSource) so the
+  // bottom bar can use the same RecordingsLink/ChangeRecordingsButton every
+  // other Assessment Hero draft banner does, rather than a single link that
+  // only ever goes to the whole CareBridge tab regardless of how many
+  // recordings actually contributed. Empty for a document-drafted plan —
+  // there's no Recording to resolve a document name against.
+  const linkedRecordings: Recording[] = draftedFromDocuments
+    ? []
+    : (sources ?? []).map(s => recordingForSource(customer.id, s)).filter((r): r is Recording => !!r);
   const total = pendingOutcomes + pendingTasks;
   const hasDraftOrigin = !!sources && sources.length > 0;
 
   if (planPublished) {
-    // Brief confirmation right after Publish, same dismissible pattern as
-    // the "Care plan drafted" success state — then gone for good, since a
-    // published plan has no further use for this banner.
-    if (planPublishedNoticeDismissed) return null;
+    // The "just published" confirmation is a one-time toast — dismissible,
+    // then gone for good (see planPublishedNoticeDismissed). The reuse
+    // banner underneath is a separate, standing affordance: unlike that
+    // toast, it doesn't go away, since "this plan can still be refreshed
+    // from a recording" stays true long after the moment of publishing has
+    // passed. Replace still only clears a citation (see
+    // handleChangeRecordings) — it deliberately doesn't revert planPublished
+    // to a draft: unlike a single Documents-tab form, this is the
+    // customer's one live care plan, and silently knocking it back to
+    // "Draft" (with everything that status otherwise implies elsewhere in
+    // Care Management) is a bigger call than "consistent reuse banner"
+    // was asked for.
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-        <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-          <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-semibold text-[rgb(12,77,12)]">Care plan published</p>
-          <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-            This is now a real care plan, not an Assessment Hero draft — it's included in reports and reviews the same as
-            any other.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={dismissPlanPublishedNotice}
-          aria-label="Dismiss"
-          className="text-[rgb(16,100,16)] hover:text-[rgb(12,77,12)] transition-colors cursor-pointer flex-shrink-0"
-        >
-          <X className="w-4 h-4" />
-        </button>
+      <div className="flex flex-col gap-3">
+        {!planPublishedNoticeDismissed && (
+          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-semibold text-[rgb(12,77,12)]">Care plan published</p>
+              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+                This is now a real care plan, not an Assessment Hero draft — it's included in reports and reviews the same as
+                any other.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissPlanPublishedNotice}
+              aria-label="Dismiss"
+              className="text-[rgb(16,100,16)] hover:text-[rgb(12,77,12)] transition-colors cursor-pointer flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+        {!draftedFromDocuments && (
+          <AssessmentHeroReuseBanner
+            customerId={customer.id}
+            linkedRecordings={linkedRecordings}
+            linkedRecordingIds={linkedRecordings.map(r => r.id)}
+            onConfirm={handleChangeRecordings}
+            navigate={navigate}
+          />
+        )}
       </div>
     );
   }
@@ -298,14 +330,10 @@ export function CarePlanDraftBanner({
     // secondary detail — rather than a single purple-tinted block, so this
     // reads as the same pattern wherever a CareBridge draft shows up, not a
     // one-off style specific to Care Management.
-    <div
-      className="rounded-lg border border-purple-200 shadow overflow-hidden"
-      onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-      onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-    >
+    <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
       <div className="flex items-start gap-3 bg-white px-4 py-3">
         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-          <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+          <img src={assessmentHeroIconUrl} className="w-8 h-8" alt="Assessment Hero" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-lg font-semibold text-purple-900 flex items-center gap-2 flex-wrap">
@@ -339,14 +367,27 @@ export function CarePlanDraftBanner({
                 ? ' — none left on this tab.'
                 : ` — ${onThisTab} ${thisTabLabel}${onThisTab === 1 ? '' : 's'} on this tab.`}
           </p>
-          <button
-            type="button"
-            onClick={() => navigate(`/customers/${customer.id}/documents?tab=${draftedFromDocuments ? 'assessments' : 'carebridge'}`)}
-            className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
-          >
-            {draftedFromDocuments ? `View document${sources!.length > 1 ? 's' : ''}` : `View recording${sources!.length > 1 ? 's' : ''}`}
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          {draftedFromDocuments ? (
+            // No individual document page to link a specific one to (unlike
+            // a recording) — same single link to the tab as before.
+            <button
+              type="button"
+              onClick={() => navigate(`/customers/${customer.id}/documents?tab=assessments`)}
+              className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
+            >
+              {`View document${sources!.length > 1 ? 's' : ''}`}
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <>
+              <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
+              <ChangeRecordingsButton
+                customerId={customer.id}
+                linkedRecordingIds={linkedRecordings.map(r => r.id)}
+                onConfirm={handleChangeRecordings}
+              />
+            </>
+          )}
         </div>
         <Button
           icon={<Send className="w-4 h-4" />}

@@ -1,4 +1,4 @@
-import { createContext, useContext as useReactContext, useState, useRef } from 'react';
+import { createContext, useContext as useReactContext, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, History, Printer, Trash2, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '../../buttons/Button';
@@ -10,6 +10,7 @@ import {
   resolveRecording,
   ChangeRecordingsButton,
   RecordingsLink,
+  AssessmentHeroReuseBanner,
   type FormField,
   type Recording,
   type RecordingSelectionMode,
@@ -17,8 +18,7 @@ import {
 import { DocumentTabs } from './DocumentTabs';
 import { PERSONAL_CARE_FIELDS, PERSONAL_CARE_GROUPS } from './personalCareMovingHandlingData';
 import { useScrolled } from '../../../hooks/useScrolled';
-import passgeniusPurpleUrl from '../../icons/passgenius-purple.svg';
-import { triggerPassGeniusHover } from '../../icons/passgenius';
+import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
 // A single, focused document — no left-hand section nav, no relink/upload
 // machinery, always sourced from the customer's own 'personal-care'
@@ -43,7 +43,6 @@ interface PersonalCareDocumentState {
   setFields: (fields: FormField[]) => void;
   pendingReview: boolean;
   pendingCount: number;
-  passgeniusRef: React.RefObject<HTMLObjectElement | null>;
 }
 
 const PersonalCareDocumentContext = createContext<PersonalCareDocumentState | null>(null);
@@ -63,7 +62,6 @@ export function PersonalCareDocumentProvider({ children }: { children: React.Rea
   const navigate = useNavigate();
   const customer = useCustomer();
   const [dirty, setDirty] = useState(false);
-  const passgeniusRef = useRef<HTMLObjectElement>(null);
   const [fields, setFields] = useState<FormField[]>(PERSONAL_CARE_FIELDS);
   // 'personal-care' is the one recording every existing field's sourceLines
   // actually came from — kept as an explicit, changeable set (rather than a
@@ -72,18 +70,25 @@ export function PersonalCareDocumentProvider({ children }: { children: React.Rea
   const linkedRecordings: Recording[] = linkedRecordingIds
     .map(id => resolveRecording(customer.id, id))
     .filter((r): r is Recording => !!r);
+  const [published, setPublished] = useState(false);
 
   // Merge just extends the linked set — every field keeps whatever citation
   // it already had. Replace only touches existing citations if
   // 'personal-care' (the recording every current sourceLines reference)
   // itself is dropped — in which case every field's citation is cleared
   // (honest gap, not the field's drafted value — there's no alternate
-  // content to regenerate from) rather than left pointing at a transcript
-  // this document no longer draws on.
+  // content to regenerate from) and marked pending again, rather than left
+  // pointing at a transcript this document no longer draws on while still
+  // reading as reviewed. This is also what makes reopening "Change
+  // recording(s)" from AssessmentHeroReuseBanner (shown once published)
+  // actually useful rather than a dead end: dropping the source kicks the
+  // document back into draft/review, same as Publish being un-done — a
+  // pure Merge, which invalidates nothing, leaves `published` alone.
   const handleChangeRecordings = (ids: string[], mode: RecordingSelectionMode) => {
     if (mode === 'replace') {
       if (!ids.includes('personal-care')) {
-        setFields(prev => prev.map(f => ({ ...f, sourceLines: undefined })));
+        setFields(prev => prev.map(f => ({ ...f, sourceLines: undefined, reviewed: false })));
+        setPublished(false);
       }
       setLinkedRecordingIds(ids);
     } else {
@@ -97,14 +102,13 @@ export function PersonalCareDocumentProvider({ children }: { children: React.Rea
   const pendingFields = fields.filter(f => isFieldCaptured(f) && f.reviewed === false);
   const pendingReview = pendingFields.length > 0;
   const pendingCount = pendingFields.length;
-  const [published, setPublished] = useState(false);
 
   return (
     <PersonalCareDocumentContext.Provider
       value={{
         customer, navigate, dirty, setDirty, published, setPublished,
         linkedRecordings, linkedRecordingIds, handleChangeRecordings,
-        fields, setFields, pendingReview, pendingCount, passgeniusRef,
+        fields, setFields, pendingReview, pendingCount,
       }}
     >
       {children}
@@ -152,7 +156,7 @@ export function PersonalCareDocumentSubnav() {
 export function PersonalCareDocumentContent() {
   const {
     customer, navigate, published, linkedRecordings, linkedRecordingIds, handleChangeRecordings,
-    fields, setFields, pendingReview, pendingCount, passgeniusRef, setDirty, setPublished,
+    fields, setFields, pendingReview, pendingCount, setDirty, setPublished,
   } = usePersonalCareDocument();
   // Every field's sourceLines (where still present — see
   // handleChangeRecordings) indexes into 'personal-care' specifically,
@@ -163,27 +167,32 @@ export function PersonalCareDocumentContent() {
   return (
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
       {published ? (
-        <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-          <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
+              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+                This document has been published from the Assessment Hero draft — it's now a saved document and is no
+                longer tracked as a draft.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-            <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-              This document has been published from the Assessment Hero draft — it's now a saved document and is no
-              longer tracked as a draft.
-            </p>
-          </div>
+          <AssessmentHeroReuseBanner
+            customerId={customer.id}
+            linkedRecordings={linkedRecordings}
+            linkedRecordingIds={linkedRecordingIds}
+            onConfirm={handleChangeRecordings}
+            navigate={navigate}
+          />
         </div>
       ) : (
-        <div
-          className="rounded-lg border border-purple-200 shadow overflow-hidden"
-          onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-          onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-        >
+        <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
           <div className="flex items-start gap-3 bg-white px-4 py-3">
             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-              <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+              <img src={assessmentHeroIconUrl} className="w-8 h-8" alt="Assessment Hero" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">

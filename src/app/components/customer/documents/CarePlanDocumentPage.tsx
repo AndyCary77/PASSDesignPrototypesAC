@@ -1,6 +1,6 @@
 import { createContext, useContext as useReactContext, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, CheckCircle2, Send } from 'lucide-react';
+import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, CheckCircle2, Send, Sparkles } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import {
   DropdownMenu,
@@ -15,8 +15,7 @@ import type { CustomerProfile } from '../../../data/customers';
 import { CarePlanDocumentView, CareBridgeContext, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { useScrolled } from '../../../hooks/useScrolled';
-import passgeniusPurpleUrl from '../../icons/passgenius-purple.svg';
-import { triggerPassGeniusHover } from '../../icons/passgenius';
+import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
 // What's currently feeding this draft: an app recording, a manually uploaded
 // one (no transcript/meta of its own — just a filename, for the demo), or
@@ -37,8 +36,9 @@ interface CarePlanDocumentState {
   pendingReview: boolean;
   pendingCount: number;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  passgeniusRef: React.RefObject<HTMLObjectElement | null>;
   handleUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** Switches to a different existing recording — also un-publishes, see the note above it in the provider. */
+  relinkRecording: (id: string) => void;
   handleUnlink: () => void;
 }
 
@@ -64,7 +64,6 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
   // CareBridgeContext) bubbles a native change event up to the content
   // wrapper — cheaper than threading a dirty flag through every field component.
   const [dirty, setDirty] = useState(false);
-  const passgeniusRef = useRef<HTMLObjectElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Starts linked to the assessment recording, where there is one — a
@@ -86,16 +85,33 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
   const pendingCount = linkedRecording ? countPendingFields(linkedRecording) : 0;
   const [published, setPublished] = useState(false);
 
+  // Every relink-family action below also un-publishes — same reasoning as
+  // ChangeRecordingsButton's Replace on the other Assessment Hero pages:
+  // choosing a different source (or removing it) means this document needs
+  // review again, so a published document doesn't stay marked Published
+  // while quietly pointing at content nobody's actually looked at yet. This
+  // is what makes the post-publish AssessmentHeroReuseBanner below (see
+  // CarePlanDocumentContent) an actual "update" rather than a dead click —
+  // it reopens this exact same dropdown.
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setLinkedSource({ type: 'upload', fileName: file.name });
+    if (file) {
+      setLinkedSource({ type: 'upload', fileName: file.name });
+      setPublished(false);
+    }
     e.target.value = '';
+  };
+
+  const relinkRecording = (id: string) => {
+    setLinkedSource({ type: 'recording', id });
+    setPublished(false);
   };
 
   const handleUnlink = () => {
     const name = linkedSource?.type === 'recording' ? linkedRecording?.label : linkedSource?.fileName;
     if (window.confirm(`Unlink "${name}" from this draft? The fields already accepted stay as they are, but nothing will sync from a recording until you link a new one.`)) {
       setLinkedSource(null);
+      setPublished(false);
     }
   };
 
@@ -103,7 +119,8 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
     <CarePlanDocumentContext.Provider
       value={{
         customer, navigate, dirty, setDirty, published, setPublished, linkedSource, setLinkedSource,
-        linkedRecording, otherRecordings, pendingReview, pendingCount, fileInputRef, passgeniusRef, handleUpload, handleUnlink,
+        linkedRecording, otherRecordings, pendingReview, pendingCount, fileInputRef,
+        handleUpload, relinkRecording, handleUnlink,
       }}
     >
       {children}
@@ -166,11 +183,75 @@ export function CarePlanDocumentSubnav() {
   );
 }
 
+/**
+ * The "Replace recording"/"Link a recording" dropdown — pulled out so it can
+ * render identically in both the pre-publish Assessment Hero Draft banner
+ * and the post-publish stripped-back reuse banner (see CarePlanDocumentContent)
+ * rather than duplicating this markup for the second case. Picking anything
+ * here (a different recording, an upload, or Unlink) also un-publishes —
+ * see the note on relinkRecording/handleUpload/handleUnlink in the provider.
+ */
+function RelinkDropdown() {
+  const { linkedSource, otherRecordings, fileInputRef, relinkRecording, handleUnlink } = useCarePlanDocument();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+        >
+          {linkedSource ? 'Replace recording' : 'Link a recording'}
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-72">
+        <DropdownMenuLabel>Choose a different recording</DropdownMenuLabel>
+        {otherRecordings.length > 0 ? (
+          otherRecordings.map(r => (
+            <DropdownMenuItem
+              key={r.id}
+              onSelect={() => relinkRecording(r.id)}
+              className="flex items-center justify-between gap-3 py-2"
+            >
+              <span className="flex items-center gap-2 text-gray-900">
+                <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                {r.label}
+              </span>
+              <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
+                {r.recordingMeta.split(' · ')[0]}
+              </span>
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <DropdownMenuItem disabled className="text-gray-400">No other recordings for this customer</DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        {/* Deferred a tick — Radix closes the menu and restores focus
+            right after onSelect, which can race with (and cancel) the
+            native file dialog if triggered in the same tick. */}
+        <DropdownMenuItem onSelect={() => setTimeout(() => fileInputRef.current?.click(), 0)} className="flex items-center gap-2">
+          <Upload className="w-3.5 h-3.5 text-gray-400" />
+          Upload a recording
+        </DropdownMenuItem>
+        {linkedSource && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleUnlink} className="flex items-center gap-2 text-red-600 focus:text-red-600">
+              <Link2Off className="w-3.5 h-3.5" />
+              Unlink recording
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /** Everything below the pinned sub-nav — the CareBridge Draft panel, title bar, History and the form itself. */
 export function CarePlanDocumentContent() {
   const {
-    customer, navigate, published, linkedSource, setLinkedSource, linkedRecording, otherRecordings,
-    pendingReview, pendingCount, fileInputRef, passgeniusRef, handleUpload, handleUnlink, setDirty, setPublished,
+    customer, navigate, published, linkedSource, linkedRecording,
+    pendingReview, pendingCount, fileInputRef, handleUpload, setDirty, setPublished,
   } = useCarePlanDocument();
 
   // Vera's Care and Support Plan is being treated as an already-completed
@@ -189,18 +270,41 @@ export function CarePlanDocumentContent() {
       <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
 
       {isCompletedDocument ? null : published ? (
-        /* Publish is one-way — once the draft becomes a saved document, the
-           review/relink workflow below no longer applies. */
-        <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-          <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
+              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+                This document has been published from the Assessment Hero draft — it's now a saved document and is no
+                longer tracked as a draft.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-            <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-              This document has been published from the Assessment Hero draft — it's now a saved document and is no
-              longer tracked as a draft.
-            </p>
+          {/* Stripped-back reuse banner — same RelinkDropdown as the draft
+              banner below, so Assessment Hero isn't a one-shot, pre-publish-
+              only tool: picking a different/new recording here re-opens
+              this document as a draft again (see relinkRecording). */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0" />
+              <p className="text-sm text-purple-900">Drafted by Assessment Hero — still available to refresh from a recording.</p>
+            </div>
+            <div className="flex items-center gap-4 flex-shrink-0">
+              {linkedRecording && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
+                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                >
+                  View recording
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <RelinkDropdown />
+            </div>
           </div>
         </div>
       ) : (
@@ -212,15 +316,10 @@ export function CarePlanDocumentContent() {
         // confined to where it's actually branding something clickable. The
         // pending count gets its own amber badge up top, so the banner still
         // flags outstanding review work without fighting either half's colour.
-        // Hovering anywhere on the panel plays the PASSgenius mark's own hover animation.
-        <div
-          className="rounded-lg border border-purple-200 shadow overflow-hidden"
-          onMouseEnter={() => triggerPassGeniusHover(passgeniusRef.current, true)}
-          onMouseLeave={() => triggerPassGeniusHover(passgeniusRef.current, false)}
-        >
+        <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
           <div className="flex items-start gap-3 bg-white px-4 py-3">
             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 pt-1">
-              <object ref={passgeniusRef} type="image/svg+xml" data={passgeniusPurpleUrl} className="w-8 h-8" aria-label="PASSgenius" tabIndex={-1} />
+              <img src={assessmentHeroIconUrl} className="w-8 h-8" alt="Assessment Hero" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-lg font-semibold text-purple-900 flex items-center gap-2">
@@ -271,56 +370,7 @@ export function CarePlanDocumentContent() {
                 </button>
               )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
-                  >
-                    {linkedSource ? 'Replace recording' : 'Link a recording'}
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuLabel>Choose a different recording</DropdownMenuLabel>
-                  {otherRecordings.length > 0 ? (
-                    otherRecordings.map(r => (
-                      <DropdownMenuItem
-                        key={r.id}
-                        onSelect={() => setLinkedSource({ type: 'recording', id: r.id })}
-                        className="flex items-center justify-between gap-3 py-2"
-                      >
-                        <span className="flex items-center gap-2 text-gray-900">
-                          <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                          {r.label}
-                        </span>
-                        <span className="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
-                          {r.recordingMeta.split(' · ')[0]}
-                        </span>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled className="text-gray-400">No other recordings for this customer</DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  {/* Deferred a tick — Radix closes the menu and restores focus
-                      right after onSelect, which can race with (and cancel) the
-                      native file dialog if triggered in the same tick. */}
-                  <DropdownMenuItem onSelect={() => setTimeout(() => fileInputRef.current?.click(), 0)} className="flex items-center gap-2">
-                    <Upload className="w-3.5 h-3.5 text-gray-400" />
-                    Upload a recording
-                  </DropdownMenuItem>
-                  {linkedSource && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={handleUnlink} className="flex items-center gap-2 text-red-600 focus:text-red-600">
-                        <Link2Off className="w-3.5 h-3.5" />
-                        Unlink recording
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RelinkDropdown />
             </div>
 
             <Button
