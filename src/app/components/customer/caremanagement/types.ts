@@ -68,6 +68,16 @@ export const TASK_CATEGORIES: TaskCategory[] = [
   'General', 'Medications', 'Nutrition', 'Hydration', 'Outcome Tracking', 'Observations',
 ];
 
+// Arthur's outcomes/tasks are deliberately plain here (no reviewed/
+// draftSource at all) — 2026-09-11's change of direction moved Care
+// Management's "drafted with Assessment Hero" story from citing a
+// recording per item to citing his completed assessment documents at the
+// plan level instead (see draftSourceDocuments in
+// CareManagementContext.tsx, seeded for him specifically, and
+// CarePlanDraftBanner's document-sourced branch in shared.tsx) — a plan's
+// worth of outcomes/tasks doesn't need every individual record to carry
+// its own citation for that framing to work, the same way Vera's
+// document-drafted plan below never needed per-item draftSource either.
 export const TASKS: CareTask[] = [
   {
     id: 't10', title: 'Hydromol Ointment', category: 'Medications',

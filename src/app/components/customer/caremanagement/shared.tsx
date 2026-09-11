@@ -1,12 +1,12 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronRight, Eye, Check, CheckCircle2, Info, Loader2, Send, Sparkles, X, Trash2 } from 'lucide-react';
+import { ChevronRight, Eye, Check, CheckCircle2, Info, Loader2, Send, Sparkles, X, Trash2, RefreshCw } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../ui/tooltip';
 import { Button } from '../../buttons/Button';
 import { Checkbox } from '../../ui/checkbox';
 import { useCareManagement, CARE_PLAN_DRAFT_STEPS } from './CareManagementContext';
 import { useCareData, recordingForSource } from './useCareData';
-import { RecordingsLink, ChangeRecordingsButton, AssessmentHeroReuseBanner, type Recording } from '../CareBridgePage';
+import { RecordingsLink, ChangeRecordingsButton, AssessmentHeroReuseBanner, PublishedConfirmationBanner, type Recording } from '../CareBridgePage';
 import { useCustomer } from '../../../data/CustomerContext';
 import { getCompletedDocuments } from '../../../data/mock-documents';
 import { StarSolidIcon, CalendarSolidIcon, TickSolidIcon, PlusSolidIcon, NutritionSolidIcon, HydrateSolidIcon } from '../../icons/CarePlanIcons';
@@ -267,42 +267,62 @@ export function CarePlanDraftBanner({
 
   if (planPublished) {
     // The "just published" confirmation is a one-time toast — dismissible,
-    // then gone for good (see planPublishedNoticeDismissed). The reuse
+    // then gone for good (see planPublishedNoticeDismissed). The small
     // banner underneath is a separate, standing affordance: unlike that
-    // toast, it doesn't go away, since "this plan can still be refreshed
-    // from a recording" stays true long after the moment of publishing has
-    // passed. Replace still only clears a citation (see
-    // handleChangeRecordings) — it deliberately doesn't revert planPublished
-    // to a draft: unlike a single Documents-tab form, this is the
-    // customer's one live care plan, and silently knocking it back to
-    // "Draft" (with everything that status otherwise implies elsewhere in
-    // Care Management) is a bigger call than "consistent reuse banner"
-    // was asked for.
+    // toast, it doesn't go away, since "this plan was drafted with
+    // Assessment Hero" stays true long after the moment of publishing has
+    // passed. Two variants depending on what this plan was actually drafted
+    // from: a document-sourced plan (Arthur — completed, refined assessment
+    // documents genuinely drive care-planning decisions, unlike a raw
+    // recording transcript) just links through to view them, no reselect
+    // action; a recording-sourced plan gets the full
+    // RecordingsLink/ChangeRecordingsButton treatment, where Replace still
+    // only clears a citation (see handleChangeRecordings) — it deliberately
+    // doesn't revert planPublished to a draft either way: unlike a single
+    // Documents-tab form, this is the customer's one live care plan, and
+    // silently knocking it back to "Draft" (with everything that status
+    // otherwise implies elsewhere in Care Management) is a bigger call than
+    // "consistent reuse banner" was asked for.
     return (
       <div className="flex flex-col gap-3">
         {!planPublishedNoticeDismissed && (
-          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-base font-semibold text-[rgb(12,77,12)]">Care plan published</p>
-              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-                This is now a real care plan, not an Assessment Hero draft — it's included in reports and reviews the same as
-                any other.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={dismissPlanPublishedNotice}
-              aria-label="Dismiss"
-              className="text-[rgb(16,100,16)] hover:text-[rgb(12,77,12)] transition-colors cursor-pointer flex-shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+          <PublishedConfirmationBanner
+            title="Care plan published"
+            description="This is now a real care plan, not an Assessment Hero draft — it's included in reports and reviews the same as any other."
+            onDismissed={dismissPlanPublishedNotice}
+          />
         )}
-        {!draftedFromDocuments && (
+        {draftedFromDocuments ? (
+          hasDraftOrigin && (
+            // Same generic, simple phrasing as AssessmentHeroReuseBanner's
+            // recording-sourced copy ("Drafted by Assessment Hero — add a
+            // recording to update.") rather than naming the specific
+            // document(s) in the sentence itself — keeps this easy to
+            // update/reword later without it going stale, and consistent
+            // with how every other completed/published Assessment Hero
+            // banner in the app reads. The specific title(s) still surface
+            // on hover over the link (native title attribute), same as
+            // RecordingsLink does for recordings.
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
+                <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a document to update.</p>
+              </div>
+              <div className="flex items-center gap-4 flex-shrink-0">
+                <button
+                  type="button"
+                  title={sources!.join(', ')}
+                  onClick={() => navigate(`/customers/${customer.id}/documents?tab=assessments`)}
+                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                >
+                  {`View document${sources!.length > 1 ? `s (${sources!.length})` : ''}`}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                <ChangeDocumentsButton />
+              </div>
+            </div>
+          )
+        ) : (
           <AssessmentHeroReuseBanner
             customerId={customer.id}
             linkedRecordings={linkedRecordings}
@@ -552,21 +572,47 @@ export function CarePlanDraftFlow() {
  * contribute if one of those is what's actually relevant. Only documents
  * marked complete are offered; a document still outstanding has nothing
  * settled yet to draft from.
+ *
+ * Reused as-is (just with different copy/initial selection) by
+ * ChangeDocumentsButton below, for re-picking sources on a plan that's
+ * already established rather than offering to draft a brand-new one — see
+ * the props' defaults, which keep CarePlanDraftFlow's original offer
+ * behaviour unchanged.
  */
 function CarePlanDraftSourcePicker({
   open, onOpenChange, onConfirm,
+  initialSelectedTitles = [],
+  title = 'Draft care plan from completed documents',
+  description = 'Choose which completed documents Assessment Hero should draft the outcomes and tasks from.',
+  confirmLabel = 'Draft care plan',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (titles: string[]) => void;
+  initialSelectedTitles?: string[];
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
 }) {
   const customer = useCustomer();
   const { assessments, documents } = getCompletedDocuments(customer.id);
   const [tab, setTab] = useState<'assessments' | 'documents'>('assessments');
   // Previously this was seeded with every completed assessment pre-checked.
   // Change: start with nothing selected so the reviewer explicitly chooses
-  // which completed assessments/documents to draft from.
+  // which completed assessments/documents to draft from — unless the caller
+  // passes initialSelectedTitles (ChangeDocumentsButton, re-picking sources
+  // for a plan that already has some), in which case those are pre-checked
+  // instead. Reset on every open (not just mount) since this component stays
+  // mounted across opens/closes.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    if (!open) return;
+    setTab('assessments');
+    setSelectedIds(new Set(
+      [...assessments, ...documents].filter(d => initialSelectedTitles.includes(d.title)).map(d => d.id),
+    ));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   const toggle = (id: string) =>
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -581,10 +627,8 @@ function CarePlanDraftSourcePicker({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Draft care plan from completed documents</DialogTitle>
-          <DialogDescription>
-            Choose which completed documents Assessment Hero should draft the outcomes and tasks from.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="flex rounded-lg border border-gray-200 overflow-hidden">
@@ -627,11 +671,48 @@ function CarePlanDraftSourcePicker({
             disabled={selectedTitles.length === 0}
             onClick={() => { onConfirm(selectedTitles); onOpenChange(false); }}
           >
-            Draft care plan
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Sits next to "View documents (N)" in the small document-sourced reuse
+ * banner (see CarePlanDraftBanner) — the "Change recording(s)" of the
+ * document-sourced world: reopens the same assessments/documents picker
+ * used to draft the plan in the first place, pre-checked to whatever's
+ * currently cited, so a reviewer can add/remove documents this plan draws
+ * on. Unlike CarePlanDraftFlow's own use of the picker, confirming here
+ * doesn't start the drafting stepper — there's no new content to reveal on
+ * an already-published plan, just an updated set of sources — so it goes
+ * straight to setDraftSourceDocuments.
+ */
+function ChangeDocumentsButton() {
+  const { draftSourceDocuments, setDraftSourceDocuments } = useCareManagement();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
+      >
+        <RefreshCw className="w-3.5 h-3.5" />
+        Update documents
+      </button>
+      <CarePlanDraftSourcePicker
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={setDraftSourceDocuments}
+        initialSelectedTitles={draftSourceDocuments ?? []}
+        title="Update documents"
+        description="Choose which completed assessments and documents this care plan should be drafted from."
+        confirmLabel="Update"
+      />
+    </>
   );
 }
 

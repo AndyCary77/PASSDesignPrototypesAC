@@ -101,12 +101,14 @@ interface CareManagementContextType {
   draftComplete: boolean;
   startCarePlanDraft: () => void;
   /**
-   * The completed documents (Assessments and/or Documents tab) the reviewer
-   * picked in CarePlanDraftSourcePicker to draft this run from — set right
-   * before `startCarePlanDraft` is called. `useCareData` prefers this over
-   * each record's own static `draftSource` for the aggregate "Drafted from
-   * X" shown in the banners, so what the banner says matches what was
-   * actually picked. Null until a draft has been run at least once.
+   * The completed documents (Assessments and/or Documents tab) this plan is
+   * drafted from — either picked by the reviewer in CarePlanDraftSourcePicker
+   * right before `startCarePlanDraft` (Edith/Vera), or pre-seeded for an
+   * already-established customer with a settled plan (Arthur — see the
+   * provider). `useCareData` prefers this over each record's own static
+   * `draftSource` for the aggregate "Drafted from X" shown in the banners,
+   * so what the banner says matches what was actually picked/seeded. Null
+   * for a customer with no document-drafted origin at all.
    */
   draftSourceDocuments: string[] | null;
   setDraftSourceDocuments: (titles: string[]) => void;
@@ -184,7 +186,24 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   const [draftStep, setDraftStep] = useState<number | null>(null);
   const [draftComplete, setDraftComplete] = useState(false);
   const [draftNoticeDismissed, setDraftNoticeDismissed] = useState(false);
-  const [draftSourceDocuments, setDraftSourceDocuments] = useState<string[] | null>(null);
+  // Seeded for Arthur specifically (2026-09-11 change of direction): Care
+  // Management's "drafted with Assessment Hero" story now points at his
+  // completed assessment documents rather than a recording — these are
+  // refined and complete, and are what actually drives the care-planning
+  // decisions, unlike a raw recording transcript. Two, not one — realistically
+  // a care plan this developed draws on more than a single document (here,
+  // his actual Care and Support Plan alongside the Personal Care / Moving
+  // and Handling assessment — both real rows in his Assessments list, see
+  // mock-documents.ts). Everyone else still starts null here (Edith/Vera
+  // only get this set once a reviewer actually runs "Draft care plan" and
+  // picks sources in CarePlanDraftSourcePicker); Arthur's is just pre-set,
+  // matching that he's an established customer with a settled,
+  // already-drafted plan rather than someone still mid-onboarding.
+  const [draftSourceDocuments, setDraftSourceDocuments] = useState<string[] | null>(
+    customer.id === 'arthur-barrington'
+      ? ['Customer Care and Support Plan', 'Personal Care / Moving and Handling']
+      : null,
+  );
   // Seeded from the customer's existing status — Arthur already has a live
   // plan, Edith/Vera's only exists as a CareBridge draft until Publish is
   // clicked. Read once on mount, same as every other piece of session state

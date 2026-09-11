@@ -153,10 +153,34 @@ export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
   // simpler single-page "Personal Care / Moving and Handling" — the 16-section
   // document read as too much to walk through in a quick demo of the review
   // flow; see PersonalCareMovingHandlingDocumentPage.
+  //
+  // 2026-09-11: also given a genuine, separate, *completed* "Customer Care
+  // and Support Plan" row (his real 16-section document — see
+  // CarePlanDocumentPage/CareBridgePage's RECORDINGS['arthur-barrington'],
+  // which already has it as the 'initial' recording's isCarePlanFocus
+  // document) so Care Management's "drafted from completed documents"
+  // banner has two genuinely separate, real documents to cite — see
+  // CareManagementContext.tsx's draftSourceDocuments. Personal Care /
+  // Moving and Handling's own status flipped from 'draft' to 'success' at
+  // the same time — CarePlanDraftSourcePicker (ChangeDocumentsButton's
+  // picker) only offers/pre-checks documents getCompletedDocuments
+  // considers complete, so leaving it 'draft' meant a document this plan
+  // is actually cited as drafted from wasn't even selectable there, and
+  // "Update" with no changes would have silently dropped it. (Each
+  // document's own page still tracks its *own* Assessment Hero
+  // review/publish state independently of this list-row status — same
+  // simplification already accepted for the Care Plan row above.)
   'arthur-barrington': [
     {
       ...STANDARD_ASSESSMENT_PACK[0],
-      status: 'draft',
+      id: 'd0',
+      status: 'success',
+      title: 'Customer Care and Support Plan',
+      to: '/customers/arthur-barrington/documents/care-plan',
+    },
+    {
+      ...STANDARD_ASSESSMENT_PACK[0],
+      status: 'success',
       title: 'Personal Care / Moving and Handling',
       to: '/customers/arthur-barrington/documents/personal-care',
     },

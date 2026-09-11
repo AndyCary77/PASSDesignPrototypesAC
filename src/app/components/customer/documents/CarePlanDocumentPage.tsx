@@ -1,6 +1,6 @@
 import { createContext, useContext as useReactContext, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, CheckCircle2, Send, Sparkles } from 'lucide-react';
+import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, Send } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
 } from '../../ui/dropdown-menu';
 import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
-import { CarePlanDocumentView, CareBridgeContext, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
+import { CarePlanDocumentView, CareBridgeContext, PublishedConfirmationBanner, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { useScrolled } from '../../../hooks/useScrolled';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
@@ -271,26 +271,15 @@ export function CarePlanDocumentContent() {
 
       {isCompletedDocument ? null : published ? (
         <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-                This document has been published from the Assessment Hero draft — it's now a saved document and is no
-                longer tracked as a draft.
-              </p>
-            </div>
-          </div>
+          <PublishedConfirmationBanner />
           {/* Stripped-back reuse banner — same RelinkDropdown as the draft
               banner below, so Assessment Hero isn't a one-shot, pre-publish-
               only tool: picking a different/new recording here re-opens
               this document as a draft again (see relinkRecording). */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
-              <Sparkles className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0" />
-              <p className="text-sm text-purple-900">Drafted by Assessment Hero — still available to refresh from a recording.</p>
+              <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
+              <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               {linkedRecording && (

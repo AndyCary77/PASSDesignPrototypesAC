@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, Search, RefreshCw } from 'lucide-react';
+import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, CheckCircle2, Search, RefreshCw } from 'lucide-react';
 import { Button } from '../buttons/Button';
+import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1980,6 +1981,85 @@ export function ChangeRecordingsButton({
   );
 }
 
+/** How long the green confirmation stays fully visible before it starts fading. */
+const PUBLISHED_BANNER_VISIBLE_MS = 5000;
+/** Must match the Tailwind `duration-*` class below — how long the fade/collapse itself takes once it starts. */
+const PUBLISHED_BANNER_FADE_MS = 500;
+
+/**
+ * The plain green "Published" confirmation, shown right after Publish —
+ * deliberately temporary (a toast, not a permanent fixture), unlike the
+ * standing AssessmentHeroReuseBanner below it: it auto-fades (and collapses
+ * its own height, via the CSS grid 1fr→0fr trick, so nothing sitting under
+ * it snaps up ungracefully) a few seconds after appearing, so the UI itself
+ * signals "this was a one-off confirmation", not "read this every time you
+ * open the page".
+ *
+ * `onDismissed` is for a caller with its own persisted "already seen this"
+ * state that needs to survive this component unmounting/remounting on its
+ * own (Care Management's banner remounts on every Outcomes/Tasks/Visits tab
+ * switch, so its "don't show this again" flag has to live in Context, not
+ * here) — pass it and this also renders a manual dismiss (×) button, which
+ * plays the same fade/collapse rather than vanishing instantly. Omit it for
+ * a page that only ever mounts this once per visit (every Documents-tab
+ * page): nothing else needs to know once it's gone.
+ */
+export function PublishedConfirmationBanner({
+  title = 'Published',
+  description = "This document has been published from the Assessment Hero draft — it's now a saved document and is no longer tracked as a draft.",
+  onDismissed,
+}: {
+  title?: string;
+  description?: string;
+  onDismissed?: () => void;
+}) {
+  const [fading, setFading] = useState(false);
+  const [gone, setGone] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFading(true), PUBLISHED_BANNER_VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!fading) return;
+    const timer = setTimeout(() => {
+      setGone(true);
+      onDismissed?.();
+    }, PUBLISHED_BANNER_FADE_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fading]);
+
+  if (gone) return null;
+
+  return (
+    <div className={`grid transition-all ease-out duration-500 ${fading ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
+      <div className="overflow-hidden">
+        <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
+          <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-lg font-semibold text-[rgb(12,77,12)]">{title}</p>
+            <p className="text-sm text-[rgb(16,100,16)] mt-0.5">{description}</p>
+          </div>
+          {onDismissed && (
+            <button
+              type="button"
+              onClick={() => setFading(true)}
+              aria-label="Dismiss"
+              className="text-[rgb(16,100,16)] hover:text-[rgb(12,77,12)] transition-colors cursor-pointer flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * The "stripped back" banner shown once a document is published — sits
  * alongside the plain green "Published" confirmation, not instead of it
@@ -2013,8 +2093,8 @@ export function AssessmentHeroReuseBanner({
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
-        <Sparkles className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0" />
-        <p className="text-sm text-purple-900">Drafted by Assessment Hero — still available to refresh from a recording.</p>
+        <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
+        <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
         <RecordingsLink customerId={customerId} recordings={linkedRecordings} navigate={navigate} />

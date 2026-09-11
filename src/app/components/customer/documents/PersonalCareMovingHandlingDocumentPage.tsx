@@ -1,6 +1,6 @@
 import { createContext, useContext as useReactContext, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, History, Printer, Trash2, CheckCircle2, Send } from 'lucide-react';
+import { ArrowLeft, History, Printer, Trash2, Send } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
@@ -11,6 +11,7 @@ import {
   ChangeRecordingsButton,
   RecordingsLink,
   AssessmentHeroReuseBanner,
+  PublishedConfirmationBanner,
   type FormField,
   type Recording,
   type RecordingSelectionMode,
@@ -168,18 +169,7 @@ export function PersonalCareDocumentContent() {
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
       {published ? (
         <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-3 rounded-lg border border-[rgb(178,224,178)] bg-[rgb(232,247,232)] px-4 py-3">
-            <div className="w-7 h-7 rounded-lg bg-[rgb(212,240,212)] flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-[rgb(33,166,33)]" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-[rgb(12,77,12)]">Published</p>
-              <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
-                This document has been published from the Assessment Hero draft — it's now a saved document and is no
-                longer tracked as a draft.
-              </p>
-            </div>
-          </div>
+          <PublishedConfirmationBanner />
           <AssessmentHeroReuseBanner
             customerId={customer.id}
             linkedRecordings={linkedRecordings}
