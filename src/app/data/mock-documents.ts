@@ -159,17 +159,18 @@ export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
   // CarePlanDocumentPage/CareBridgePage's RECORDINGS['arthur-barrington'],
   // which already has it as the 'initial' recording's isCarePlanFocus
   // document) so Care Management's "drafted from completed documents"
-  // banner has two genuinely separate, real documents to cite — see
-  // CareManagementContext.tsx's draftSourceDocuments. Personal Care /
-  // Moving and Handling's own status flipped from 'draft' to 'success' at
-  // the same time — CarePlanDraftSourcePicker (ChangeDocumentsButton's
-  // picker) only offers/pre-checks documents getCompletedDocuments
-  // considers complete, so leaving it 'draft' meant a document this plan
-  // is actually cited as drafted from wasn't even selectable there, and
-  // "Update" with no changes would have silently dropped it. (Each
-  // document's own page still tracks its *own* Assessment Hero
-  // review/publish state independently of this list-row status — same
-  // simplification already accepted for the Care Plan row above.)
+  // banner has a genuine second, real document to cite alongside
+  // "Confirmation of Instructions" below — see CareManagementContext.tsx's
+  // draftSourceDocuments.
+  //
+  // Personal Care / Moving and Handling is deliberately *not* one of Care
+  // Management's cited sources, and stays 'draft' here — it's a genuinely
+  // still-pending Assessment Hero draft on its own page (fields still
+  // awaiting review), so it doesn't fit "completed, refined document" the
+  // way Care Management's citation is meant to. (Briefly flipped to
+  // 'success' on 2026-09-11 purely so CarePlanDraftSourcePicker would
+  // still offer/pre-check it as a source — reverted once it stopped being
+  // one of Care Management's cited documents.)
   'arthur-barrington': [
     {
       ...STANDARD_ASSESSMENT_PACK[0],
@@ -180,7 +181,7 @@ export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
     },
     {
       ...STANDARD_ASSESSMENT_PACK[0],
-      status: 'success',
+      status: 'draft',
       title: 'Personal Care / Moving and Handling',
       to: '/customers/arthur-barrington/documents/personal-care',
     },

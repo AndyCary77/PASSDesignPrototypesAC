@@ -164,6 +164,7 @@ export function PersonalCareDocumentContent() {
   // regardless of what else is currently linked, so the transcript passed
   // to FormFieldsView stays fixed to that one recording.
   const citedRecording = resolveRecording(customer.id, 'personal-care');
+  const scrolled = useScrolled();
 
   return (
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
@@ -236,8 +237,22 @@ export function PersonalCareDocumentContent() {
         </div>
       )}
 
-      <div className="flex items-center px-5 py-4 rounded-lg border border-gray-200 bg-white">
-        <h2 className="text-xl font-semibold text-gray-900">Personal Care / Moving and Handling</h2>
+      {/* Sticky beneath the pinned sub-nav, in an opaque bg-gray-50 shell that
+          swallows the gap-4 above it — see the matching note in
+          CarePlanDocumentPage. */}
+      <div
+        className={`sticky z-30 bg-gray-50 -mt-4 pt-4 transition-all duration-300 ${
+          scrolled ? 'top-[263px]' : 'top-[335px]'
+        }`}
+      >
+        <div
+          className={`flex items-center justify-center px-5 rounded-lg border border-gray-200 transition-all duration-300 ${
+            scrolled ? 'py-2' : 'py-4'
+          }`}
+          style={{ backgroundColor: '#6d1b98' }}
+        >
+          <h2 className="text-xl font-semibold text-white">Personal Care / Moving and Handling</h2>
+        </div>
       </div>
 
       <div>

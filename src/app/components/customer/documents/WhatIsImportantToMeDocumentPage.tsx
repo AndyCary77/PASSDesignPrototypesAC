@@ -316,6 +316,7 @@ export function WiitmDocumentContent() {
   // See the same guard in CarePlanDocumentPage — Vera's WIITM reads as an
   // already-completed document, so no CareBridge banner above it at all.
   const isCompletedDocument = customer.id === 'vera-bramwell';
+  const scrolled = useScrolled();
 
   return (
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
@@ -529,8 +530,22 @@ export function WiitmDocumentContent() {
         </div>
       )}
 
-      <div className="flex items-center px-5 py-4 rounded-lg border border-gray-200 bg-white">
-        <h2 className="text-xl font-semibold text-gray-900">What Is Important To Me</h2>
+      {/* Sticky beneath the pinned sub-nav, in an opaque bg-gray-50 shell that
+          swallows the gap-4 above it — see the matching note in
+          CarePlanDocumentPage. */}
+      <div
+        className={`sticky z-30 bg-gray-50 -mt-4 pt-4 transition-all duration-300 ${
+          scrolled ? 'top-[263px]' : 'top-[335px]'
+        }`}
+      >
+        <div
+          className={`flex items-center justify-center px-5 rounded-lg border border-gray-200 transition-all duration-300 ${
+            scrolled ? 'py-2' : 'py-4'
+          }`}
+          style={{ backgroundColor: '#6d1b98' }}
+        >
+          <h2 className="text-xl font-semibold text-white">What Is Important To Me</h2>
+        </div>
       </div>
 
       <div>

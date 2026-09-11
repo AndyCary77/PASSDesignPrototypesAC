@@ -191,17 +191,23 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   // completed assessment documents rather than a recording — these are
   // refined and complete, and are what actually drives the care-planning
   // decisions, unlike a raw recording transcript. Two, not one — realistically
-  // a care plan this developed draws on more than a single document (here,
-  // his actual Care and Support Plan alongside the Personal Care / Moving
-  // and Handling assessment — both real rows in his Assessments list, see
-  // mock-documents.ts). Everyone else still starts null here (Edith/Vera
+  // a care plan this developed draws on more than a single document: his
+  // actual Care and Support Plan, and Confirmation of Instructions (his
+  // real 6-Week Review document — see focusDocumentName on the 'review6'
+  // recording in CareBridgePage.tsx) — both genuinely complete, real rows
+  // in his Assessments list (see mock-documents.ts). NOT Personal Care /
+  // Moving and Handling — that one's still a genuinely pending Assessment
+  // Hero draft on its own page, so citing it here as a "completed
+  // document" would be dishonest, and it wouldn't stay selectable in
+  // CarePlanDraftSourcePicker anyway (getCompletedDocuments only offers
+  // completed ones). Everyone else still starts null here (Edith/Vera
   // only get this set once a reviewer actually runs "Draft care plan" and
   // picks sources in CarePlanDraftSourcePicker); Arthur's is just pre-set,
   // matching that he's an established customer with a settled,
   // already-drafted plan rather than someone still mid-onboarding.
   const [draftSourceDocuments, setDraftSourceDocuments] = useState<string[] | null>(
     customer.id === 'arthur-barrington'
-      ? ['Customer Care and Support Plan', 'Personal Care / Moving and Handling']
+      ? ['Customer Care and Support Plan', 'Confirmation of Instructions']
       : null,
   );
   // Seeded from the customer's existing status — Arthur already has a live
