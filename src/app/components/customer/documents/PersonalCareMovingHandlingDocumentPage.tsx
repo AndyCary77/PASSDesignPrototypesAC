@@ -1,10 +1,19 @@
 import { createContext, useContext as useReactContext, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, History, Printer, Trash2, ChevronRight, CheckCircle2, Send } from 'lucide-react';
+import { ArrowLeft, History, Printer, Trash2, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
-import { FormFieldsView, isFieldCaptured, resolveRecording, type FormField, type Recording } from '../CareBridgePage';
+import {
+  FormFieldsView,
+  isFieldCaptured,
+  resolveRecording,
+  ChangeRecordingsButton,
+  RecordingsLink,
+  type FormField,
+  type Recording,
+  type RecordingSelectionMode,
+} from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { PERSONAL_CARE_FIELDS, PERSONAL_CARE_GROUPS } from './personalCareMovingHandlingData';
 import { useScrolled } from '../../../hooks/useScrolled';
@@ -27,7 +36,9 @@ interface PersonalCareDocumentState {
   setDirty: (dirty: boolean) => void;
   published: boolean;
   setPublished: (published: boolean) => void;
-  linkedRecording: Recording | null;
+  linkedRecordings: Recording[];
+  linkedRecordingIds: string[];
+  handleChangeRecordings: (ids: string[], mode: RecordingSelectionMode) => void;
   fields: FormField[];
   setFields: (fields: FormField[]) => void;
   pendingReview: boolean;
@@ -54,7 +65,31 @@ export function PersonalCareDocumentProvider({ children }: { children: React.Rea
   const [dirty, setDirty] = useState(false);
   const passgeniusRef = useRef<HTMLObjectElement>(null);
   const [fields, setFields] = useState<FormField[]>(PERSONAL_CARE_FIELDS);
-  const linkedRecording = resolveRecording(customer.id, 'personal-care') ?? null;
+  // 'personal-care' is the one recording every existing field's sourceLines
+  // actually came from — kept as an explicit, changeable set (rather than a
+  // single fixed id) so "Change recording(s)" below has something to act on.
+  const [linkedRecordingIds, setLinkedRecordingIds] = useState<string[]>(['personal-care']);
+  const linkedRecordings: Recording[] = linkedRecordingIds
+    .map(id => resolveRecording(customer.id, id))
+    .filter((r): r is Recording => !!r);
+
+  // Merge just extends the linked set — every field keeps whatever citation
+  // it already had. Replace only touches existing citations if
+  // 'personal-care' (the recording every current sourceLines reference)
+  // itself is dropped — in which case every field's citation is cleared
+  // (honest gap, not the field's drafted value — there's no alternate
+  // content to regenerate from) rather than left pointing at a transcript
+  // this document no longer draws on.
+  const handleChangeRecordings = (ids: string[], mode: RecordingSelectionMode) => {
+    if (mode === 'replace') {
+      if (!ids.includes('personal-care')) {
+        setFields(prev => prev.map(f => ({ ...f, sourceLines: undefined })));
+      }
+      setLinkedRecordingIds(ids);
+    } else {
+      setLinkedRecordingIds(prev => Array.from(new Set([...prev, ...ids])));
+    }
+  };
 
   // isFieldCaptured (not a plain `!!f.value` check) so the "Risks and control
   // measures" table field — captured via `rows`, not `value` — counts toward
@@ -66,7 +101,11 @@ export function PersonalCareDocumentProvider({ children }: { children: React.Rea
 
   return (
     <PersonalCareDocumentContext.Provider
-      value={{ customer, navigate, dirty, setDirty, published, setPublished, linkedRecording, fields, setFields, pendingReview, pendingCount, passgeniusRef }}
+      value={{
+        customer, navigate, dirty, setDirty, published, setPublished,
+        linkedRecordings, linkedRecordingIds, handleChangeRecordings,
+        fields, setFields, pendingReview, pendingCount, passgeniusRef,
+      }}
     >
       {children}
     </PersonalCareDocumentContext.Provider>
@@ -111,7 +150,15 @@ export function PersonalCareDocumentSubnav() {
 
 /** Everything below the pinned sub-nav — the Assessment Hero Draft panel, title bar, History and the form itself. */
 export function PersonalCareDocumentContent() {
-  const { customer, navigate, published, linkedRecording, fields, setFields, pendingReview, pendingCount, passgeniusRef, setDirty, setPublished } = usePersonalCareDocument();
+  const {
+    customer, navigate, published, linkedRecordings, linkedRecordingIds, handleChangeRecordings,
+    fields, setFields, pendingReview, pendingCount, passgeniusRef, setDirty, setPublished,
+  } = usePersonalCareDocument();
+  // Every field's sourceLines (where still present — see
+  // handleChangeRecordings) indexes into 'personal-care' specifically,
+  // regardless of what else is currently linked, so the transcript passed
+  // to FormFieldsView stays fixed to that one recording.
+  const citedRecording = resolveRecording(customer.id, 'personal-care');
 
   return (
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
@@ -148,30 +195,35 @@ export function PersonalCareDocumentContent() {
                 )}
               </p>
 
-              {linkedRecording && (
+              {linkedRecordings.length === 1 && (
                 <p className="text-sm text-purple-800 mt-0.5">
-                  Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
+                  Generated from <strong>{linkedRecordings[0].label}</strong>, recorded{' '}
                   <strong>
-                    {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
-                    {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
+                    {linkedRecordings[0].recordingMeta.split(' · ')[0]} at{' '}
+                    {linkedRecordings[0].recordingMeta.split(' · ')[1].split('–')[0]}
                   </strong>{' '}
-                  by <strong>{linkedRecording.recordedBy}</strong> — please review before accepting.
+                  by <strong>{linkedRecordings[0].recordedBy}</strong> — please review before accepting.
+                </p>
+              )}
+              {linkedRecordings.length > 1 && (
+                <p className="text-sm text-purple-800 mt-0.5">
+                  Generated from <strong>{linkedRecordings.length} recordings</strong> — not every entry is a direct
+                  quote, so please review before accepting.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
-            {linkedRecording ? (
-              <button
-                type="button"
-                onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
-              >
-                View recording
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            ) : <span />}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
+            <div className="flex items-center gap-4">
+              <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
+              {linkedRecordings.length === 0 && <span />}
+              <ChangeRecordingsButton
+                customerId={customer.id}
+                linkedRecordingIds={linkedRecordingIds}
+                onConfirm={handleChangeRecordings}
+              />
+            </div>
 
             <Button
               icon={<Send className="w-4 h-4" />}
@@ -206,8 +258,8 @@ export function PersonalCareDocumentContent() {
                 <FormFieldsView
                   fields={groupFields}
                   onChange={updated => setFields(fields.map(f => updated.find(u => u.id === f.id) ?? f))}
-                  transcript={linkedRecording?.transcript ?? []}
-                  audioUrl={linkedRecording?.audioUrl}
+                  transcript={citedRecording?.transcript ?? []}
+                  audioUrl={citedRecording?.audioUrl}
                 />
               )}
             </div>

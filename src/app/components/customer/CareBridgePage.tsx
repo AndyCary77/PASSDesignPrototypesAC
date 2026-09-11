@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, Search } from 'lucide-react';
+import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, Search, RefreshCw } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import {
   DropdownMenu,
@@ -12,6 +12,17 @@ import {
 } from '../ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../ui/dialog';
+import { Checkbox } from '../ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
 import { veraise } from '../../data/vera-from-edith';
@@ -1779,6 +1790,193 @@ export function RecordingsLink({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** What a confirmed `ChangeRecordingsButton` selection means for the document's existing content. */
+export type RecordingSelectionMode = 'merge' | 'replace';
+
+/**
+ * Sits to the right of RecordingsLink in an Assessment Hero Draft banner's
+ * footer, letting the reviewer pick a different set of source recordings
+ * from everything captured for this customer, rather than being stuck with
+ * whatever recording the draft originally linked.
+ *
+ * Two steps: (1) pick recordings — checkboxes when `multiSelect` (a
+ * document whose content is a flat set of fields/entries, each with its own
+ * optional citation, so more than one recording can genuinely stay linked
+ * at once — see Medical History/About Me/Personal Care), or a single radio
+ * choice when not (Care Plan/WIITM's content is regenerated wholesale from
+ * exactly one linked recording, so there's nothing to merge — picking a new
+ * one always replaces the old, skipping step 2 entirely). (2) only for
+ * multiSelect, and only when the new selection actually differs from what's
+ * linked now: "Merge with existing content" (additive — keeps every
+ * existing citation, just extends the linked set) or "Replace existing
+ * content" (the caller is responsible for clearing citations that pointed
+ * at a recording no longer selected, per the "honest gaps" pattern used
+ * throughout this app — never fabricate a citation for content that isn't
+ * really there).
+ */
+export function ChangeRecordingsButton({
+  customerId,
+  linkedRecordingIds,
+  onConfirm,
+  multiSelect = true,
+}: {
+  customerId: string;
+  linkedRecordingIds: string[];
+  onConfirm: (ids: string[], mode: RecordingSelectionMode) => void;
+  multiSelect?: boolean;
+}) {
+  const recordings = resolveRecordings(customerId);
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<'select' | 'confirm'>('select');
+  const [selected, setSelected] = useState<string[]>(linkedRecordingIds);
+  const [mode, setMode] = useState<RecordingSelectionMode>('merge');
+
+  if (recordings.length < 2) return null; // nothing else to switch to
+
+  const sameAsCurrent =
+    selected.length === linkedRecordingIds.length && selected.every(id => linkedRecordingIds.includes(id));
+
+  const toggle = (id: string) => {
+    if (multiSelect) {
+      setSelected(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    } else {
+      setSelected([id]);
+    }
+  };
+
+  const handleContinue = () => {
+    if (selected.length === 0 || sameAsCurrent) {
+      setOpen(false);
+      return;
+    }
+    if (multiSelect) {
+      setMode('merge');
+      setStep('confirm');
+    } else {
+      onConfirm(selected, 'replace');
+      setOpen(false);
+    }
+  };
+
+  const handleConfirm = () => {
+    onConfirm(selected, mode);
+    setOpen(false);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={o => {
+        setOpen(o);
+        if (o) {
+          setSelected(linkedRecordingIds);
+          setStep('select');
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          Change recording{multiSelect ? '(s)' : ''}
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        {step === 'select' ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>{multiSelect ? 'Choose recordings' : 'Choose a recording'}</DialogTitle>
+              <DialogDescription>
+                {multiSelect
+                  ? 'Select every recording this document should draw on.'
+                  : "Select the recording this document should draw on — its content is regenerated from a single recording, so this replaces what's currently linked."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-1.5 max-h-80 overflow-y-auto -mx-1 px-1">
+              {recordings.map(r => {
+                const checked = selected.includes(r.id);
+                return (
+                  <label
+                    key={r.id}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${checked ? 'border-[rgb(154,38,214)] bg-purple-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    {multiSelect ? (
+                      <Checkbox checked={checked} onCheckedChange={() => toggle(r.id)} />
+                    ) : (
+                      <input
+                        type="radio"
+                        name="change-recording"
+                        checked={checked}
+                        onChange={() => toggle(r.id)}
+                        className="h-4 w-4 accent-[rgb(154,38,214)] flex-shrink-0"
+                      />
+                    )}
+                    <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">{r.label}</p>
+                      <p className="text-sm text-gray-500">
+                        {r.recordingMeta.split(' · ')[0]} · {r.recordedBy}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+            <DialogFooter>
+              <Button variant="tertiary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button disabled={selected.length === 0} onClick={handleContinue}>
+                Continue
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Update this document with this selection?</DialogTitle>
+              <DialogDescription>Choose how the new selection should be applied.</DialogDescription>
+            </DialogHeader>
+            <RadioGroup value={mode} onValueChange={v => setMode(v as RecordingSelectionMode)}>
+              <label
+                className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${mode === 'merge' ? 'border-[rgb(154,38,214)] bg-purple-50' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                <RadioGroupItem value="merge" className="mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Merge with existing content</p>
+                  <p className="text-sm text-gray-500">
+                    Add the newly selected recording(s) alongside what's already linked here.
+                  </p>
+                </div>
+              </label>
+              <label
+                className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${mode === 'replace' ? 'border-[rgb(154,38,214)] bg-purple-50' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                <RadioGroupItem value="replace" className="mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Replace existing content</p>
+                  <p className="text-sm text-gray-500">
+                    Only use the newly selected recording(s) — anything drafted solely from a recording you've
+                    removed goes back to needing manual review.
+                  </p>
+                </div>
+              </label>
+            </RadioGroup>
+            <DialogFooter>
+              <Button variant="tertiary" onClick={() => setStep('select')}>
+                Back
+              </Button>
+              <Button onClick={handleConfirm}>Confirm</Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 

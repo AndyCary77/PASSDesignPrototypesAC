@@ -3,7 +3,14 @@ import { useNavigate } from 'react-router';
 import { Stethoscope, Calendar, Check, Search } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
 import { EmptyTab, DiscardButton } from './caremanagement/shared';
-import { TranscriptCheckPopover, RecordingsLink, resolveRecording, type Recording } from './CareBridgePage';
+import {
+  TranscriptCheckPopover,
+  RecordingsLink,
+  ChangeRecordingsButton,
+  resolveRecording,
+  type Recording,
+  type RecordingSelectionMode,
+} from './CareBridgePage';
 import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
 import { triggerPassGeniusHover } from '../icons/passgenius';
 
@@ -216,6 +223,11 @@ export function MedicalHistoryPage() {
   const navigate = useNavigate();
   const isDraft = customer.id === 'arthur-barrington';
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>(() => getMedicalHistory(customer.id));
+  // Recordings explicitly added via "Change recording(s)" → Merge that
+  // don't (yet) back any individual diagnosis — kept separately from
+  // diagnoses' own recordingId so a merged-in recording still shows as
+  // linked even before/unless anything on the page actually cites it.
+  const [extraLinkedRecordingIds, setExtraLinkedRecordingIds] = useState<string[]>([]);
   const passgeniusRef = useRef<HTMLObjectElement>(null);
 
   // Which recording backs a given diagnosis — defaults to 'personal-care'
@@ -223,19 +235,36 @@ export function MedicalHistoryPage() {
   const recordingFor = (d: Diagnosis): Recording | null =>
     isDraft ? resolveRecording(customer.id, d.recordingId ?? 'personal-care') ?? null : null;
 
-  // Every distinct recording actually cited by something on this page —
-  // one when everything traces back to the same visit, more once a second
-  // recording (like Arthur's original 'initial' assessment) also
-  // contributes. Order: whichever's cited by the most entries first, so
-  // the single-recording case still shows the more relevant one first once
-  // a second is added later.
+  // Every distinct recording actually cited by something on this page, plus
+  // anything merged in explicitly — one when everything traces back to the
+  // same visit, more once a second recording (like Arthur's original
+  // 'initial' assessment) also contributes.
+  const linkedRecordingIds = Array.from(
+    new Set([...diagnoses.map(d => d.recordingId ?? 'personal-care'), ...extraLinkedRecordingIds]),
+  );
   const linkedRecordings: Recording[] = isDraft
-    ? Array.from(new Set(diagnoses.map(d => d.recordingId ?? 'personal-care')))
-        .map(id => resolveRecording(customer.id, id))
-        .filter((r): r is Recording => !!r)
+    ? linkedRecordingIds.map(id => resolveRecording(customer.id, id)).filter((r): r is Recording => !!r)
     : [];
 
   const pendingCount = diagnoses.filter(d => d.reviewed === false).length;
+
+  // "Merge" just extends the linked set — every existing diagnosis keeps
+  // whatever it already cited. "Replace" drops the citation (not the
+  // diagnosis itself — it's a real medical history entry, not a form field,
+  // so it doesn't just disappear) from anything that pointed at a recording
+  // no longer selected: an honest gap, same pattern as Ischemic Stroke
+  // above, rather than leaving a citation to a recording this document no
+  // longer draws on.
+  const handleChangeRecordings = (ids: string[], mode: RecordingSelectionMode) => {
+    if (mode === 'replace') {
+      setDiagnoses(prev =>
+        prev.map(d => (ids.includes(d.recordingId ?? 'personal-care') ? d : { ...d, recordingId: undefined, sourceLines: undefined })),
+      );
+      setExtraLinkedRecordingIds(ids);
+    } else {
+      setExtraLinkedRecordingIds(prev => Array.from(new Set([...prev, ...ids])));
+    }
+  };
 
   // Publishes just this one diagnosis — there's no document-level Publish
   // gating everything else, see the note on the per-card button below.
@@ -304,8 +333,13 @@ export function MedicalHistoryPage() {
           </div>
 
           {linkedRecordings.length > 0 && (
-            <div className="bg-purple-50 border-t border-purple-200 px-4 py-3">
+            <div className="bg-purple-50 border-t border-purple-200 px-4 py-3 flex items-center gap-4">
               <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
+              <ChangeRecordingsButton
+                customerId={customer.id}
+                linkedRecordingIds={linkedRecordingIds}
+                onConfirm={handleChangeRecordings}
+              />
             </div>
           )}
         </div>

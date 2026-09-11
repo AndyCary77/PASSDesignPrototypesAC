@@ -5,7 +5,16 @@ import { Button } from '../buttons/Button';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
 import type { CustomerProfile } from '../../data/customers';
-import { FormFieldsView, isFieldCaptured, resolveRecording, RecordingsLink, type FormField, type Recording } from './CareBridgePage';
+import {
+  FormFieldsView,
+  isFieldCaptured,
+  resolveRecording,
+  RecordingsLink,
+  ChangeRecordingsButton,
+  type FormField,
+  type Recording,
+  type RecordingSelectionMode,
+} from './CareBridgePage';
 import passgeniusPurpleUrl from '../icons/passgenius-purple.svg';
 import { triggerPassGeniusHover } from '../icons/passgenius';
 
@@ -169,7 +178,9 @@ interface AboutMeState {
   navigate: ReturnType<typeof useNavigate>;
   record: AboutMeRecord;
   isDraft: boolean;
-  linkedRecording: Recording | null;
+  linkedRecordings: Recording[];
+  linkedRecordingIds: string[];
+  handleChangeRecordings: (ids: string[], mode: RecordingSelectionMode) => void;
   fields: FormField[];
   setFields: (fields: FormField[]) => void;
   dirty: boolean;
@@ -200,7 +211,31 @@ export function AboutMeProvider({ children }: { children: React.ReactNode }) {
   const [dirty, setDirty] = useState(false);
   const [published, setPublished] = useState(false);
   const passgeniusRef = useRef<HTMLObjectElement>(null);
-  const linkedRecording = isDraft ? resolveRecording(customer.id, 'personal-care') ?? null : null;
+  // 'personal-care' is the one recording every existing field's sourceLines
+  // actually came from — kept as an explicit, changeable set (rather than a
+  // single fixed id) so "Change recording(s)" below has something to act on.
+  const [linkedRecordingIds, setLinkedRecordingIds] = useState<string[]>(isDraft ? ['personal-care'] : []);
+  const linkedRecordings: Recording[] = isDraft
+    ? linkedRecordingIds.map(id => resolveRecording(customer.id, id)).filter((r): r is Recording => !!r)
+    : [];
+
+  // Merge just extends the linked set — every field keeps whatever citation
+  // it already had. Replace only makes sense to touch existing citations if
+  // 'personal-care' (the recording every current sourceLines reference)
+  // itself is dropped — in which case every field's citation is cleared
+  // (honest gap, not the field's drafted value — we don't have alternate
+  // content to regenerate from) rather than left pointing at a transcript
+  // this document no longer draws on.
+  const handleChangeRecordings = (ids: string[], mode: RecordingSelectionMode) => {
+    if (mode === 'replace') {
+      if (!ids.includes('personal-care')) {
+        setFields(prev => prev.map(f => ({ ...f, sourceLines: undefined })));
+      }
+      setLinkedRecordingIds(ids);
+    } else {
+      setLinkedRecordingIds(prev => Array.from(new Set([...prev, ...ids])));
+    }
+  };
 
   // isFieldCaptured (not a plain `!!f.value` check) for consistency with
   // every other Assessment Hero draft page, even though every field here
@@ -211,7 +246,7 @@ export function AboutMeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AboutMeContext.Provider
-      value={{ customer, navigate, record, isDraft, linkedRecording, fields, setFields, dirty, setDirty, published, setPublished, pendingReview, pendingCount, passgeniusRef }}
+      value={{ customer, navigate, record, isDraft, linkedRecordings, linkedRecordingIds, handleChangeRecordings, fields, setFields, dirty, setDirty, published, setPublished, pendingReview, pendingCount, passgeniusRef }}
     >
       {children}
     </AboutMeContext.Provider>
@@ -248,7 +283,18 @@ export function AboutMeSubnav() {
 
 /** The purple "Assessment Hero Draft" banner — same shell as every other drafted document (see PersonalCareMovingHandlingDocumentPage). Only ever shown for Arthur. */
 function AssessmentHeroDraftBanner() {
-  const { customer, navigate, linkedRecording, published, setPublished, pendingReview, pendingCount, passgeniusRef } = useAboutMe();
+  const {
+    customer,
+    navigate,
+    linkedRecordings,
+    linkedRecordingIds,
+    handleChangeRecordings,
+    published,
+    setPublished,
+    pendingReview,
+    pendingCount,
+    passgeniusRef,
+  } = useAboutMe();
 
   if (published) {
     return (
@@ -287,28 +333,41 @@ function AssessmentHeroDraftBanner() {
             )}
           </p>
 
-          {linkedRecording && (
+          {linkedRecordings.length === 1 && (
             <p className="text-sm text-purple-800 mt-0.5">
-              Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
+              Generated from <strong>{linkedRecordings[0].label}</strong>, recorded{' '}
               <strong>
-                {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
-                {linkedRecording.recordingMeta.split(' · ')[1].split('–')[0]}
+                {linkedRecordings[0].recordingMeta.split(' · ')[0]} at{' '}
+                {linkedRecordings[0].recordingMeta.split(' · ')[1].split('–')[0]}
               </strong>{' '}
-              by <strong>{linkedRecording.recordedBy}</strong> — please review before accepting.
+              by <strong>{linkedRecordings[0].recordedBy}</strong> — please review before accepting.
+            </p>
+          )}
+          {linkedRecordings.length > 1 && (
+            <p className="text-sm text-purple-800 mt-0.5">
+              Generated from <strong>{linkedRecordings.length} recordings</strong> — not every entry is a direct
+              quote, so please review before accepting.
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
-        {/* RecordingsLink degrades to today's plain "View recording" link
-            for the single-source case this page always has right now —
-            it's shared with Medical History (which does draw on two) so
-            that if About Me ever cites a second recording too, it picks up
-            the same "N recordings" picker for free rather than needing its
-            own copy built later. */}
-        <RecordingsLink customerId={customer.id} recordings={linkedRecording ? [linkedRecording] : []} navigate={navigate} />
-        {!linkedRecording && <span />}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
+        <div className="flex items-center gap-4">
+          {/* RecordingsLink degrades to today's plain "View recording" link
+              for the single-source case this page usually has — it's
+              shared with Medical History (which does draw on two) so that
+              once About Me cites a second recording too, via "Change
+              recording(s)" below, it picks up the same "N recordings"
+              picker for free rather than needing its own copy built later. */}
+          <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
+          {linkedRecordings.length === 0 && <span />}
+          <ChangeRecordingsButton
+            customerId={customer.id}
+            linkedRecordingIds={linkedRecordingIds}
+            onConfirm={handleChangeRecordings}
+          />
+        </div>
 
         <Button
           icon={<Send className="w-4 h-4" />}
@@ -324,7 +383,13 @@ function AssessmentHeroDraftBanner() {
 }
 
 export function AboutMePage() {
-  const { record, isDraft, fields, setFields, linkedRecording, setDirty } = useAboutMe();
+  const { customer, record, isDraft, fields, setFields, setDirty } = useAboutMe();
+  // Every field's sourceLines (where still present — see
+  // handleChangeRecordings) indexes into 'personal-care' specifically,
+  // regardless of what else is currently linked, so the transcript passed
+  // to FormFieldsView stays fixed to that one recording rather than
+  // whichever's first in linkedRecordings.
+  const citedRecording = isDraft ? resolveRecording(customer.id, 'personal-care') : undefined;
 
   return (
     // Same max-w-5xl mx-auto as CareManagementPage's own content wrapper —
@@ -343,8 +408,8 @@ export function AboutMePage() {
           <FormFieldsView
             fields={fields}
             onChange={updated => setFields(fields.map(f => updated.find(u => u.id === f.id) ?? f))}
-            transcript={linkedRecording?.transcript ?? []}
-            audioUrl={linkedRecording?.audioUrl}
+            transcript={citedRecording?.transcript ?? []}
+            audioUrl={citedRecording?.audioUrl}
           />
         ) : (
           record.fields.map(field => (
