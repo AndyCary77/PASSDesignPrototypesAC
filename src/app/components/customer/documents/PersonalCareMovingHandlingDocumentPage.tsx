@@ -19,6 +19,7 @@ import {
 import { DocumentTabs } from './DocumentTabs';
 import { PERSONAL_CARE_FIELDS, PERSONAL_CARE_GROUPS } from './personalCareMovingHandlingData';
 import { useScrolled } from '../../../hooks/useScrolled';
+import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
 // A single, focused document — no left-hand section nav, no relink/upload
@@ -165,6 +166,7 @@ export function PersonalCareDocumentContent() {
   // to FormFieldsView stays fixed to that one recording.
   const citedRecording = resolveRecording(customer.id, 'personal-care');
   const scrolled = useScrolled();
+  const infoBarBottom = useInfoBarBottom();
 
   return (
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
@@ -238,13 +240,11 @@ export function PersonalCareDocumentContent() {
       )}
 
       {/* Sticky beneath the pinned sub-nav, in an opaque bg-gray-50 shell that
-          swallows the gap-4 above it — see the matching note in
+          swallows the gap-4 above it — `top` tracks the sub-nav's actual
+          height every frame (useInfoBarBottom) rather than a hardcoded
+          pixel value per scrolled state — see the matching note in
           CarePlanDocumentPage. */}
-      <div
-        className={`sticky z-30 bg-gray-50 -mt-4 pt-4 transition-all duration-300 ${
-          scrolled ? 'top-[263px]' : 'top-[335px]'
-        }`}
-      >
+      <div className="sticky z-30 bg-gray-50 -mt-4 pt-4" style={{ top: infoBarBottom }}>
         <div
           className={`flex items-center justify-center px-5 rounded-lg border border-gray-200 transition-all duration-300 ${
             scrolled ? 'py-2' : 'py-4'

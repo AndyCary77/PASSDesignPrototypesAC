@@ -15,6 +15,7 @@ import type { CustomerProfile } from '../../../data/customers';
 import { CarePlanDocumentView, CareBridgeContext, PublishedConfirmationBanner, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { useScrolled } from '../../../hooks/useScrolled';
+import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
 // What's currently feeding this draft: an app recording, a manually uploaded
@@ -263,6 +264,7 @@ export function CarePlanDocumentContent() {
   // highlighting, Check transcript, or Accept controls in the content below.
   const isCompletedDocument = customer.id === 'vera-bramwell';
   const scrolled = useScrolled();
+  const infoBarBottom = useInfoBarBottom();
 
   return (
     // Matches the Documents/Assessments list and CustomerDetailsPage's two-column width.
@@ -376,10 +378,16 @@ export function CarePlanDocumentContent() {
       )}
 
       {/* Sticky beneath the pinned sub-nav (CarePlanDocumentSubnav, in AppShell's
-          infoBar) rather than scrolling away with the rest of the content — the
-          top offset is that sub-nav's own measured height, shrunk/expanded to
-          match its scrolled state (see useScrolled), same empirical-pixel
-          approach ChatPanel uses for its own second-level sticky element.
+          infoBar) rather than scrolling away with the rest of the content —
+          `top` tracks that sub-nav's *actual, currently-rendered* height via
+          useInfoBarBottom() every frame, rather than a hardcoded pixel value
+          per scrolled state: an earlier version keyed this off the same
+          `scrolled` boolean with its own CSS transition, but that's a second,
+          independently-animating copy of the sub-nav's own shrink transition
+          — the two drift out of sync for the ~300ms the transition plays
+          during a real scroll gesture, briefly exposing scrolled-past
+          content in the gap between them. Measuring the real element every
+          frame can't drift, by construction.
           Wrapped in its own sticky, page-coloured shell rather than putting
           `sticky` directly on the purple box: the flex column's gap-4 above
           this element is transparent, so once stuck, whatever's scrolling
@@ -388,11 +396,7 @@ export function CarePlanDocumentContent() {
           to cancel that gap and `pt-4` puts the same space back *inside*
           this sticky, bg-gray-50 box instead — same visual position, but
           now opaque, so nothing shows through as content scrolls past. */}
-      <div
-        className={`sticky z-30 bg-gray-50 -mt-4 pt-4 transition-all duration-300 ${
-          scrolled ? 'top-[263px]' : 'top-[335px]'
-        }`}
-      >
+      <div className="sticky z-30 bg-gray-50 -mt-4 pt-4" style={{ top: infoBarBottom }}>
         <div
           className={`flex items-center justify-center px-5 rounded-lg border border-gray-200 transition-all duration-300 ${
             scrolled ? 'py-2' : 'py-4'
