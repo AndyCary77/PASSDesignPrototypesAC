@@ -367,14 +367,21 @@ function AssessmentHeroDraftBanner() {
           />
         </div>
 
-        <Button
-          icon={<Send className="w-4 h-4" />}
-          disabled={pendingReview}
-          title={pendingReview ? 'Accept the outstanding drafted fields before publishing' : undefined}
-          onClick={() => setPublished(true)}
-        >
-          Publish
-        </Button>
+        {/* Discard draft — same unwired stub as CareBridgeSubnav's own
+            "Discard draft" (the main Assessment Hero tab's equivalent
+            action); left of Publish, plain tertiary so it doesn't compete
+            with Publish's primary styling. */}
+        <div className="flex items-center gap-3">
+          <Button variant="tertiary">Discard draft</Button>
+          <Button
+            icon={<Send className="w-4 h-4" />}
+            disabled={pendingReview}
+            title={pendingReview ? 'Accept the outstanding drafted fields before publishing' : undefined}
+            onClick={() => setPublished(true)}
+          >
+            Publish
+          </Button>
+        </div>
       </div>
     </div>
   );
