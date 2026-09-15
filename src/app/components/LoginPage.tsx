@@ -53,7 +53,9 @@ type Layout = 'card' | 'full';
  */
 export function LoginPage() {
   const navigate = useNavigate();
-  const [layout, setLayout] = useState<Layout>('card');
+  // 'full' (the breathehr-inspired full-bleed layout) is now the default
+  // — 'card' is still there as the alternative, just a toggle click away.
+  const [layout, setLayout] = useState<Layout>('full');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
@@ -87,6 +89,15 @@ interface FormLayoutProps {
 // a single pixel.
 const SCHEDULE_HERO_BG = '#392250';
 
+// The "Explore now" pill's own fill — sampled directly from the source
+// PNG (a flat, well-inside-the-shape pixel, avoiding anti-aliasing): a
+// distinctly more vibrant/lighter purple than either this app's usual
+// primary (rgb(154,38,214)) or the panel's own dark background, with
+// white text — not the pale bg-purple-100 + dark-purple-text combination
+// an earlier version used, which read as washed out next to the real
+// graphic.
+const SCHEDULE_HERO_BUTTON_BG = '#9966e3';
+
 /**
  * The "Schedule Hero" promo graphic, split into a CSS-recreated top half
  * (heading/subtitle/CTA, real DOM text) and a cropped raster image for the
@@ -112,15 +123,26 @@ const SCHEDULE_HERO_BG = '#392250';
  * topmost pixel (~y=389, so it's kept whole).
  *
  * Fluid type: the header is a container-query context (`@container`,
- * Tailwind v4's `container-type: inline-size`) and the heading/subtitle/
- * button font sizes are `clamp(min, Ncqw, max)` rather than fixed
- * breakpoint steps — so the type actually scales with *this component's
- * own* rendered width, not the viewport's. That matters because the two
- * layouts hand it very different widths for the same viewport (the
- * full-bleed layout's half-viewport panel vs. the card layout's
- * `max-w-sm`-ish column): breakpoint classes would need separate tuning
- * per layout, while `cqw` scales correctly in both automatically, filling
- * more of the available space wherever the layout gives it more.
+ * Tailwind v4's `container-type: inline-size`) so it scales with *this
+ * component's own* rendered width, not the viewport's — needed because
+ * the two layouts hand it very different widths for the same viewport
+ * (the full-bleed layout's half-viewport panel vs. the card layout's
+ * `max-w-sm`-ish column).
+ *
+ * 2026-09-17: heading/subtitle/button used to each carry their *own*
+ * independent `clamp(min, Ncqw, max)`, tuned separately — which meant
+ * their relative proportions actually drifted as the container resized
+ * (whichever hit its own min/max bound first would stop scaling while the
+ * others kept going). Fixed by giving the whole header block ONE fluid
+ * base size (`clamp(0.7rem, 3.4cqw, 1.75rem)`, on the wrapping `<div>`)
+ * and sizing the heading/subtitle/button/gaps/padding/radius all in `em`
+ * off that single value — `em` always resolves relative to the *inherited*
+ * font-size, so multiplying the one shared base by fixed ratios (2.6em
+ * for the heading, 1em for the subtitle, 0.9em for the button) guarantees
+ * they scale in lockstep at every width, the way one flat image naturally
+ * would. The only thing that changes their *relationship* now is the
+ * `@lg:flex-row` breakpoint below, which is exactly the "wrap when it gets
+ * too narrow" behaviour asked for — not a side effect of mismatched clamps.
  *
  * Layout: a flex column with the header pinned to the top and the mockup
  * image pushed to the bottom via `mt-auto` — so on a tall container (the
@@ -153,8 +175,10 @@ function SchedulePromo({ className = '' }: { className?: string }) {
       className={`@container group flex-col overflow-hidden transition-transform duration-500 ease-out hover:-translate-y-0.5 ${className}`}
       style={{ backgroundColor: SCHEDULE_HERO_BG }}
     >
-      <div className="p-8 sm:p-10">
-        <h3 className="text-[clamp(1.75rem,9cqw,4.5rem)] font-extrabold text-white leading-[1.05]">
+      {/* text-[clamp(...)] here is the ONE fluid base every size below
+          derives from via em — see the note above. */}
+      <div className="p-8 sm:p-10 text-[clamp(0.7rem,3.4cqw,1.75rem)]">
+        <h3 className="text-[2.6em] font-extrabold text-white leading-[1.05]">
           Schedule Hero
         </h3>
         {/* Subtitle + CTA sit stacked by default, but become a row —
@@ -164,16 +188,26 @@ function SchedulePromo({ className = '' }: { className?: string }) {
             side by side without cramping either. Mirrors the real
             production graphic's own layout, which sits the button beside
             the strapline rather than below it. */}
-        <div className="mt-3 flex flex-col gap-3 @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-6">
+        <div className="mt-[0.6em] flex flex-col gap-[0.5em] @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-[1em]">
           {/* text-balance (not text-pretty) — this is a short, ~2-line
               strapline where an uneven wrap can easily strand a single
               word on its own line; balancing the two lines' lengths
               avoids that reliably, unlike relying on max-w tuning per
               breakpoint. */}
-          <p className="text-balance text-[clamp(0.9rem,3cqw,1.5rem)] font-semibold text-purple-100 max-w-[80cqw] sm:max-w-[60cqw] @lg:max-w-[45cqw]">
+          <p className="text-balance text-[1em] font-semibold text-purple-100 max-w-[80cqw] sm:max-w-[60cqw] @lg:max-w-[45cqw]">
             AI-powered scheduling built for home care teams
           </p>
-          <span className="self-start @lg:self-auto @lg:flex-shrink-0 inline-block -rotate-3 rounded-full bg-purple-100 px-[clamp(1rem,4cqw,2rem)] py-[clamp(0.5rem,2cqw,1rem)] text-[clamp(0.8rem,2.4cqw,1.125rem)] font-bold text-[rgb(109,27,152)] shadow-sm transition-transform duration-500 ease-out group-hover:scale-105">
+          {/* Vibrant fill + white text (sampled from the source graphic —
+              see SCHEDULE_HERO_BUTTON_BG), and a moderate `em`-based
+              radius rather than `rounded-full` — the reference button is
+              a rounded rectangle, not a stadium/pill; radius scales with
+              the button's own text size so it stays proportionally "less
+              rounded" at every size rather than reading as a pill once
+              the button grows large. */}
+          <span
+            className="self-start @lg:self-auto @lg:flex-shrink-0 inline-block -rotate-3 rounded-[0.5em] px-[1em] py-[0.5em] text-[0.9em] font-bold text-white shadow-sm transition-transform duration-500 ease-out group-hover:scale-105"
+            style={{ backgroundColor: SCHEDULE_HERO_BUTTON_BG }}
+          >
             Explore now
           </span>
         </div>
