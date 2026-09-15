@@ -21,6 +21,7 @@ import { CareManagementSubnav } from './components/customer/caremanagement/CareM
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 import { LandingPage } from './components/LandingPage';
+import { LoginPage } from './components/LoginPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
 import { AboutMePage, AboutMeSubnav, AboutMeProvider } from './components/customer/AboutMePage';
 import { MedicalHistoryPage } from './components/customer/MedicalHistoryPage';
@@ -327,6 +328,12 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: () => <AppShell><LandingPage /></AppShell>,
+  },
+  {
+    // Standalone — no AppShell/Header, same as a real login screen has no
+    // app chrome to sit inside. See LoginPage.tsx for why.
+    path: "/login",
+    Component: LoginPage,
   },
   {
     path: "/customers/list",

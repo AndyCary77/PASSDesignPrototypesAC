@@ -2,6 +2,12 @@ import { Link } from 'react-router';
 
 const SCREENS = [
   {
+    title: 'Auth',
+    items: [
+      { label: 'Login screen', to: '/login' },
+    ],
+  },
+  {
     title: 'Customer Profile',
     items: [
       { label: 'Customers List', to: '/customers/list' },
