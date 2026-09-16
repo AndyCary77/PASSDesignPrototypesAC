@@ -4,6 +4,12 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Button } from './buttons/Button';
 
 type Layout = 'card' | 'full';
+// Which promo panel to render in the full-bleed layout — 'component' is
+// the CSS-recreated SchedulePromo built in this repo; 'iframe' embeds the
+// actual WordPress campaign page marketing is building, to check it looks
+// right once it's really the thing being embedded rather than a
+// recreation of it. Session-only, like `layout` — see PromoSourceToggle.
+type PromoSource = 'component' | 'iframe';
 
 /**
  * A dummy recreation of PASS's real login screen
@@ -56,6 +62,7 @@ export function LoginPage() {
   // 'full' (the breathehr-inspired full-bleed layout) is now the default
   // — 'card' is still there as the alternative, just a toggle click away.
   const [layout, setLayout] = useState<Layout>('full');
+  const [promoSource, setPromoSource] = useState<PromoSource>('component');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
@@ -68,9 +75,17 @@ export function LoginPage() {
       {layout === 'card' ? (
         <CardLayout showPassword={showPassword} setShowPassword={setShowPassword} onSubmit={handleSubmit} />
       ) : (
-        <FullBleedLayout showPassword={showPassword} setShowPassword={setShowPassword} onSubmit={handleSubmit} />
+        <FullBleedLayout
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          onSubmit={handleSubmit}
+          promoSource={promoSource}
+        />
       )}
       <LayoutToggle layout={layout} onChange={setLayout} />
+      {/* Only meaningful for the full-bleed layout — Card's own promo
+          panel isn't part of this comparison. */}
+      {layout === 'full' && <PromoSourceToggle source={promoSource} onChange={setPromoSource} />}
     </>
   );
 }
@@ -97,6 +112,16 @@ const SCHEDULE_HERO_BG = '#392250';
 // an earlier version used, which read as washed out next to the real
 // graphic.
 const SCHEDULE_HERO_BUTTON_BG = '#9966e3';
+
+// Sizing/position/border for the promo panel in FullBleedLayout, shared
+// between both `promoSource` options (see PromoSourceToggle) so swapping
+// between the CSS recreation and the real WordPress iframe never changes
+// the shape of the box, only what renders inside it. Excludes the
+// `hidden md:flex`/`hidden md:block` display utility, since that's the
+// one thing that genuinely differs between an element with children to
+// arrange (SchedulePromo) and a childless iframe (SchedulePromoIframe).
+const PROMO_SIZE_CLASSES =
+  'md:max-lg:h-80 md:max-lg:w-full md:max-lg:border-t md:max-lg:border-gray-200 lg:min-h-screen lg:w-1/2 flex-shrink-0 lg:border-l lg:border-gray-200';
 
 /**
  * The "Schedule Hero" promo graphic, split into a CSS-recreated top half
@@ -260,6 +285,40 @@ function SchedulePromo({ className = '', tabletRow = false }: { className?: stri
   );
 }
 
+// The real campaign page marketing is building in WordPress (see
+// AIOP-24311's implementation note) — a plain HTML/CSS page, not
+// something built here, that's meant to be embedded via iframe rather
+// than recreated in this codebase.
+const SCHEDULE_HERO_WORDPRESS_URL = 'https://elpassportal.wpenginepowered.com/?page_id=93';
+
+/**
+ * The actual embed, for testing the real WordPress page in place of
+ * `SchedulePromo`'s CSS recreation — see `PromoSourceToggle`. Takes the
+ * *exact same* `className` (sizing/position/border/visibility per
+ * breakpoint) as `SchedulePromo` does, so switching between the two never
+ * changes the shape of the box itself, only what's rendered inside it —
+ * that's what makes it a fair like-for-like comparison rather than two
+ * differently-sized things.
+ *
+ * Unlike `SchedulePromo`, there's no `flex`/`flex-col` here: an iframe is
+ * a leaf/replaced element with no children of ours to arrange, so it only
+ * ever needs `block` (vs. `hidden`) for its own display, not `flex` — the
+ * WordPress page's *own* internal layout (desktop column vs. tablet-banner
+ * split) is entirely its own responsibility once embedded, per the spec
+ * on AIOP-24311; this component only controls the size/position of the
+ * box it's shown in, same as SchedulePromo's className already did.
+ */
+function SchedulePromoIframe({ className = '' }: { className?: string }) {
+  return (
+    <iframe
+      src={SCHEDULE_HERO_WORDPRESS_URL}
+      title="Schedule Hero campaign (WordPress)"
+      className={`border-0 ${className}`}
+      style={{ backgroundColor: SCHEDULE_HERO_BG }}
+    />
+  );
+}
+
 /**
  * Left/right panels — each has a muted caption below it (no label above —
  * an earlier version had one on each side, but it read as redundant next
@@ -408,7 +467,7 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
  * SchedulePromo's own file-level note for how `tabletRow` achieves the
  * internal split.
  */
-function FullBleedLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps) {
+function FullBleedLayout({ showPassword, setShowPassword, onSubmit, promoSource }: FormLayoutProps & { promoSource: PromoSource }) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Form half — plain white, no card/border/shadow: the whole half
@@ -503,11 +562,21 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit }: FormLayout
             seam either way — border-t under the tablet banner (it sits
             below the form there), border-l beside it at lg (it sits to
             the form's right there) — otherwise the purple panel just
-            runs straight into the white form with no edge at all. */}
-      <SchedulePromo
-        tabletRow
-        className="hidden md:flex md:max-lg:h-80 md:max-lg:w-full md:max-lg:border-t md:max-lg:border-gray-200 lg:min-h-screen lg:w-1/2 flex-shrink-0 lg:border-l lg:border-gray-200"
-      />
+            runs straight into the white form with no edge at all.
+
+          The sizing/position/border/visibility classes are identical
+          between the two `promoSource` options (only the `flex`/`block`
+          display utility differs — see SchedulePromoIframe's own note),
+          so switching the toggle never changes the shape of the box,
+          only what's rendered inside it. */}
+      {promoSource === 'component' ? (
+        <SchedulePromo
+          tabletRow
+          className={`hidden md:flex ${PROMO_SIZE_CLASSES}`}
+        />
+      ) : (
+        <SchedulePromoIframe className={`hidden md:block ${PROMO_SIZE_CLASSES}`} />
+      )}
     </div>
   );
 }
@@ -542,6 +611,37 @@ function LayoutToggle({ layout, onChange }: { layout: Layout; onChange: (l: Layo
     <div className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white p-1 shadow-sm">
       {segment('card', 'Card')}
       {segment('full', 'Full screen')}
+    </div>
+  );
+}
+
+/**
+ * A second, stacked-above-`LayoutToggle` corner pill — only shown while
+ * the full-bleed layout is active, since Card's own promo panel isn't
+ * part of this comparison. Lets the real WordPress campaign page (once
+ * marketing has it live at AIOP-24311's URL) be checked in place
+ * side by side with the CSS recreation, in the *exact* box it'll actually
+ * occupy on the real page, rather than only ever viewing it standalone.
+ * Session-only, same as `layout` — not persisted, not a real product
+ * setting.
+ */
+function PromoSourceToggle({ source, onChange }: { source: PromoSource; onChange: (s: PromoSource) => void }) {
+  const segment = (value: PromoSource, label: string) => (
+    <button
+      type="button"
+      onClick={() => onChange(value)}
+      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+        source === value ? 'bg-[rgb(154,38,214)] text-white' : 'text-gray-500 hover:text-gray-700'
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="fixed bottom-16 right-4 z-50 inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white p-1 shadow-sm">
+      {segment('component', 'Component')}
+      {segment('iframe', 'WordPress')}
     </div>
   );
 }
