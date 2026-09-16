@@ -354,93 +354,118 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
  * breathehr's own mobile behaviour of hiding that panel below its mobile
  * breakpoint (`hidden lg:flex` here) rather than stacking it above the
  * form the way an earlier version of this layout did.
+ *
+ * 2026-09-16: form half first (left), promo half second (right) — an
+ * earlier version had the promo on the left; flipped on request, so the
+ * divider border moved from the promo's right edge to its left (`lg:border-l`)
+ * since that's the shared seam now.
  */
 function FullBleedLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Form half — plain white, no card/border/shadow: the whole half
+          already reads as the "panel", so the fields don't need a second,
+          nested box around them.
+          flex-col rather than a single items-center/justify-center block:
+          the form itself sits in a flex-1 centering wrapper, and the
+          copyright/terms footer is a separate sibling below it — that's
+          what "docks" the footer to the very bottom of the half (any
+          extra vertical space is absorbed above it, by the centering
+          wrapper) instead of it just trailing the form wherever the
+          form's own centered position happens to end. */}
+      <div className="flex-1 flex flex-col bg-white px-6 py-16">
+        <div className="flex-1 flex items-center justify-center">
+          <form onSubmit={onSubmit} className="w-full max-w-sm">
+            <img src="/PASSLogo.png" alt="PASS" className="h-14 w-auto mb-8" />
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="full-username" className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                <input
+                  id="full-username"
+                  type="text"
+                  autoComplete="username"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
+                />
+              </div>
+
+              <div>
+                {/* "Forgot password" sits inline with the label, mirroring
+                    breathehr's own row — deliberately not the second button
+                    CardLayout uses, so this reads as its own treatment. */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="full-password" className="block text-sm font-medium text-gray-700">Password</label>
+                  <a href="#" className="text-sm font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
+                <div className="relative">
+                  <input
+                    id="full-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full mt-6">Log in</Button>
+
+            <p className="text-sm text-gray-500 text-center mt-4">
+              Not a customer yet?{' '}
+              <a href="#" className="text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
+                Click here!
+              </a>
+            </p>
+            <p className="text-sm text-gray-500 text-center mt-1">Customer Support 0330 094 0122</p>
+          </form>
+        </div>
+
+        {/* Docked to the bottom of the half via the flex-1 wrapper above
+            absorbing the extra space, not by being part of the form's own
+            centered flow. Two lines, same as CardLayout's own footer
+            reads once combined: the copyright/rights sentence, then Terms
+            and Conditions. */}
+        <div className="text-center text-sm text-gray-400 space-y-0.5">
+          <p className="text-sm">Copyright © 2026 everyLIFE Technologies Ltd. All rights reserved.</p>
+          <a href="#" className="text-sm text-[rgb(109,27,152)] hover:underline">Terms and Conditions</a>
+        </div>
+      </div>
+
       {/* Promo half — hidden entirely below lg (see file-level note on
-          SchedulePromo); the full left half of the viewport from lg
+          SchedulePromo); the full right half of the viewport from lg
           upward. SchedulePromo's own flex-col + mt-auto handles filling
           that height itself — no absolute+object-cover cropping needed.
-          A hairline border-r marks the seam between the two full-bleed
+          A hairline border-l marks the seam between the two full-bleed
           halves, standing in for the card layout's own border — otherwise
           the purple panel just runs straight into the white form half
           with no edge at all. */}
-      <SchedulePromo className="hidden lg:flex lg:min-h-screen lg:w-1/2 flex-shrink-0 lg:border-r lg:border-gray-200" />
-
-      {/* Form half — plain white, no card/border/shadow: the whole half
-          already reads as the "panel", so the fields don't need a second,
-          nested box around them. */}
-      <div className="flex-1 flex items-center justify-center bg-white px-6 py-16">
-        <form onSubmit={onSubmit} className="w-full max-w-sm">
-          <img src="/PASSLogo.png" alt="PASS" className="h-14 w-auto mb-8" />
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="full-username" className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
-              <input
-                id="full-username"
-                type="text"
-                autoComplete="username"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
-              />
-            </div>
-
-            <div>
-              {/* "Forgot password" sits inline with the label, mirroring
-                  breathehr's own row — deliberately not the second button
-                  CardLayout uses, so this reads as its own treatment. */}
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="full-password" className="block text-sm font-medium text-gray-700">Password</label>
-                <a href="#" className="text-sm font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
-                  Forgot password?
-                </a>
-              </div>
-              <div className="relative">
-                <input
-                  id="full-password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full mt-6">Log in</Button>
-
-          <p className="text-sm text-gray-500 text-center mt-4">
-            Not a customer yet?{' '}
-            <a href="#" className="text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
-              Click here!
-            </a>
-          </p>
-          <p className="text-sm text-gray-500 text-center mt-1">Customer Support 0330 094 0122</p>
-
-          <div className="text-center mt-8 text-sm text-gray-400 space-y-0.5">
-            <p className="text-sm">Copyright © 2026 everyLIFE Technologies Ltd. All rights reserved.</p>
-            <a href="#" className="text-[rgb(109,27,152)] hover:underline">Terms and Conditions</a>
-          </div>
-        </form>
-      </div>
+      <SchedulePromo className="hidden lg:flex lg:min-h-screen lg:w-1/2 flex-shrink-0 lg:border-l lg:border-gray-200" />
     </div>
   );
 }
 
 /**
- * Subtle, session-only layout switch — fixed to a corner, small and muted
- * until hovered, so it reads as a design-review aid rather than part of
+ * Subtle, session-only layout switch — fixed to a corner, small and
+ * unobtrusive, so it reads as a design-review aid rather than part of
  * either design itself. Plain two-segment pill rather than NavModeToggle's
  * track+thumb switch (see the file-level note) since this isn't a
  * persistent app setting.
+ *
+ * 2026-09-16: full opacity always now — the earlier opacity-60-until-hover
+ * treatment made it hard to make out sitting over the full-bleed layout's
+ * own promo image in that corner (the image's own colours/contrast bled
+ * through it). The white bg/border/shadow still keep it visually light,
+ * just no longer semi-transparent on top of a busy background.
  */
 function LayoutToggle({ layout, onChange }: { layout: Layout; onChange: (l: Layout) => void }) {
   const segment = (value: Layout, label: string) => (
@@ -456,7 +481,7 @@ function LayoutToggle({ layout, onChange }: { layout: Layout; onChange: (l: Layo
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white/90 backdrop-blur-sm p-1 shadow-sm opacity-60 hover:opacity-100 transition-opacity">
+    <div className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white p-1 shadow-sm">
       {segment('card', 'Card')}
       {segment('full', 'Full screen')}
     </div>
