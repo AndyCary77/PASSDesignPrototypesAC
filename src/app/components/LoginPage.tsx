@@ -246,8 +246,11 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-4xl flex flex-col lg:flex-row justify-center gap-10">
-        {/* Login card */}
-        <div className="w-full max-w-sm flex flex-col mx-auto lg:mx-0">
+        {/* Login card — same width classes as the promo column below
+            (max-w-sm on mobile, lg:flex-1 once side-by-side) so the two
+            panels split the row evenly instead of the card staying a
+            fixed, narrower width next to a wider image. */}
+        <div className="w-full max-w-sm lg:max-w-none lg:flex-1 flex flex-col mx-auto lg:mx-0">
           <form onSubmit={onSubmit} className="flex-1 flex flex-col bg-white rounded-[10px] border border-gray-200 shadow-sm p-8">
             <div>
               <img src="/PASSLogo.png" alt="PASS" className="h-14 w-auto mb-5" />
