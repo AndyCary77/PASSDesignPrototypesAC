@@ -160,8 +160,30 @@ const SCHEDULE_HERO_BUTTON_BG = '#9966e3';
  * for how that's applied (a `hidden lg:flex` wrapper in CardLayout, since
  * its caption underneath needs to disappear with it; directly on this
  * component in FullBleedLayout, which has no such caption).
+ *
+ * 2026-09-16: `tabletRow` (opt-in, off by default — CardLayout doesn't
+ * pass it, so it's unaffected) adds a tablet-portrait band (`md` up to
+ * just below `lg`, via Tailwind's `md:max-lg:` range variant) where this
+ * switches from its usual top/bottom stack to a left/right split: header
+ * (heading/subtitle/CTA) on the left half, the mockup image on the right
+ * half — the same two children, just laid out as a row instead of a
+ * column, so no JSX reordering needed. Below `md` it's still hidden
+ * entirely (FullBleedLayout's own caller className), matching the
+ * instruction to keep the phone breakpoint image-free; at `lg`+ it's
+ * back to the normal full-height column.
+ *
+ * The header's own `@container` (nested inside the root's) is what keeps
+ * the subtitle/CTA row's `@lg:flex-row` decision correct in this mode —
+ * without it, that breakpoint would still measure the *root's* full
+ * width even though the header itself only has half of it at tablet,
+ * and would wrongly go side-by-side in a space too cramped for it. A
+ * nested container only changes what *its own descendants* measure
+ * against for `cqw`/`@`-variants — the header's own `text-[clamp(cqw)]`
+ * base size still resolves against the root (an element can't be a
+ * container for its own properties), so heading/subtitle/button scale
+ * stays exactly as it was; only the inner row's wrap decision narrows.
  */
-function SchedulePromo({ className = '' }: { className?: string }) {
+function SchedulePromo({ className = '', tabletRow = false }: { className?: string; tabletRow?: boolean }) {
   return (
     <Link
       to="/schedule"
@@ -172,12 +194,29 @@ function SchedulePromo({ className = '' }: { className?: string }) {
       // duration-500 ease-out (not the 150ms Tailwind default) — the lift
       // was reading as an abrupt snap rather than a hover, at the default
       // speed.
-      className={`@container group flex-col overflow-hidden transition-transform duration-500 ease-out hover:-translate-y-0.5 ${className}`}
+      className={`@container group flex-col ${tabletRow ? 'md:max-lg:flex-row' : ''} overflow-hidden transition-transform duration-500 ease-out hover:-translate-y-0.5 ${className}`}
       style={{ backgroundColor: SCHEDULE_HERO_BG }}
     >
       {/* text-[clamp(...)] here is the ONE fluid base every size below
-          derives from via em — see the note above. */}
-      <div className="p-8 sm:p-10 text-[clamp(0.7rem,3.4cqw,1.75rem)]">
+          derives from via em — see the note above. @container here too
+          (harmless when tabletRow is off, since the header is always
+          full-width then anyway) so the subtitle/CTA row's own @lg break
+          measures *this* element's width, not the root's — see the
+          file-level note.
+          md:max-lg:text-base overrides the cqw-fluid base with a flat
+          one for the tablet band specifically: that clamp is keyed to
+          the *root's* width (an element can't be a cqw container for its
+          own font-size), which is still the full banner width even once
+          this div itself drops to half of it — so left uncorrected, the
+          heading rendered at full-banner size squeezed into a half-width
+          column and overflowed the banner's fixed height. Still one
+          shared base the heading/subtitle/button/spacing all derive from
+          via the same em ratios, so they stay proportional to *each
+          other* here too — just a smaller flat number appropriate for
+          this narrower band, not a fluid one (768–1023px is a much
+          narrower range than the full desktop/card spread this clamp was
+          tuned for, so a fixed value is a reasonable simplification). */}
+      <div className={`@container p-8 sm:p-10 text-[clamp(0.7rem,3.4cqw,1.75rem)] ${tabletRow ? 'md:max-lg:w-1/2 md:max-lg:flex-shrink-0 md:max-lg:text-base' : ''}`}>
         <h3 className="text-[2.6em] font-extrabold text-white leading-[1.05]">
           Schedule Hero
         </h3>
@@ -215,7 +254,7 @@ function SchedulePromo({ className = '' }: { className?: string }) {
       <img
         src="/schedule-hero-mockup.png"
         alt="Suggested plan — 8/8 covered, 4 carers, 17 min extra travel in total"
-        className="w-full h-auto mt-auto block"
+        className={`w-full h-auto mt-auto block ${tabletRow ? 'md:max-lg:w-1/2 md:max-lg:h-full md:max-lg:mt-0 md:max-lg:flex-shrink-0 md:max-lg:object-cover' : ''}`}
       />
     </Link>
   );
@@ -346,19 +385,28 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
 
 /**
  * Full-bleed alternative — the promo graphic fills an entire half of the
- * viewport (edge to edge, no page margin/card around it), the form sits
- * directly on a plain white half with no card of its own. Same assets and
- * colours as CardLayout, just without the padded, bordered-card treatment
- * — the point of this variant is the graphic reading as full-screen
- * brand/marketing real estate, the way breathehr's login does — including
- * breathehr's own mobile behaviour of hiding that panel below its mobile
- * breakpoint (`hidden lg:flex` here) rather than stacking it above the
- * form the way an earlier version of this layout did.
+ * viewport (edge to edge, no page margin/card around it) at desktop
+ * widths, the form sits directly on a plain white half with no card of
+ * its own. Same assets and colours as CardLayout, just without the
+ * padded, bordered-card treatment — the point of this variant is the
+ * graphic reading as full-screen brand/marketing real estate, the way
+ * breathehr's login does.
  *
  * 2026-09-16: form half first (left), promo half second (right) — an
  * earlier version had the promo on the left; flipped on request, so the
  * divider border moved from the promo's right edge to its left (`lg:border-l`)
  * since that's the shared seam now.
+ *
+ * 2026-09-16, later — a third, tablet-portrait treatment: below `lg` this
+ * container is `flex-col`, so the promo (SchedulePromo, now with
+ * `tabletRow`) simply becomes the next sibling under the form rather than
+ * beside it — no restructuring needed there, it falls out of the existing
+ * column layout. From `md` up to just below `lg` it's shown as a wide
+ * banner (fixed height, not the full viewport) with its own internal
+ * header-left/mockup-right split. Below `md` (phone) it's still `hidden`
+ * entirely, keeping that breakpoint image-free as asked. See
+ * SchedulePromo's own file-level note for how `tabletRow` achieves the
+ * internal split.
  */
 function FullBleedLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps) {
   return (
@@ -441,15 +489,25 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit }: FormLayout
         </div>
       </div>
 
-      {/* Promo half — hidden entirely below lg (see file-level note on
-          SchedulePromo); the full right half of the viewport from lg
-          upward. SchedulePromo's own flex-col + mt-auto handles filling
-          that height itself — no absolute+object-cover cropping needed.
-          A hairline border-l marks the seam between the two full-bleed
-          halves, standing in for the card layout's own border — otherwise
-          the purple panel just runs straight into the white form half
-          with no edge at all. */}
-      <SchedulePromo className="hidden lg:flex lg:min-h-screen lg:w-1/2 flex-shrink-0 lg:border-l lg:border-gray-200" />
+      {/* Promo — three distinct treatments by breakpoint:
+          - below md (phone): hidden entirely, kept image-free.
+          - md up to just below lg (tablet portrait): a wide banner under
+            the form (this is just the next sibling in a flex-col
+            container, so it naturally stacks below rather than beside),
+            `tabletRow` switching its internal layout to header-left/
+            mockup-right, split 50/50, within its own dark-purple box. A
+            fixed banner height rather than lg's min-h-screen — this
+            isn't meant to fill the viewport, just read as a strip.
+          - lg+ (desktop): the original full-height side-by-side half,
+            header stacked above the mockup. A hairline border marks the
+            seam either way — border-t under the tablet banner (it sits
+            below the form there), border-l beside it at lg (it sits to
+            the form's right there) — otherwise the purple panel just
+            runs straight into the white form with no edge at all. */}
+      <SchedulePromo
+        tabletRow
+        className="hidden md:flex md:max-lg:h-80 md:max-lg:w-full md:max-lg:border-t md:max-lg:border-gray-200 lg:min-h-screen lg:w-1/2 flex-shrink-0 lg:border-l lg:border-gray-200"
+      />
     </div>
   );
 }
