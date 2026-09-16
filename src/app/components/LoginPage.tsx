@@ -297,7 +297,7 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
               <p className="text-sm text-gray-500 text-center mt-1">
                 Not a customer yet?{' '}
                 <a href="#" className="text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
-                  Click here!
+                  Book a free tour
                 </a>
               </p>
             </div>
@@ -423,7 +423,7 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit }: FormLayout
             <p className="text-sm text-gray-500 text-center mt-4">
               Not a customer yet?{' '}
               <a href="#" className="text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
-                Click here!
+                Book a free tour
               </a>
             </p>
             <p className="text-sm text-gray-500 text-center mt-1">Customer Support 0330 094 0122</p>
