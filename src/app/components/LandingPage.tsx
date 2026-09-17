@@ -78,6 +78,16 @@ const MOBILE = [
       { label: 'Notifications', to: '/src/app/components/mobile/notifications/' },
     ],
   },
+  {
+    // A design reference/handoff doc, not a running app screen — its own
+    // section rather than folded into "Mobile App" above. Lives in
+    // public/app-icon/ (a static asset, same as the mobile prototypes
+    // themselves), so this is a plain page navigation too.
+    title: 'App Icon',
+    items: [
+      { label: 'Android Icon Preview', to: '/app-icon/android-icon-preview.html' },
+    ],
+  },
 ];
 
 const COMPONENTS = [

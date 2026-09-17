@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PASSforcare adaptive icons &middot; Android &amp; iOS preview</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{color-scheme:light dark}
+:root {
+  --ground: #F6F4F8; --surface: #FFFFFF; --surface-sunk: #EFEBF3;
+  --line: #DCD5E4; --line-strong: #C3B8CF;
+  --ink: #1B1522; --ink-soft: #564C63; --ink-faint: #7C7288;
+  --accent: #6C1B98; --accent-soft: #F0E6F6; --accent-line: #C9A9DC;
+  --flag: #9A5A05; --flag-soft: #FBF0DF; --flag-line: #E0B876;
+  --ok: #0E6B5C; --ok-soft: #DFF0EC; --ok-line: #9FD3C5;
+  --shadow: 0 1px 2px rgba(27,21,34,.06);
+  --phone-bg: linear-gradient(160deg,#274058,#0E1B28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131019; --surface:#1C1724; --surface-sunk:#171320;
+    --line:#2E2739; --line-strong:#453B53;
+    --ink:#EFEAF4; --ink-soft:#B6AAC4; --ink-faint:#8B7F99;
+    --accent:#C58EE6; --accent-soft:#2A1C38; --accent-line:#5B3E74;
+    --flag: #E0A85C; --flag-soft: #33260F; --flag-line: #6B4E22;
+    --ok: #5FC9B4; --ok-soft: #12302B; --ok-line: #2C5850;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#131019; --surface:#1C1724; --surface-sunk:#171320;
+  --line:#2E2739; --line-strong:#453B53;
+  --ink:#EFEAF4; --ink-soft:#B6AAC4; --ink-faint:#8B7F99;
+  --accent:#C58EE6; --accent-soft:#2A1C38; --accent-line:#5B3E74;
+  --flag: #E0A85C; --flag-soft: #33260F; --flag-line: #6B4E22;
+  --ok: #5FC9B4; --ok-soft: #12302B; --ok-line: #2C5850;
+  --shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+* { box-sizing: border-box; }
+body {
+  margin:0; background: var(--ground); color: var(--ink);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 48px 96px; display: flex; flex-direction: column; gap: 56px; }
+h1,h2,h3 { font-family: Archivo, "IBM Plex Sans", sans-serif; text-wrap: balance; margin: 0; letter-spacing: -0.015em; }
+h1 { font-size: clamp(28px, 5.5vw, 40px); font-weight: 700; line-height: 1.15; }
+h2 { font-size: clamp(20px, 3vw, 24px); font-weight: 600; line-height: 1.2; }
+p { margin: 0; max-width: 68ch; }
+.mono { font-family:"IBM Plex Mono",monospace; font-size:.9em; background:var(--surface-sunk); border:1px solid var(--line); border-radius:3px; padding:1px 5px; }
+.eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+header.masthead { display:flex; flex-direction:column; gap:14px; border-bottom:2px solid var(--ink); padding-bottom:28px; }
+header.masthead .lede { font-size: 17.5px; color: var(--ink-soft); max-width:72ch; }
+.meta-row { display:flex; flex-wrap:wrap; gap:8px 22px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-faint); padding-top:6px; }
+.meta-row span b { color: var(--ink-soft); font-weight: 500; }
+section { display:flex; flex-direction:column; gap:20px; }
+.section-head { display:flex; flex-direction:column; gap:6px; }
+.card { background: var(--surface); border:1px solid var(--line); border-radius:12px; padding:24px; box-shadow: var(--shadow); }
+.callout-flag { background: var(--flag-soft); border:1px solid var(--flag-line); border-radius:10px; padding:14px 18px; display:flex; flex-direction:column; gap:6px; }
+.callout-flag p:not(.eyebrow) { font-size:14px; color: var(--ink-soft); max-width:74ch; }
+
+/* confirmed / reference tags */
+.tag { display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; padding:2px 7px; border-radius:999px; margin-left:2px; vertical-align:middle; font-weight:600; }
+.tag-confirmed { background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok-line); }
+.tag-reference { background:var(--surface-sunk); color:var(--ink-faint); border:1px solid var(--line); }
+
+.icon-tile { position:relative; width:64px; height:64px; overflow:hidden; flex-shrink:0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+.tile-bg { position:absolute; inset:0; }
+.tile-mark { position:absolute; inset:0; width:100%; height:100%; }
+.glyph-svg { position:absolute; left:50%; top:50%; width:58%; height:58%; transform:translate(-50%,-50%); }
+.mask-circle { clip-path: circle(50%); border-radius:50%; }
+.mask-squircle { clip-path: url(#mask-squircle); }
+.mask-rounded { clip-path: url(#mask-rounded); }
+.mask-teardrop { clip-path: url(#mask-teardrop); }
+.mask-ios { clip-path: url(#mask-ios); }
+.platform-view { display:flex; flex-direction:column; gap:56px; padding-top:8px; }
+
+/* platform toggle */
+.platform-toggle { display:inline-flex; align-self:flex-start; background:var(--surface-sunk); border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; }
+.toggle-btn { font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.04em; padding:7px 20px; border-radius:999px; border:none; background:transparent; color:var(--ink-faint); cursor:pointer; transition:background .15s,color .15s; }
+.toggle-btn.is-active { background:var(--accent); color:#fff; }
+.toggle-btn:hover:not(.is-active) { color:var(--ink-soft); }
+
+.mask-row { display:flex; gap:22px; align-items:flex-start; }
+.mask-row + .mask-row { margin-top:4px; padding-top:20px; border-top:1px dashed var(--line); }
+.mask-row-label { width:140px; flex-shrink:0; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-faint); padding-top:22px; }
+.mask-row-cells { display:flex; flex-wrap:wrap; gap:28px; flex:1; }
+.mask-cell { display:flex; flex-direction:column; align-items:center; gap:6px; width:110px; }
+.mask-cell .icon-tile { width:88px; height:88px; }
+.mask-name { font-size:13.5px; font-weight:600; text-align:center; }
+.mask-sub { font-size:11.5px; color:var(--ink-faint); text-align:center; line-height:1.3; }
+
+.phone, .ios-phone { position:relative; width:360px; max-width:100%; margin:0 auto; border-radius:36px; padding:26px 20px; background: var(--phone-bg); box-shadow: 0 20px 40px rgba(10,15,25,.4), inset 0 0 0 2px rgba(255,255,255,.08); }
+.phone-statusbar, .ios-statusbar { display:flex; justify-content:space-between; font-family:"IBM Plex Mono",monospace; font-size:11px; color:rgba(255,255,255,.85); padding:0 4px 20px; }
+.phone-grid, .ios-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:26px 14px; }
+.ios-dock { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-top:22px; padding:12px 10px; background:rgba(255,255,255,.12); border-radius:22px; }
+.ios-dock .hs-app .icon-tile { width:48px; height:48px; }
+.hs-app { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.hs-app .icon-tile { width:52px; height:52px; box-shadow: 0 3px 8px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.16); }
+.hs-app--ours .icon-tile { outline:2px solid #FFD166; outline-offset:3px; }
+.hs-label { font-size:10.5px; color:rgba(255,255,255,.95); text-shadow:0 1px 2px rgba(0,0,0,.5); text-align:center; max-width:76px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.legend { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--ink-soft); }
+.legend .swatch { width:14px; height:14px; border-radius:4px; outline:2px solid #FFD166; outline-offset:2px; background:var(--accent-soft); flex-shrink:0; }
+
+.compare-strip { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.compare-strip .hs-app .icon-tile { width:72px; height:72px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.08); }
+.compare-strip .hs-label { color: var(--ink-soft); text-shadow:none; max-width:150px; white-space:normal; }
+.legacy-shrunk { transform: scale(0.64); transform-origin:center; }
+.arrow { font-size:22px; color: var(--ink-faint); }
+
+.themed-row { display:flex; gap:22px; }
+.themed-row + .themed-row { margin-top:4px; padding-top:20px; border-top:1px dashed var(--line); }
+.themed-row-cells { display:flex; flex-wrap:wrap; gap:30px; flex:1; }
+.themed-pair { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.themed-tone-label { font-size:12.5px; font-weight:600; color:var(--ink-soft); }
+.themed-tiles { display:flex; gap:10px; }
+.themed-tiles .icon-tile { width:64px; height:64px; }
+.themed-sub { display:flex; gap:10px; font-size:10.5px; color:var(--ink-faint); font-family:"IBM Plex Mono",monospace; }
+.themed-sub span { width:64px; text-align:center; }
+
+.appearance-block { display:flex; flex-direction:column; gap:12px; }
+.appearance-block + .appearance-block { margin-top:16px; padding-top:20px; border-top:1px dashed var(--line); }
+.appearance-cells { display:flex; flex-wrap:wrap; gap:28px; padding-left:0; }
+
+.store-section-cards { display:flex; gap:20px; flex-wrap:wrap; }
+.store-card { display:flex; align-items:center; gap:16px; background:var(--surface-sunk); border:1px solid var(--line); border-radius:12px; padding:16px 18px; flex:1; min-width:280px; position:relative; }
+.store-card .icon-tile { box-shadow:0 2px 8px rgba(0,0,0,.15); }
+.store-name { font-weight:600; font-size:15.5px; }
+.store-pub { font-size:12.5px; color:var(--ink-faint); }
+.store-rating { font-size:12.5px; color:#C08A00; margin-top:2px; }
+.store-tag { position:absolute; top:12px; right:14px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent-line); padding:2px 8px; border-radius:999px; }
+
+.size-row { display:flex; gap:22px; align-items:center; }
+.size-row + .size-row { margin-top:4px; padding-top:18px; border-top:1px dashed var(--line); }
+.size-row-cells { display:flex; align-items:flex-end; gap:26px; flex:1; flex-wrap:wrap; }
+.size-cell { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.size-cell .icon-tile { box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.size-label { font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-faint); }
+.size-ctx { font-size:9.5px; color:var(--ink-faint); }
+
+.variants-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:18px; }
+.variant-card { background:var(--surface-sunk); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.variant-head { display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+.variant-head h3 { font-family:"IBM Plex Mono",monospace; font-size:15px; letter-spacing:0; }
+.variant-head .appid { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-faint); overflow-wrap:anywhere; }
+.variant-tiles { display:flex; gap:14px; }
+.variant-tile { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.variant-tile .icon-tile { width:72px; height:72px; }
+.variant-tile-label { font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--ink-faint); }
+.variant-note { font-size:13px; color:var(--ink-soft); }
+
+footer { border-top:1px solid var(--line); padding-top:20px; font-size:13px; color:var(--ink-faint); }
+.pill { display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:999px; border:1px solid var(--accent-line); background:var(--accent-soft); color:var(--accent); width:fit-content; }
+@media (max-width: 680px) {
+  .mask-row, .themed-row, .size-row { flex-direction:column; gap:14px; }
+  .mask-row-label { width:auto; padding-top:0; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="mark-light" viewBox="0 0 108 108"><path d="M 54.0,21.0 C 35.80436170212766,21.0 20.999999999999993,35.80436170212766 21.0,54.0 C 21.0,72.19563829787234 35.80436170212766,87.0 54.0,87.0 C 72.19563829787234,87.0 87.0,72.19563829787234 87.0,54.0 C 87.0,35.804361702127665 72.19563829787234,21.0 54.0,21.0 M 84.59170212765957,53.992978723404256 C 84.59170212765957,70.86159574468086 70.86861702127659,84.58468085106384 53.99999999999999,84.58468085106384 C 37.1313829787234,84.58468085106384 23.408297872340427,70.86159574468086 23.408297872340423,53.992978723404256 C 23.408297872340423,37.12436170212766 37.1313829787234,23.401276595744683 54.0,23.401276595744683 C 70.8686170212766,23.401276595744683 84.59170212765957,37.124361702127665 84.59170212765957,53.992978723404256" fill="currentColor" fill-rule="evenodd"/><path d="M 46.971702127659576,55.79744680851064 L 39.90478723404256,48.74808510638298 L 31.089574468085107,57.53170212765958 L 46.9681914893617,73.37872340425531 L 76.90340425531915,43.485638297872335 L 68.08468085106384,34.72308510638297 L 46.97521276595745,55.79393617021276 L 46.971702127659576,55.79744680851064 M 46.9681914893617,59.18170212765958 L 66.21351063829786,39.975 L 68.07414893617022,38.09329787234043 L 73.48404255319149,43.51372340425532 L 61.937553191489364,55.039148936170214 L 46.96468085106383,70.0190425531915 L 34.494893617021276,57.54574468085106 L 39.90829787234043,52.132340425531915 L 46.9681914893617,59.1781914893617 L 46.9681914893617,59.18170212765958" fill="currentColor" fill-rule="evenodd"/></symbol>
+    <symbol id="mark-original" viewBox="0 0 108 108"><path d="M 54.0,85.42372340425531 C 36.63989361702127,85.42372340425531 22.565744680851058,71.34957446808511 22.56574468085106,53.98946808510638 C 22.56574468085106,36.62936170212765 36.63989361702127,22.558723404255314 54.0,22.558723404255318 C 71.36010638297873,22.558723404255318 85.43425531914895,36.63287234042553 85.43425531914895,53.992978723404256 C 85.43425531914895,71.35308510638298 71.36010638297873,85.4272340425532 54.00000000000001,85.4272340425532 L 54.0,85.42372340425531 M 68.27074468085107,35.03553191489361 L 46.880425531914895,56.38372340425531 L 39.71872340425532,49.24308510638298 L 31.763617021276595,57.20170212765957 L 31.41255319148936,57.535212765957446 L 46.873404255319144,72.96797872340426 L 76.58393617021277,43.296063829787236 L 68.26723404255318,35.03553191489362 L 68.27074468085107,35.03553191489361" fill="currentColor" fill-rule="evenodd"/></symbol>
+    <clipPath id="mask-squircle" clipPathUnits="objectBoundingBox"><path transform="scale(0.01)" d="M100.00,50.00 L99.94,63.21 L99.76,68.65 L99.45,72.80 L99.02,76.25 L98.47,79.24 L97.79,81.89 L96.98,84.26 L96.04,86.40 L94.97,88.33 L93.76,90.09 L92.41,91.67 L90.90,93.10 L89.23,94.38 L87.39,95.53 L85.36,96.53 L83.10,97.40 L80.60,98.15 L77.79,98.76 L74.59,99.25 L70.84,99.62 L66.17,99.86 L59.34,99.98 L40.66,99.98 L33.83,99.86 L29.16,99.62 L25.41,99.25 L22.21,98.76 L19.40,98.15 L16.90,97.40 L14.64,96.53 L12.61,95.53 L10.77,94.38 L9.10,93.10 L7.59,91.67 L6.24,90.09 L5.03,88.33 L3.96,86.40 L3.02,84.26 L2.21,81.89 L1.53,79.24 L0.98,76.25 L0.55,72.80 L0.24,68.65 L0.06,63.21 L0.00,50.00 L0.06,36.79 L0.24,31.35 L0.55,27.20 L0.98,23.75 L1.53,20.76 L2.21,18.11 L3.02,15.74 L3.96,13.60 L5.03,11.67 L6.24,9.91 L7.59,8.33 L9.10,6.90 L10.77,5.62 L12.61,4.47 L14.64,3.47 L16.90,2.60 L19.40,1.85 L22.21,1.24 L25.41,0.75 L29.16,0.38 L33.83,0.14 L40.66,0.02 L59.34,0.02 L66.17,0.14 L70.84,0.38 L74.59,0.75 L77.79,1.24 L80.60,1.85 L83.10,2.60 L85.36,3.47 L87.39,4.47 L89.23,5.62 L90.90,6.90 L92.41,8.33 L93.76,9.91 L94.97,11.67 L96.04,13.60 L96.98,15.74 L97.79,18.11 L98.47,20.76 L99.02,23.75 L99.45,27.20 L99.76,31.35 L99.94,36.79 Z"/></clipPath>
+    <clipPath id="mask-rounded" clipPathUnits="objectBoundingBox"><path transform="scale(0.01)" d="M22,0 L78,0 A22,22 0 0 1 100,22 L100,78 A22,22 0 0 1 78,100 L22,100 A22,22 0 0 1 0,78 L0,22 A22,22 0 0 1 22,0 Z"/></clipPath>
+    <clipPath id="mask-teardrop" clipPathUnits="objectBoundingBox"><path transform="scale(0.01)" d="M50,0 L86,0 A14,14 0 0 1 100,14 L100,50 A50,50 0 0 1 50,100 A50,50 0 0 1 0,50 A50,50 0 0 1 50,0 Z"/></clipPath>
+    <clipPath id="mask-ios" clipPathUnits="objectBoundingBox"><path transform="scale(0.01)" d="M100.00,50.00 L99.95,67.23 L99.80,72.72 L99.56,76.68 L99.22,79.86 L98.77,82.55 L98.22,84.89 L97.57,86.95 L96.81,88.78 L95.94,90.43 L94.94,91.90 L93.83,93.22 L92.58,94.40 L91.18,95.46 L89.63,96.39 L87.89,97.20 L85.95,97.91 L83.76,98.51 L81.26,99.01 L78.34,99.40 L74.82,99.69 L70.26,99.89 L63.06,99.99 L36.94,99.99 L29.74,99.89 L25.18,99.69 L21.66,99.40 L18.74,99.01 L16.24,98.51 L14.05,97.91 L12.11,97.20 L10.37,96.39 L8.82,95.46 L7.42,94.40 L6.17,93.22 L5.06,91.90 L4.06,90.43 L3.19,88.78 L2.43,86.95 L1.78,84.89 L1.23,82.55 L0.78,79.86 L0.44,76.68 L0.20,72.72 L0.05,67.23 L0.00,50.00 L0.05,32.77 L0.20,27.28 L0.44,23.32 L0.78,20.14 L1.23,17.45 L1.78,15.11 L2.43,13.05 L3.19,11.22 L4.06,9.57 L5.06,8.10 L6.17,6.78 L7.42,5.60 L8.82,4.54 L10.37,3.61 L12.11,2.80 L14.05,2.09 L16.24,1.49 L18.74,0.99 L21.66,0.60 L25.18,0.31 L29.74,0.11 L36.94,0.01 L63.06,0.01 L70.26,0.11 L74.82,0.31 L78.34,0.60 L81.26,0.99 L83.76,1.49 L85.95,2.09 L87.89,2.80 L89.63,3.61 L91.18,4.54 L92.58,5.60 L93.83,6.78 L94.94,8.10 L95.94,9.57 L96.81,11.22 L97.57,13.05 L98.22,15.11 L98.77,17.45 L99.22,20.14 L99.56,23.32 L99.80,27.28 L99.95,32.77 Z"/></clipPath>
+  </defs>
+</svg>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Preview &middot; Adaptive icon deliverables</p>
+    <h1>PASSforcare icon, on Android &amp; iOS</h1>
+    <p class="lede"><b>Original</b> &mdash; marketing&rsquo;s solid mark, a white disc with the tick cut through it, revealing the purple ground beneath &mdash; is confirmed as the direction on both platforms. <b>Light</b>, the thin hollow ring-and-tick, stays on this page for reference and comparison only, not as a live alternative. Both use their source vertex paths unmodified, scaled and centred so the mark sits consistently on each platform&rsquo;s canvas.</p>
+  </header>
+
+  <div class="platform-toggle" role="tablist" aria-label="Platform">
+    <button type="button" id="tab-android" class="toggle-btn" role="tab">Android</button>
+    <button type="button" id="tab-ios" class="toggle-btn" role="tab">iOS</button>
+  </div>
+
+  <div id="view-android"><div class="platform-view">
+    <div class="meta-row">
+      <span><b>Original (confirmed)</b> solid disc + tick cutout, no stroke to thin out</span>
+      <span><b>Light (reference)</b> hollow ring + tick, &asymp;2.4dp stroke</span>
+      <span><b>Canvas</b> 108&times;108dp</span>
+      <span><b>Keyline</b> 66dp</span>
+      <span><b>Brand purple</b> #6C1B98</span>
+    </div>
+    <div class="callout-flag">
+      <p class="eyebrow" style="color:var(--flag)">Where each mark lands against the brief</p>
+      <p><b>Original</b> is confirmed and is a solid shape, not a stroke &mdash; the brief's 4dp-minimum-stroke concern doesn't apply to it at all, since there's no hairline to disappear at small sizes. <b>Light</b> is kept here only for reference: it still sits under the brief's 4dp minimum and carries the small-size legibility risk already flagged, one more reason Original is the safer pick.</p>
+    </div>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">00 &middot; Colour treatment</p>
+      <h2>Default vs. reversed</h2>
+      <p>Original ships only in its own authored colouring &mdash; a white disc and tick cut-through on a purple ground &mdash; with no reversed version. Light's default is a purple tick on a white ground, with a colour-swapped reversed treatment kept as a variant.</p>
+    </div>
+    <div class="card"><div class="mask-row">
+      <div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div>
+      <div class="mask-row-cells">
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Default</span><span class="mask-sub">White disc, purple ground &mdash; as authored, no reversed treatment</span></div>
+      </div>
+    </div><div class="mask-row">
+      <div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div>
+      <div class="mask-row-cells">
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">Default</span><span class="mask-sub">Purple tick, white ground</span></div>
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-light"/></svg></div><span class="mask-name">Reversed</span><span class="mask-sub">White tick, purple ground &mdash; variant</span></div>
+      </div>
+    </div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">01 &middot; Launcher masks</p>
+      <h2>Same layers, four device shapes &mdash; default treatment</h2>
+      <p>The foreground and background never change &mdash; only the mask the launcher applies does. Both marks hold their proportions under every shape below, so nothing gets clipped.</p>
+    </div>
+    <div class="card"><div class="mask-row"><div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div><div class="mask-row-cells"><div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Circle</span><span class="mask-sub">Pixel launcher</span></div><div class="mask-cell"><div class="icon-tile mask-squircle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Squircle</span><span class="mask-sub">Play Store / many OEM launchers</span></div><div class="mask-cell"><div class="icon-tile mask-rounded" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Rounded square</span><span class="mask-sub">Samsung One UI (square style)</span></div><div class="mask-cell"><div class="icon-tile mask-teardrop" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Teardrop</span><span class="mask-sub">Samsung One UI (mixed style)</span></div></div></div><div class="mask-row"><div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div><div class="mask-row-cells"><div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">Circle</span><span class="mask-sub">Pixel launcher</span></div><div class="mask-cell"><div class="icon-tile mask-squircle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">Squircle</span><span class="mask-sub">Play Store / many OEM launchers</span></div><div class="mask-cell"><div class="icon-tile mask-rounded" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">Rounded square</span><span class="mask-sub">Samsung One UI (square style)</span></div><div class="mask-cell"><div class="icon-tile mask-teardrop" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">Teardrop</span><span class="mask-sub">Samsung One UI (mixed style)</span></div></div></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">02 &middot; Home screen, before / after</p>
+      <h2>Filling the circle like its neighbours</h2>
+      <p>Today&rsquo;s legacy bitmap loses roughly a third of its area before the launcher even draws it &mdash; legacy icon normalisation scales the square art down to fit inside a generated white circle. Original, the confirmed direction, fills the same circle edge to edge; Light shown alongside for reference.</p>
+    </div>
+    <div class="card">
+      <div class="compare-strip" style="margin-bottom:22px;padding-bottom:22px;border-bottom:1px dashed var(--line)">
+        <div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark legacy-shrunk" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="hs-label">PASSforcare&nbsp;(today)</span></div>
+<span class="arrow">&rarr;</span>
+<div class="hs-app"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="hs-label">PASSforcare&nbsp;(original) &mdash; confirmed</span></div>
+<span class="arrow">&rarr;</span>
+<div class="hs-app"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="hs-label">PASSforcare&nbsp;(light) &mdash; reference</span></div>
+      </div>
+      <div class="phone">
+        <div class="phone-statusbar"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div class="phone-grid"><div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#F2B33D"></div><svg viewBox="0 0 24 24" class="glyph-svg"><path d="M12 6.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM12 1v2.2M12 20.8V23M4.2 4.2l1.55 1.55M18.25 18.25l1.55 1.55M1 12h2.2M20.8 12H23M4.2 19.8l1.55-1.55M18.25 5.75l1.55-1.55" stroke="#fff" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg></div><span class="hs-label">Weather</span></div><div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#3D8DF2"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="2.5" y="5.5" width="19" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M3.5 6.5l8.5 7 8.5-7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="hs-label">Mail</span></div><div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#3DBF8D"></div><svg viewBox="0 0 24 24" class="glyph-svg"><circle cx="6.5" cy="18" r="3" fill="#fff"/><circle cx="17" cy="16" r="3" fill="#fff"/><path d="M9.5 18V5.2L20 3v10.8" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="hs-label">Music</span></div><div class="hs-app hs-app--ours"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="hs-label">PASSforcare</span></div><div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#E85C5C"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="3" y="4.5" width="18" height="16" rx="2.2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><rect x="7" y="12.3" width="4" height="4" rx="0.8" fill="#fff"/></svg></div><span class="hs-label">Calendar</span></div><div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#8A6AE0"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></div><span class="hs-label">Notes</span></div><div class="hs-app"><div class="icon-tile mask-circle"><div class="tile-bg" style="background:#4CA6A8"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="2.5" y="7" width="19" height="13" rx="2.2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M8.5 7l1.6-2.5h3.8L15.5 7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/></svg></div><span class="hs-label">Camera</span></div><div class="hs-app hs-app--ours"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="hs-label">PASSforcare</span></div></div>
+      </div>
+      <div class="legend" style="margin-top:16px;justify-content:center">
+        <span class="swatch"></span> highlighted tiles are Original (confirmed) and Light (reference), placed among generic placeholder apps for scale comparison
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">03 &middot; Themed icons (Android 13+)</p>
+      <h2>Monochrome layer, tone on tone</h2>
+      <p>When a user turns on themed icons, the system ignores our colours and paints <span class="mono">ic_launcher_monochrome</span> in a single tone derived from their wallpaper, over a matching tone-on-tone background. For Original, that tone shows through the tick cutout the same way the brand purple does today.</p>
+    </div>
+    <div class="card"><div class="themed-row"><div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div><div class="themed-row-cells"><div class="themed-pair"><div class="themed-tone-label">Violet</div><div class="themed-tiles"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#3A2151"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#E3C9FB"><use href="#mark-original"/></svg></div></div><div class="themed-sub"><span>Dark</span></div></div><div class="themed-pair"><div class="themed-tone-label">Blue&#8209;grey</div><div class="themed-tiles"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#26333D"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#B9CEDE"><use href="#mark-original"/></svg></div></div><div class="themed-sub"><span>Dark</span></div></div><div class="themed-pair"><div class="themed-tone-label">Sage</div><div class="themed-tiles"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#263524"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#C4D8BC"><use href="#mark-original"/></svg></div></div><div class="themed-sub"><span>Dark</span></div></div></div></div><div class="themed-row"><div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div><div class="themed-row-cells"><div class="themed-pair"><div class="themed-tone-label">Violet</div><div class="themed-tiles"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#E9DDF7"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#4A2170"><use href="#mark-light"/></svg></div><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#3A2151"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#E3C9FB"><use href="#mark-light"/></svg></div></div><div class="themed-sub"><span>Light</span><span>Dark</span></div></div><div class="themed-pair"><div class="themed-tone-label">Blue&#8209;grey</div><div class="themed-tiles"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#DCE3EA"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#29435A"><use href="#mark-light"/></svg></div><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#26333D"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#B9CEDE"><use href="#mark-light"/></svg></div></div><div class="themed-sub"><span>Light</span><span>Dark</span></div></div><div class="themed-pair"><div class="themed-tone-label">Sage</div><div class="themed-tiles"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#DEE7DA"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#2E4A2A"><use href="#mark-light"/></svg></div><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#263524"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#C4D8BC"><use href="#mark-light"/></svg></div></div><div class="themed-sub"><span>Light</span><span>Dark</span></div></div></div></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">04 &middot; Play Store listing</p>
+      <h2>Square asset, store&rsquo;s own mask &mdash; default treatment</h2>
+      <p><span class="mono">ic_launcher-web.png</span> ships flat and square, 512&times;512, no alpha; Play applies its own squircle mask and shadow on the listing page.</p>
+    </div>
+    <div class="store-section-cards"><div class="store-card"><div class="icon-tile mask-squircle" style="width:96px;height:96px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div>
+      <div class="store-meta"><div class="store-name">PASSforcare</div><div class="store-pub">Everylife Technologies</div><div class="store-rating">&#9733;&#9733;&#9733;&#9733;&#9734; &nbsp;4.2</div></div>
+      <span class="store-tag">Original &middot; Confirmed</span></div><div class="store-card"><div class="icon-tile mask-squircle" style="width:96px;height:96px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div>
+      <div class="store-meta"><div class="store-name">PASSforcare</div><div class="store-pub">Everylife Technologies</div><div class="store-rating">&#9733;&#9733;&#9733;&#9733;&#9734; &nbsp;4.2</div></div>
+      <span class="store-tag">Light &middot; Reference</span></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">05 &middot; Small-size legibility</p>
+      <h2>Does the mark hold up when it shrinks?</h2>
+      <p>App-drawer, settings and notification contexts render the icon far smaller than the launcher grid. Original&rsquo;s solid disc and cutout stay crisp all the way down; Light&rsquo;s hollow ring and tick thin out noticeably below 28&ndash;36px &mdash; one of the reasons Original is the confirmed pick.</p>
+    </div>
+    <div class="card"><div class="size-row"><div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div><div class="size-row-cells"><div class="size-cell"><div class="icon-tile mask-circle" style="width:20px;height:20px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">20px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:24px;height:24px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">24px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:28px;height:28px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">28px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:36px;height:36px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">36px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:48px;height:48px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">48px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:64px;height:64px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">64px</span></div></div></div><div class="size-row"><div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div><div class="size-row-cells"><div class="size-cell"><div class="icon-tile mask-circle" style="width:20px;height:20px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">20px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:24px;height:24px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">24px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:28px;height:28px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">28px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:36px;height:36px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">36px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:48px;height:48px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">48px</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:64px;height:64px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">64px</span></div></div></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">06 &middot; Environment badges</p>
+      <h2>The six build variants, side by side</h2>
+      <p>Per the brief: every build flavour carries its own icon so testers can tell environments apart on one device. Badges are moved fully inside the 72dp safe zone (the original artwork had them low-and-right, ~10% from the edge, which lands in the bleed margin and gets clipped by a circular mask). Shown here as illustrative type for sign-off; the production files need this lettering converted to outlined paths.</p>
+    </div>
+    <div class="callout-flag">
+      <p class="eyebrow" style="color:var(--flag)">Two open calls from the brief</p>
+      <p><b>qa</b> and <b>qaapp</b> both currently show a plain &ldquo;QA&rdquo; badge and are indistinguishable on a device &mdash; shown here with <b>qa</b> relabelled &ldquo;QA2&rdquo; as a starting suggestion, not a final decision. <b>demo</b> has no icon of its own today, so it inherits a stray QA badge; shown here matching prod (no badge) until you decide whether demo should get its own mark instead.</p>
+    </div>
+    <div class="card"><div class="variants-grid"><div class="variant-card"><div class="variant-head"><h3>prod</h3><span class="appid">com.elt.passforcare</span><span class="pill" style="text-transform:none;background:var(--surface-sunk);color:var(--ink-faint);border-color:var(--line)">no badge</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Public release &mdash; no badge. Also needs the 512px store asset.</p></div><div class="variant-card"><div class="variant-head"><h3>qaapp</h3><span class="appid">com.elt.passforcare.qaapp</span><span class="pill" style="text-transform:none">badge: QA</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA</text></g></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA</text></g></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Default development variant.</p></div><div class="variant-card"><div class="variant-head"><h3>qa</h3><span class="appid">com.elt.passforcare.qa</span><span class="pill" style="text-transform:none">badge: QA2</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA2</text></g></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA2</text></g></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Given its own badge here &mdash; today it's identical to qaapp's (both show “QA”) and the two builds can't be told apart on a device.</p></div><div class="variant-card"><div class="variant-head"><h3>pen</h3><span class="appid">com.elt.passforcare.pen</span><span class="pill" style="text-transform:none">badge: PEN</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">PEN</text></g></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">PEN</text></g></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Penetration-test builds.</p></div><div class="variant-card"><div class="variant-head"><h3>stub</h3><span class="appid">com.elt.passforcare.stub</span><span class="pill" style="text-transform:none">badge: MOCK</span></div><div class="variant-tiles"><div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="8.3" letter-spacing="0.3" fill="#6C1B98">MOCK</text></g></svg></div><span class="variant-tile-label">Original</span></div></div><p class="variant-note">Mocked-data builds. Already uses the solid (Original) treatment.</p></div><div class="variant-card"><div class="variant-head"><h3>demo</h3><span class="appid">com.elt.passforcare</span><span class="pill" style="text-transform:none;background:var(--surface-sunk);color:var(--ink-faint);border-color:var(--line)">no badge</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Currently inherits a stray QA badge (a bug) with no icon of its own. Shown here matching prod &mdash; flagging rather than deciding, since the brief leaves this as an open call: its own mark, or prod's.</p></div></div></div>
+  </section>
+
+  <footer>
+    Rendered from the actual <span class="mono">ic_launcher_foreground.svg</span> / <span class="mono">ic_launcher_background.svg</span> / <span class="mono">ic_launcher_monochrome.svg</span> geometry in <span class="mono">output/original</span> and <span class="mono">output/light</span> (default treatment). Light&rsquo;s reversed variant lives in <span class="mono">output/light/reversed/</span>; Original has no reversed variant. Placeholder app icons in the home-screen mockup are generic stand-ins (simple vector glyphs), not real app artwork. Mask shapes are approximations of each OEM&rsquo;s published launcher masks, for illustration.
+  </footer>
+  </div></div>
+
+  <div id="view-ios" hidden><div class="platform-view">
+    <div class="meta-row">
+      <span><b>Original (confirmed)</b> solid disc + tick cutout, no stroke to thin out</span>
+      <span><b>Light (reference)</b> hollow ring + tick, same &asymp;2.4dp-equivalent stroke as Android</span>
+      <span><b>Canvas</b> 1024&times;1024pt (App Store size)</span>
+      <span><b>Corner</b> system-applied continuous curve</span>
+      <span><b>Brand purple</b> #6C1B98</span>
+    </div>
+    <div class="callout-flag">
+      <p class="eyebrow" style="color:var(--flag)">Same risk, different platform</p>
+      <p>iOS has no equivalent to the brief's 4dp minimum &mdash; that's an Android adaptive-icon spec &mdash; but the underlying problem carries over identically. <b>Original</b>, confirmed, stays legible at every size iOS renders it. <b>Light</b> is kept only for reference: its thin stroke is the one to watch, especially at Settings/notification sizes.</p>
+    </div>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">00 &middot; Icon shape</p>
+      <h2>One shape, system-applied</h2>
+      <p>iOS has no adaptive-icon layering and no launcher-dependent mask. You supply one flat, fully opaque square; the OS applies its own fixed continuous-corner ("squircle") mask at render time &mdash; the same corner curve everywhere, on every device. Don&rsquo;t bake rounded corners, shadows or transparency into the artwork yourself.</p>
+    </div>
+    <div class="card"><div class="mask-row"><div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div>
+      <div class="mask-row-cells"><div class="mask-cell"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">iOS icon</span><span class="mask-sub">Continuous corner, system-applied</span></div></div></div><div class="mask-row"><div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div>
+      <div class="mask-row-cells"><div class="mask-cell"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">iOS icon</span><span class="mask-sub">Continuous corner, system-applied</span></div></div></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">01 &middot; Home Screen</p>
+      <h2>Alongside real neighbours</h2>
+      <p>Original (confirmed) and Light (reference) at Home Screen size, among generic placeholder apps, plus the Dock &mdash; which iOS always keeps unlabelled.</p>
+    </div>
+    <div class="card">
+      <div class="ios-phone">
+        <div class="ios-statusbar"><span>9:41</span><span>&#128246; &#128265;</span></div>
+        <div class="ios-grid"><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#F2B33D"></div><svg viewBox="0 0 24 24" class="glyph-svg"><path d="M12 6.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM12 1v2.2M12 20.8V23M4.2 4.2l1.55 1.55M18.25 18.25l1.55 1.55M1 12h2.2M20.8 12H23M4.2 19.8l1.55-1.55M18.25 5.75l1.55-1.55" stroke="#fff" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg></div><span class="hs-label">Weather</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#3D8DF2"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="2.5" y="5.5" width="19" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M3.5 6.5l8.5 7 8.5-7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="hs-label">Mail</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#3DBF8D"></div><svg viewBox="0 0 24 24" class="glyph-svg"><circle cx="6.5" cy="18" r="3" fill="#fff"/><circle cx="17" cy="16" r="3" fill="#fff"/><path d="M9.5 18V5.2L20 3v10.8" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="hs-label">Music</span></div><div class="hs-app hs-app--ours"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="hs-label">PASSforcare</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#7D8A97"></div><svg viewBox="0 0 24 24" class="glyph-svg"><path d="M6.6 3.5c-1.7 0-3.1 1.4-3.1 3.1 0 7.6 6.2 13.8 13.8 13.8 1.7 0 3.1-1.4 3.1-3.1v-2.1l-4.6-1.5-1.5 1.9a12 12 0 01-5.6-5.6l1.9-1.5L9.1 3.5H6.6z" fill="#fff"/></svg></div><span class="hs-label">Phone</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#E85C5C"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="3" y="4.5" width="18" height="16" rx="2.2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><rect x="7" y="12.3" width="4" height="4" rx="0.8" fill="#fff"/></svg></div><span class="hs-label">Calendar</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#8A6AE0"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></div><span class="hs-label">Notes</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#4CA6A8"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="2.5" y="7" width="19" height="13" rx="2.2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M8.5 7l1.6-2.5h3.8L15.5 7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.6" fill="none" stroke="#fff" stroke-width="1.7"/></svg></div><span class="hs-label">Camera</span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#5B9BD5"></div><svg viewBox="0 0 24 24" class="glyph-svg"><path d="M12 2C7.8 2 4.5 5.3 4.5 9.5 4.5 15 12 22 12 22s7.5-7 7.5-12.5C19.5 5.3 16.2 2 12 2z" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.6" fill="#fff"/></svg></div><span class="hs-label">Maps</span></div><div class="hs-app hs-app--ours"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="hs-label">PASSforcare</span></div></div>
+        <div class="ios-dock"><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#F2B33D"></div><svg viewBox="0 0 24 24" class="glyph-svg"><path d="M12 6.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM12 1v2.2M12 20.8V23M4.2 4.2l1.55 1.55M18.25 18.25l1.55 1.55M1 12h2.2M20.8 12H23M4.2 19.8l1.55-1.55M18.25 5.75l1.55-1.55" stroke="#fff" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg></div><span class="hs-label"></span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#3D8DF2"></div><svg viewBox="0 0 24 24" class="glyph-svg"><rect x="2.5" y="5.5" width="19" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M3.5 6.5l8.5 7 8.5-7" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="hs-label"></span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#3DBF8D"></div><svg viewBox="0 0 24 24" class="glyph-svg"><circle cx="6.5" cy="18" r="3" fill="#fff"/><circle cx="17" cy="16" r="3" fill="#fff"/><path d="M9.5 18V5.2L20 3v10.8" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="hs-label"></span></div><div class="hs-app"><div class="icon-tile mask-ios"><div class="tile-bg" style="background:#7D8A97"></div><svg viewBox="0 0 24 24" class="glyph-svg"><path d="M6.6 3.5c-1.7 0-3.1 1.4-3.1 3.1 0 7.6 6.2 13.8 13.8 13.8 1.7 0 3.1-1.4 3.1-3.1v-2.1l-4.6-1.5-1.5 1.9a12 12 0 01-5.6-5.6l1.9-1.5L9.1 3.5H6.6z" fill="#fff"/></svg></div><span class="hs-label"></span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">02 &middot; Appearance modes</p>
+      <h2>Light &amp; Dark appearance</h2>
+      <p>iOS 18 lets a user choose Light or Dark for every app icon on their Home Screen, independent of system theme. (Apple also offers a system Tinted mode, but that&rsquo;s not something we&rsquo;re designing for here.) Light&rsquo;s thin stroke is still the one to watch at small sizes, same risk flagged for Android.</p>
+    </div>
+    <div class="card"><div class="appearance-block"><div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div>
+      <div class="appearance-cells">
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Light</span><span class="mask-sub">Default appearance</span></div>
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="mask-name">Dark</span><span class="mask-sub">Same as Light appearance &mdash; the purple ground already reads fine at night, no separate dark image needed.</span></div>
+      </div>
+    </div><div class="appearance-block"><div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div>
+      <div class="appearance-cells">
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="mask-name">Light</span><span class="mask-sub">Default appearance</span></div>
+        <div class="mask-cell"><div class="icon-tile mask-circle" style=""><div class="tile-bg" style="background:#1B1522"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#C58EE6"><use href="#mark-light"/></svg></div><span class="mask-name">Dark</span><span class="mask-sub">Proposed &mdash; a dark-ink ground with a lighter tick, so it doesn&rsquo;t sit as a bright white square among dark tiles at night.</span></div>
+      </div>
+    </div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">03 &middot; App Store listing</p>
+      <h2>1024&times;1024, no alpha, single size</h2>
+      <p>Since Xcode 14, a single 1024&times;1024 PNG (no alpha channel, no corner rounding) is enough &mdash; Xcode and App Store Connect generate every smaller size from it. Apple applies its own mask on the product page, same principle as Android&rsquo;s Play Store squircle.</p>
+    </div>
+    <div class="store-section-cards"><div class="store-card"><div class="icon-tile mask-circle" style="width:96px;height:96px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div>
+      <div class="store-meta"><div class="store-name">PASSforcare</div><div class="store-pub">Everylife Technologies</div><div class="store-rating">&#9733;&#9733;&#9733;&#9733;&#9734; &nbsp;4.2</div></div>
+      <span class="store-tag">Original &middot; Confirmed</span></div><div class="store-card"><div class="icon-tile mask-circle" style="width:96px;height:96px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div>
+      <div class="store-meta"><div class="store-name">PASSforcare</div><div class="store-pub">Everylife Technologies</div><div class="store-rating">&#9733;&#9733;&#9733;&#9733;&#9734; &nbsp;4.2</div></div>
+      <span class="store-tag">Light &middot; Reference</span></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">04 &middot; Small-size legibility</p>
+      <h2>Settings, Spotlight, notifications</h2>
+      <p>iOS renders the icon far smaller than the Home Screen in several system surfaces. Point sizes shown here are the base @1x figure; actual assets are exported at @2x/@3x.</p>
+    </div>
+    <div class="card"><div class="size-row"><div class="mask-row-label">Original <span class="tag tag-confirmed">Confirmed</span></div><div class="size-row-cells"><div class="size-cell"><div class="icon-tile mask-circle" style="width:20px;height:20px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">20pt</span><span class="size-ctx">Notification</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:29px;height:29px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">29pt</span><span class="size-ctx">Settings</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:40px;height:40px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">40pt</span><span class="size-ctx">Spotlight</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:60px;height:60px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">60pt</span><span class="size-ctx">Home Screen</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:76px;height:76px;"><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="size-label">76pt</span><span class="size-ctx">iPad Home</span></div></div></div><div class="size-row"><div class="mask-row-label">Light <span class="tag tag-reference">Reference</span></div><div class="size-row-cells"><div class="size-cell"><div class="icon-tile mask-circle" style="width:20px;height:20px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">20pt</span><span class="size-ctx">Notification</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:29px;height:29px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">29pt</span><span class="size-ctx">Settings</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:40px;height:40px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">40pt</span><span class="size-ctx">Spotlight</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:60px;height:60px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">60pt</span><span class="size-ctx">Home Screen</span></div><div class="size-cell"><div class="icon-tile mask-circle" style="width:76px;height:76px;"><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="size-label">76pt</span><span class="size-ctx">iPad Home</span></div></div></div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <p class="eyebrow">05 &middot; Environment badges</p>
+      <h2>The six build variants, on iOS</h2>
+      <p>Same badge design as Android (white circle, purple stroke, purple lettering) and the same two open calls &mdash; <b>qa</b>/<b>qaapp</b> clash, <b>demo</b>&rsquo;s missing icon &mdash; carried over unchanged, since they're app-wide decisions, not platform-specific ones. iOS has no fixed adaptive safe zone, but Apple's own guidance is the same idea: keep anything meaningful clear of the corners the system is going to round off.</p>
+    </div>
+    <div class="card"><div class="variants-grid"><div class="variant-card"><div class="variant-head"><h3>prod</h3><span class="appid">com.elt.passforcare</span><span class="pill" style="text-transform:none;background:var(--surface-sunk);color:var(--ink-faint);border-color:var(--line)">no badge</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Public release &mdash; no badge. Also needs its own 1024&times;1024 App Store asset.</p></div><div class="variant-card"><div class="variant-head"><h3>qaapp</h3><span class="appid">com.elt.passforcare.qaapp</span><span class="pill" style="text-transform:none">badge: QA</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA</text></g></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA</text></g></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Default development variant.</p></div><div class="variant-card"><div class="variant-head"><h3>qa</h3><span class="appid">com.elt.passforcare.qa</span><span class="pill" style="text-transform:none">badge: QA2</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA2</text></g></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">QA2</text></g></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Given its own badge here, mirroring the Android proposal, so it can be told apart from qaapp.</p></div><div class="variant-card"><div class="variant-head"><h3>pen</h3><span class="appid">com.elt.passforcare.pen</span><span class="pill" style="text-transform:none">badge: PEN</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">PEN</text></g></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="9.3" letter-spacing="0.3" fill="#6C1B98">PEN</text></g></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Penetration-test builds.</p></div><div class="variant-card"><div class="variant-head"><h3>stub</h3><span class="appid">com.elt.passforcare.stub</span><span class="pill" style="text-transform:none">badge: MOCK</span></div><div class="variant-tiles"><div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/><g><circle cx="73" cy="75" r="13" fill="#FFFFFF" stroke="#6C1B98" stroke-width="2.6"/><text x="73" y="78.2" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="8.3" letter-spacing="0.3" fill="#6C1B98">MOCK</text></g></svg></div><span class="variant-tile-label">Original</span></div></div><p class="variant-note">Mocked-data builds &mdash; solid (Original) treatment, matching the Android proposal.</p></div><div class="variant-card"><div class="variant-head"><h3>demo</h3><span class="appid">com.elt.passforcare</span><span class="pill" style="text-transform:none;background:var(--surface-sunk);color:var(--ink-faint);border-color:var(--line)">no badge</span></div><div class="variant-tiles">
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#6C1B98"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#FFFFFF"><use href="#mark-original"/></svg></div><span class="variant-tile-label">Original</span></div>
+          <div class="variant-tile"><div class="icon-tile mask-ios" style=""><div class="tile-bg" style="background:#FFFFFF"></div><svg class="tile-mark" viewBox="0 0 108 108" style="color:#6C1B98"><use href="#mark-light"/></svg></div><span class="variant-tile-label">Light</span></div>
+        </div><p class="variant-note">Same open call as Android: own mark, or match prod. Shown here matching prod.</p></div></div></div>
+  </section>
+
+  <footer>
+    Mock-up only &mdash; Stage 1. These are illustrative renders built from the same approved mark geometry as the Android side; no iOS asset files exist yet. Once this is signed off, Stage 2 produces an <span class="mono">ios-handoff/</span> folder: the 1024&times;1024 App Store PNG plus Light/Dark Asset Catalog images for each mark. Badge lettering here is live SVG text, same caveat as Android &mdash; production badges still need it converted to outlines before going anywhere near an actual build. Placeholder app icons are generic stand-ins, not real app artwork. The corner curve is a close approximation of Apple's continuous-corner mask, for illustration.
+  </footer>
+  </div></div>
+
+</div>
+<script>
+(function(){
+  var androidBtn = document.getElementById('tab-android');
+  var iosBtn = document.getElementById('tab-ios');
+  var androidView = document.getElementById('view-android');
+  var iosView = document.getElementById('view-ios');
+  function setPlatform(p){
+    androidView.hidden = (p !== 'android');
+    iosView.hidden = (p !== 'ios');
+    androidBtn.classList.toggle('is-active', p === 'android');
+    iosBtn.classList.toggle('is-active', p === 'ios');
+    try { localStorage.setItem('icon-preview-platform', p); } catch(e) {}
+  }
+  androidBtn.addEventListener('click', function(){ setPlatform('android'); });
+  iosBtn.addEventListener('click', function(){ setPlatform('ios'); });
+  var saved = 'android';
+  try { saved = localStorage.getItem('icon-preview-platform') || 'android'; } catch(e) {}
+  setPlatform(saved);
+})();
+</script>
+</body>
+</html>
