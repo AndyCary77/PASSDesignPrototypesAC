@@ -304,7 +304,12 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
             </div>
           )}
 
-          <div className="flex-1 min-w-0">
+          {/* font-weight-fixed: this profile header (name/badges/contact
+              details) stays at the base weight scale even in "Bolder" mode
+              — see the rule in globals.css. Exempted on request: it's
+              dense identity/contact info, not the body copy the Bolder
+              toggle is meant to help with. */}
+          <div className="flex-1 min-w-0 font-weight-fixed">
             {/* Name and Badges */}
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-gray-900 font-semibold">{customer.fullName}</h2>

@@ -22,7 +22,10 @@ export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: bo
             style={{ backgroundImage: `url(${davidPhoto})` }}
           />
 
-          <div className="flex-1 min-w-0">
+          {/* font-weight-fixed: see the matching note in CustomerInfoNav —
+              this profile header stays at the base weight scale even in
+              "Bolder" mode. */}
+          <div className="flex-1 min-w-0 font-weight-fixed">
             {/* Name and badges */}
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-gray-900 font-semibold">Mr David Buckowski</h2>

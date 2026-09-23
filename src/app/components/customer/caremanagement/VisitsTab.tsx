@@ -5,7 +5,7 @@ import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
 import { useCareData } from './useCareData';
 import { TASK_CATEGORIES, type CareVisit } from './types';
-import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, labelClass, CATEGORY_CONFIG, CarePlanDraftBanner } from './shared';
+import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, CareManagementFooter, labelClass, CATEGORY_CONFIG, CarePlanDraftBanner } from './shared';
 
 const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -258,7 +258,7 @@ export function VisitsTab() {
       {VISITS.map(visit => (
         <VisitCard key={visit.id} visit={visit} onSelect={() => setSelectedId(visit.id)} />
       ))}
-      <p className="text-xs text-center text-gray-400 pt-2">Version 7 was modified 4 months ago by Sharon Hunter</p>
+      <CareManagementFooter />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
 import { useCareData } from './useCareData';
 import { type CareTask } from './types';
-import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, inputClass, labelClass, CATEGORY_CONFIG, DraftActionBar, CarePlanDraftBanner, CarePlanDraftFlow } from './shared';
+import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, CareManagementFooter, inputClass, labelClass, CATEGORY_CONFIG, DraftActionBar, CarePlanDraftBanner, CarePlanDraftFlow } from './shared';
 
 /**
  * Medication summary chips. `prn` is a boolean rather than a string, so it
@@ -442,7 +442,7 @@ export function TasksTab() {
           {TASKS.map(task => (
             <TaskCard key={task.id} task={task} onSelect={() => setSelectedId(task.id)} />
           ))}
-          <p className="text-xs text-center text-gray-400 pt-2">Version 7 was modified 4 months ago by Sharon Hunter</p>
+          <CareManagementFooter />
         </>
       )}
     </div>

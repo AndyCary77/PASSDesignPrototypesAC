@@ -30,8 +30,11 @@
   --input: transparent;
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
-  --font-weight-medium: 500;
   --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -69,8 +72,11 @@
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
   --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -86,7 +92,104 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* "Bolder" review mode — toggled app-wide via FontWeightContext (a plain
+   `data-font-weight="bold"` attribute on <html>, same mechanism the mobile
+   prototypes' platform.js already uses for iOS/Android). Bumps every
+   weight up one step on the standard scale. This single rule is enough to
+   affect the entire app because every font-weight utility class (and the
+   plain-element typography reset below) already reads from these same
+   custom properties rather than a hardcoded number — see the @theme inline
+   note just below. `--font-weight-extrabold` is deliberately left
+   unchanged here: 800 is already the heaviest weight actually loaded (see
+   the Barlow @import in index.css), so bumping it further would just
+   trigger a synthesised fake-900 rather than a real one. */
+[data-font-weight='bold'] {
+  --font-weight-normal: 500;
+  --font-weight-medium: 600;
+  --font-weight-semibold: 700;
+  --font-weight-bold: 800;
+}
+
+/* Opt-out for the customer/employee profile header (name, badges, contact
+   details) at the top of each nav — resets the scale back to default
+   within that subtree, overriding the rule above via normal CSS cascade,
+   so it's unaffected by the app-wide Bolder toggle regardless of where it
+   sits in the tree. */
+[data-font-weight='bold'] .font-weight-fixed {
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+/* Small drop shadow on standalone content panels, tied to the same
+   "Bolder" mode above — a follow-up to the customer complaint that
+   flat/pastel panels with no shadow or border were hard to visually tell
+   apart (see feedback_accessibility memory). Scoped to real panel
+   containers only:
+   - `main` — the shared page-content wrapper both app shells (legacy and
+     side-nav) render on top of the grey `bg-gray-50` canvas (routes.tsx)
+     — excludes the sticky header/info bar above it and any Radix
+     dropdown/menu/tooltip content, which mounts via Portal outside
+     `<main>` entirely.
+   - `.bg-white` paired with one of the roundings actually used for real
+     panels (`rounded-lg`/`rounded-xl`/`rounded-2xl`/`rounded-t-lg`/
+     `rounded-b-lg`) — deliberately not bare `rounded`/`rounded-md`
+     (buttons, tooltips) or `rounded-full` (avatar circles).
+   - `:not(...)` skips anything that already declares its own static
+     `shadow-*` class (modals, popover-style cards) so this never
+     downgrades an existing, intentionally bigger shadow. Uses `~=` exact
+     token matching so a card that only has `hover:shadow-md` (an
+     interaction affordance, not a resting shadow) still gets this. */
+[data-font-weight='bold'] main .bg-white:is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-t-lg, .rounded-b-lg):not(
+    [class~='shadow'],
+    [class~='shadow-xs'],
+    [class~='shadow-sm'],
+    [class~='shadow-md'],
+    [class~='shadow-lg'],
+    [class~='shadow-xl'],
+    [class~='shadow-2xl'],
+    [class~='shadow-none']
+  ) {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* ...but not for a panel nested inside another white panel — the shadow
+   is meant to separate top-level panels from the grey canvas, not stack
+   up inside one that's already separated. Repeats the same qualifiers so
+   this is strictly more specific than the rule above (one extra
+   `.bg-white` in the chain) and reliably wins for the nested case. */
+[data-font-weight='bold'] main .bg-white .bg-white:is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-t-lg, .rounded-b-lg):not(
+    [class~='shadow'],
+    [class~='shadow-xs'],
+    [class~='shadow-sm'],
+    [class~='shadow-md'],
+    [class~='shadow-lg'],
+    [class~='shadow-xl'],
+    [class~='shadow-2xl'],
+    [class~='shadow-none']
+  ) {
+  box-shadow: none;
+}
+
 @theme inline {
+  /* Wiring these into Tailwind's own theme namespace (not just declaring
+     them as plain custom properties) is what actually makes `font-normal`/
+     `font-medium`/`font-semibold`/`font-bold`/`font-extrabold` everywhere
+     in the app read from these variables, the same way the colour tokens
+     below already do for `bg-primary` etc. Without this mapping, the two
+     that existed before (`--font-weight-normal`/`--font-weight-medium`)
+     only affected the plain-element typography reset further down this
+     file — every component's own `font-medium`/`font-semibold`/etc. class
+     was silently using Tailwind's separate, hardcoded built-in scale
+     instead, so changing the variable here wouldn't have touched them at
+     all. Now it will — bump one value in :root/.dark and every use of
+     that weight across the whole app follows. */
+  --font-weight-normal: var(--font-weight-normal);
+  --font-weight-medium: var(--font-weight-medium);
+  --font-weight-semibold: var(--font-weight-semibold);
+  --font-weight-bold: var(--font-weight-bold);
+  --font-weight-extrabold: var(--font-weight-extrabold);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -136,6 +239,7 @@
     @apply bg-background text-foreground;
     font-family: 'Barlow', sans-serif;
     font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

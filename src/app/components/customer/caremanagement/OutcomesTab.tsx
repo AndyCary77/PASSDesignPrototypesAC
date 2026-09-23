@@ -4,7 +4,7 @@ import { StarSolidIcon } from '../../icons/CarePlanIcons';
 import { useCareManagement } from './CareManagementContext';
 import { useCareData } from './useCareData';
 import { TASK_CATEGORIES, type Outcome } from './types';
-import { TaskBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, inputClass, labelClass, CATEGORY_CONFIG, DraftActionBar, CarePlanDraftBanner, CarePlanDraftFlow } from './shared';
+import { TaskBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, CareManagementFooter, inputClass, labelClass, CATEGORY_CONFIG, DraftActionBar, CarePlanDraftBanner, CarePlanDraftFlow } from './shared';
 
 function OutcomeCard({ outcome, onSelect }: { outcome: Outcome; onSelect: () => void }) {
   const { TASKS, VISITS } = useCareData();
@@ -289,7 +289,7 @@ export function OutcomesTab() {
           {OUTCOMES.map(outcome => (
             <OutcomeCard key={outcome.id} outcome={outcome} onSelect={() => setSelectedId(outcome.id)} />
           ))}
-          <p className="text-xs text-center text-gray-400 pt-2">Version 7 was modified 4 months ago by Sharon Hunter</p>
+          <CareManagementFooter />
         </>
       )}
     </div>

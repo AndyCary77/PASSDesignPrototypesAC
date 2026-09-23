@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronRight, Eye, Check, CheckCircle2, Info, Loader2, Send, Sparkles, X, Trash2, RefreshCw } from 'lucide-react';
+import { ChevronRight, Eye, Check, CheckCircle2, History, Info, Loader2, Send, Sparkles, X, Trash2, RefreshCw } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../ui/tooltip';
 import { Button } from '../../buttons/Button';
 import { Checkbox } from '../../ui/checkbox';
@@ -40,6 +40,165 @@ export function EmptyTab({ label }: { label: string }) {
       <p className="text-sm text-gray-500">No {label} yet</p>
       <p className="text-xs text-gray-400 mt-1">Nothing has been added for this customer.</p>
     </div>
+  );
+}
+
+/**
+ * Version footer shared by the Outcomes/Tasks/Visits tabs, now with a
+ * "History" button centred underneath, opening a design simulation of the
+ * real "Careplan Version History" modal (screenshot supplied directly by
+ * the user) — View/Revert per row aren't wired to anything real yet.
+ */
+export function CareManagementFooter() {
+  const [historyOpen, setHistoryOpen] = useState(false);
+  return (
+    <div className="pt-2 space-y-2">
+      <p className="text-xs text-center text-gray-400">Version 7 was modified 4 months ago by Sharon Hunter</p>
+      <div className="flex justify-center">
+        <Button
+          variant="tertiary"
+          size="sm"
+          icon={<History className="w-3.5 h-3.5" />}
+          onClick={() => setHistoryOpen(true)}
+        >
+          History
+        </Button>
+      </div>
+      <CareplanVersionHistoryModal open={historyOpen} onOpenChange={setHistoryOpen} />
+    </div>
+  );
+}
+
+// ─── Careplan version history ───────────────────────────────────────────────
+//
+// Page 1's rows are copied verbatim from a screenshot of the real, live
+// version of this modal (supplied directly by the user) — same dates,
+// employees, sources and version numbers, just with the "Actions" dropdown
+// replaced by explicit View/Revert buttons per the ask. Versions 47 down to
+// 1 (pages 2–6) are generated below since the reference only showed page 1;
+// 57 total rows at 10/page lands on exactly the same 6 pages shown live.
+interface VersionHistoryRow {
+  version: number;
+  dateModified: string;
+  dateReceived: string;
+  employee: string;
+  source: string;
+}
+
+const VERSION_HISTORY_PAGE_SIZE = 10;
+
+const VERSION_HISTORY_PAGE_ONE: VersionHistoryRow[] = [
+  { version: 57, dateModified: '23/09/2026 08:31', dateReceived: '23/09/2026 08:31', employee: 'Admin', source: 'Web 1.211.0' },
+  { version: 56, dateModified: '22/09/2026 12:20', dateReceived: '22/09/2026 12:20', employee: 'PASS Roster', source: 'PASSroster' },
+  { version: 55, dateModified: '22/09/2026 12:19', dateReceived: '22/09/2026 12:19', employee: 'PASS Roster', source: 'PASSroster' },
+  { version: 54, dateModified: '22/09/2026 12:18', dateReceived: '22/09/2026 12:18', employee: 'PASS Roster', source: 'PASSroster' },
+  { version: 53, dateModified: '21/09/2026 16:41', dateReceived: '21/09/2026 16:41', employee: 'Admin', source: 'web' },
+  { version: 52, dateModified: '21/09/2026 14:27', dateReceived: '21/09/2026 14:27', employee: 'Admin', source: 'Web 1.214.0-SNAPSHOT' },
+  { version: 51, dateModified: '17/09/2026 10:07', dateReceived: '17/09/2026 10:07', employee: 'Admin', source: 'web' },
+  { version: 50, dateModified: '16/09/2026 13:30', dateReceived: '16/09/2026 13:30', employee: 'Admin', source: 'Web 1.214.0-SNAPSHOT' },
+  { version: 49, dateModified: '16/09/2026 14:27', dateReceived: '16/09/2026 14:27', employee: 'Admin', source: 'Web 1.214.0-SNAPSHOT' },
+  { version: 48, dateModified: '11/09/2026 17:18', dateReceived: '11/09/2026 17:18', employee: 'Admin', source: 'web' },
+];
+
+// Older rows (versions 47→1) aren't part of the reference screenshot — filled
+// in with a plausible, deterministic continuation so pages 2–6 aren't empty.
+const OLDER_HISTORY_SOURCES = ['web', 'PASSroster', 'Web 1.211.0', 'Web 1.214.0-SNAPSHOT'] as const;
+const VERSION_HISTORY_OLDER: VersionHistoryRow[] = Array.from({ length: 47 }, (_, i) => {
+  const version = 47 - i;
+  const daysBack = 12 + i * 3;
+  const date = new Date(2026, 8, 23);
+  date.setDate(date.getDate() - daysBack);
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const hh = String((version * 7 + 8) % 18 + 6).padStart(2, '0');
+  const min = String((version * 11) % 60).padStart(2, '0');
+  const dateStr = `${dd}/${mm}/${date.getFullYear()} ${hh}:${min}`;
+  const source = OLDER_HISTORY_SOURCES[version % OLDER_HISTORY_SOURCES.length];
+  const employee = source === 'PASSroster' ? 'PASS Roster' : 'Admin';
+  return { version, dateModified: dateStr, dateReceived: dateStr, employee, source };
+});
+
+const VERSION_HISTORY: VersionHistoryRow[] = [...VERSION_HISTORY_PAGE_ONE, ...VERSION_HISTORY_OLDER];
+
+function CareplanVersionHistoryModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [page, setPage] = useState(1);
+  const pageCount = Math.ceil(VERSION_HISTORY.length / VERSION_HISTORY_PAGE_SIZE);
+  const rows = VERSION_HISTORY.slice((page - 1) * VERSION_HISTORY_PAGE_SIZE, page * VERSION_HISTORY_PAGE_SIZE);
+
+  // Single path for every way the dialog can close (X button, Esc, overlay
+  // click, or the footer's own Close button below) so the page reset can't
+  // be bypassed by whichever one the user happens to use.
+  const handleOpenChange = (next: boolean) => {
+    onOpenChange(next);
+    if (!next) setPage(1);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Careplan Version History</DialogTitle>
+        </DialogHeader>
+
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2.5 text-left font-medium text-gray-700 border-b border-gray-200">Date Modified</th>
+                <th className="px-4 py-2.5 text-left font-medium text-gray-700 border-b border-gray-200">Date Received</th>
+                <th className="px-4 py-2.5 text-left font-medium text-gray-700 border-b border-gray-200">Employee</th>
+                <th className="px-4 py-2.5 text-left font-medium text-gray-700 border-b border-gray-200">Source</th>
+                <th className="px-4 py-2.5 text-left font-medium text-gray-700 border-b border-gray-200">Version</th>
+                <th className="px-4 py-2.5 border-b border-gray-200" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={row.version} className={i !== rows.length - 1 ? 'border-b border-gray-200' : ''}>
+                  <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.dateModified}</td>
+                  <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.dateReceived}</td>
+                  <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.employee}</td>
+                  <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.source}</td>
+                  <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.version}</td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="tertiary" size="sm">View</Button>
+                      <Button variant="secondary" size="sm">Revert</Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {pageCount > 1 && (
+          <div className="flex justify-center items-center gap-1.5">
+            <Button variant="tertiary" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+              Previous
+            </Button>
+            {Array.from({ length: pageCount }, (_, i) => i + 1).map(n => (
+              <Button
+                key={n}
+                variant={n === page ? 'primary' : 'tertiary'}
+                size="sm"
+                className="w-9 px-0"
+                onClick={() => setPage(n)}
+              >
+                {n}
+              </Button>
+            ))}
+            <Button variant="tertiary" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>
+              Next
+            </Button>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="tertiary" onClick={() => handleOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
