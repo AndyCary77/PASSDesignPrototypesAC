@@ -9,18 +9,47 @@ import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, CareManagementFooter, l
 
 const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+/** A "Title" / "Type" style field: bold label above, plain value below — the pairing used throughout the Visit Details/Visit Schedule panels. */
+function SummaryField({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start py-2.5 border-b border-gray-200 last:border-b-0">
-      <span className="w-44 flex-shrink-0 text-sm text-gray-500">{label}</span>
-      <div className="flex-1 text-sm font-medium text-gray-900">{children}</div>
+    <div>
+      <div className="text-sm font-semibold text-gray-900">
+        {label} {sublabel && <span className="font-normal text-gray-400">{sublabel}</span>}
+      </div>
+      <div className="text-sm text-gray-700 mt-1">{children}</div>
     </div>
   );
 }
 
-function DayPill({ label, active }: { label: string; active: boolean }) {
+/** Titled bordered panel — "Visit Details"/"Visit Schedule"/"Scheduled Times"/"Care Groups" all use this same shell. */
+function SummaryPanel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className={`w-10 h-10 flex items-center justify-center rounded-full text-xs font-semibold border transition-colors ${
+    <div>
+      <h4 className="text-sm font-semibold text-gray-900 mb-3">{title}</h4>
+      <div className="border border-gray-200 rounded-lg p-6">{children}</div>
+    </div>
+  );
+}
+
+// isToday isn't part of the data model — it's derived live from the real
+// calendar date each render, purely as a visual "this is today" cue on the
+// schedule's day-of-week picker (matching the reference screenshot).
+//
+// Sized by `aspect-square` + `w-full` rather than a fixed w/h — each pill
+// fills whatever width its grid cell (1/7th of the row) happens to be and
+// derives its height from that, so the row always spans the full
+// available width, stays perfectly circular, and scales smoothly as the
+// column narrows (e.g. resizing the window) instead of wrapping or
+// overflowing at a fixed size. The label's font-size is tied to the
+// row's own width via a container-query `cqw` unit (needs `@container`
+// on the row, set where this is used) rather than a fixed size, so
+// "Mon"/"Tue" etc. shrink in step with the circle instead of overflowing
+// it once the circles get small — verified down to an 800px viewport.
+function DayPill({ label, active, isToday }: { label: string; active: boolean; isToday: boolean }) {
+  return (
+    <div className={`aspect-square w-full flex items-center justify-center rounded-full text-[clamp(6px,3.2cqw,10px)] border transition-colors ${
+      isToday ? 'font-bold underline' : 'font-semibold'
+    } ${
       active
         ? 'bg-[rgb(154,38,214)] border-[rgb(154,38,214)] text-white'
         : 'bg-white border-gray-200 text-gray-400'
@@ -96,7 +125,11 @@ function VisitCard({ visit, onSelect }: { visit: CareVisit; onSelect: () => void
 
 function VisitEditForm({ visit }: { visit: CareVisit }) {
   const { TASKS } = useCareData();
-  const cadenceLabel = visit.cadence === 'Alternate week' ? 'BiWeekly' : visit.cadence;
+  // 'Alternate week' visits repeat every 2 weeks; everything else here is
+  // weekly — matches the "Every {n} week(s)" wording from the real
+  // implementation rather than the old internal 'BiWeekly' label.
+  const everyWeeks = visit.cadence === 'Alternate week' ? 2 : 1;
+  const todayIndex = (new Date().getDay() + 6) % 7; // JS getDay() is Sun=0; DAYS_ABBR is Mon-first.
 
   return (
     <div>
@@ -104,49 +137,79 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-5 space-y-5">
 
-          {/* Read-only visit summary */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-gray-900">{visit.title}</h3>
-              <ActiveBadge status={visit.status} />
-            </div>
-            <div className="grid grid-cols-2 gap-x-8">
-              <div>
-                <FieldRow label="Visit type">{visit.visitType}</FieldRow>
-                <FieldRow label="Careworkers required">{visit.numEmployees}</FieldRow>
-                <FieldRow label="Time">
-                  {visit.startTime} – {visit.endTime} ({visit.duration})
-                </FieldRow>
-              </div>
-              <div>
-                <FieldRow label="Start date">
-                  <div className="flex items-center gap-1.5">
-                    <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
-                    <span>{visit.startDate}</span>
-                  </div>
-                </FieldRow>
-                <FieldRow label="End date">
-                  <div className="flex items-center gap-1.5">
-                    <Repeat2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                    <span>Ongoing</span>
-                  </div>
-                </FieldRow>
-                <FieldRow label="Cadence">
-                  <div className="space-y-2">
-                    <div>{cadenceLabel}</div>
+          {/* Read-only visit summary — left panels take 2/3 of the width,
+              right 1/3, so the columns line up with the 3-column Tasks
+              grid below (and a single-week cadence's day pills fit on the
+              same row as "Every"). */}
+          <div className="grid grid-cols-[2fr_1fr] gap-x-8 gap-y-5">
+            <div className="space-y-5">
+              <SummaryPanel title="Visit Details">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+                  <SummaryField label="Title">{visit.title}</SummaryField>
+                  <SummaryField label="Type">{visit.visitType}</SummaryField>
+                  <SummaryField label="No. Employees">{visit.numEmployees}</SummaryField>
+                  <SummaryField label="Preferred Employees" sublabel="(In order of preference)">—</SummaryField>
+                </div>
+              </SummaryPanel>
+
+              <SummaryPanel title="Visit Schedule">
+                {/* One grid for the whole panel (not just the Begins on/
+                    Finishes on row) so the day-pill column always starts
+                    at the same x as "Finishes on" above it, whether it's
+                    a single row (weekly) or several stacked rows
+                    (biweekly+) — a plain flex row here previously let the
+                    pills drift depending on how wide the "Every" label
+                    happened to be. */}
+                <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                  <SummaryField label="Begins on">{visit.startDate}</SummaryField>
+                  <SummaryField label="Finishes on">Ongoing</SummaryField>
+                  <SummaryField label="Every">{everyWeeks} week{everyWeeks > 1 ? 's' : ''}</SummaryField>
+                  <div className="space-y-3">
                     {visit.weeks.map((week, wi) => (
-                      <div key={wi} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400 w-14 shrink-0">Week {wi + 1}</span>
-                        <div className="flex gap-1.5">
+                      <div key={wi}>
+                        {visit.weeks.length > 1 && (
+                          <div className="text-xs text-gray-400 mb-1.5">Week {wi + 1}</div>
+                        )}
+                        <div className="@container grid grid-cols-7 gap-1.5 w-full">
                           {DAYS_ABBR.map((day, di) => (
-                            <DayPill key={day} label={day.slice(0, 3)} active={week.activeDays.includes(di)} />
+                            <DayPill key={day} label={day.slice(0, 3)} active={week.activeDays.includes(di)} isToday={di === todayIndex} />
                           ))}
                         </div>
                       </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </FieldRow>
+              </SummaryPanel>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">Status</h4>
+                {visit.status === 'active' ? (
+                  <span className="inline-block text-sm font-medium px-4 py-2 rounded-md" style={{ backgroundColor: '#D4EBC3', color: '#2D5F1E' }}>
+                    Active
+                  </span>
+                ) : (
+                  <span className="inline-block text-sm font-medium px-4 py-2 rounded-md bg-gray-100 text-gray-500">
+                    Inactive
+                  </span>
+                )}
               </div>
+
+              <SummaryPanel title="Scheduled Times">
+                <p className="text-sm text-gray-500">
+                  at {visit.startTime} for {visit.duration} until {visit.endTime}
+                </p>
+              </SummaryPanel>
+
+              <SummaryPanel title="Care Groups">
+                <input
+                  type="text"
+                  disabled
+                  placeholder="Start typing to select a care group"
+                  className="w-full text-sm text-gray-400 placeholder:text-gray-400 outline-none bg-transparent cursor-default"
+                />
+              </SummaryPanel>
             </div>
           </div>
 
