@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2 } from 'lucide-react';
+import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2, Plus } from 'lucide-react';
 import { CalendarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { useCareManagement } from './CareManagementContext';
@@ -45,9 +45,14 @@ function SummaryPanel({ title, children }: { title: string; children: React.Reac
 // on the row, set where this is used) rather than a fixed size, so
 // "Mon"/"Tue" etc. shrink in step with the circle instead of overflowing
 // it once the circles get small — verified down to an 800px viewport.
+// Coefficient/ceiling chosen to match this app's original 40px-circle/
+// 12px-label ratio (~0.3 of the diameter): at a ~316px row (7 circles +
+// 6 gaps, diameter ~40px, the old fixed size), 4.2cqw ≈ 13px — so normal/
+// wide screens now render at roughly that original size instead of
+// plateauing at a noticeably smaller cap.
 function DayPill({ label, active, isToday }: { label: string; active: boolean; isToday: boolean }) {
   return (
-    <div className={`aspect-square w-full flex items-center justify-center rounded-full text-[clamp(6px,3.2cqw,10px)] border transition-colors ${
+    <div className={`aspect-square w-full flex items-center justify-center rounded-full text-[clamp(7px,4.2cqw,13px)] border transition-colors ${
       isToday ? 'font-bold underline' : 'font-semibold'
     } ${
       active
@@ -130,6 +135,22 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
   // implementation rather than the old internal 'BiWeekly' label.
   const everyWeeks = visit.cadence === 'Alternate week' ? 2 : 1;
   const todayIndex = (new Date().getDay() + 6) % 7; // JS getDay() is Sun=0; DAYS_ABBR is Mon-first.
+  // Defaults to on, matching this app's existing tab-level "Hide inactive"
+  // checkbox convention (checked by default) elsewhere in Care Management.
+  const [hideInactiveTasks, setHideInactiveTasks] = useState(true);
+  // Single source of truth for the checkbox's checked state, the
+  // selector row's colour tint, AND the Task ordering list below —
+  // previously the checkbox used `defaultChecked` (uncontrolled) while
+  // the tint and the ordering list both read `visit.taskIds` directly, so
+  // clicking a checkbox changed its own tick but nothing else, silently
+  // desyncing all three the moment anyone actually used it. An ordered
+  // array (not a Set) so the existing order is preserved and a newly
+  // checked task simply appends to the end, matching what "adding it to
+  // the plan" should do.
+  const [orderedTaskIds, setOrderedTaskIds] = useState<string[]>(visit.taskIds);
+  const toggleTask = (taskId: string) => {
+    setOrderedTaskIds(prev => (prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]));
+  };
 
   return (
     <div>
@@ -215,28 +236,75 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
 
           {/* Task selector */}
           <div>
-            <label className={labelClass}>Tasks</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-gray-700">Tasks</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hideInactiveTasks}
+                    onChange={e => setHideInactiveTasks(e.target.checked)}
+                    className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer"
+                  />
+                  Hide inactive tasks
+                </label>
+                {/* Matches the real system's "New task" control above the
+                    category columns — unwired here, same as History/
+                    Discard draft elsewhere in this prototype. */}
+                <Button variant="secondary" size="sm" icon={<Plus className="w-3.5 h-3.5" />}>
+                  New task
+                </Button>
+              </div>
+            </div>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <div className="grid grid-cols-3 divide-x divide-gray-200">
                 {TASK_CATEGORIES.map(cat => {
-                  const catTasks = TASKS.filter(t => t.category === cat);
-                  const { Icon } = CATEGORY_CONFIG[cat];
+                  // Inactive tasks sort to the bottom of their own column
+                  // rather than being interleaved at their alphabetical/
+                  // insertion position — Array.sort is stable, so within
+                  // "active" and within "inactive" the original order is
+                  // otherwise preserved.
+                  const catTasks = TASKS
+                    .filter(t => t.category === cat)
+                    .filter(t => !hideInactiveTasks || t.status !== 'inactive')
+                    .sort((a, b) => (a.status === 'inactive' ? 1 : 0) - (b.status === 'inactive' ? 1 : 0));
+                  const { Icon, bg, text, border, bgFaded, borderFaded } = CATEGORY_CONFIG[cat];
                   return (
                     <div key={cat} className="p-4">
                       <p className="text-sm font-semibold text-gray-900 mb-3">{cat}</p>
                       <div className="space-y-2">
                         {catTasks.length === 0 && <p className="text-xs text-gray-300 italic">None</p>}
                         {catTasks.map(task => {
-                          const checked = visit.taskIds.includes(task.id);
+                          const checked = orderedTaskIds.includes(task.id);
+                          const isInactive = task.status === 'inactive';
                           return (
-                            <label key={task.id} className={`flex items-center gap-2.5 cursor-pointer group ${!checked ? 'opacity-40' : ''}`}>
+                            <label
+                              key={task.id}
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer group transition-colors ${
+                                checked ? `${bg} ${border}` : `${bgFaded} ${borderFaded}`
+                              }`}
+                            >
                               <input
                                 type="checkbox"
-                                defaultChecked={checked}
-                                className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer"
+                                checked={checked}
+                                onChange={() => toggleTask(task.id)}
+                                className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer flex-shrink-0"
                               />
-                              <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                              <span className="text-sm text-gray-700 group-hover:text-gray-900">{task.title}</span>
+                              <Icon className={`w-4 h-4 flex-shrink-0 ${checked ? text : 'text-gray-400'}`} />
+                              <span className={`text-sm flex-1 ${checked ? text : 'text-gray-700'} group-hover:text-gray-900`}>
+                                {task.title}
+                              </span>
+                              {/* Distinct from the plain "not assigned to
+                                  this visit" dimming above — without this,
+                                  an active-but-unchecked task and a
+                                  genuinely inactive one were visually
+                                  identical, and the "Hide inactive tasks"
+                                  toggle only ever touched the latter. */}
+                              {isInactive && (
+                                <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">
+                                  Inactive
+                                </span>
+                              )}
                             </label>
                           );
                         })}
@@ -253,14 +321,20 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
             <label className={labelClass}>Task ordering</label>
             <p className="text-xs text-[rgb(154,38,214)] mb-3">Reorder the tasks using the position buttons</p>
             <div className="space-y-2">
-              {visit.taskIds.map((tid, idx) => {
+              {orderedTaskIds.map((tid, idx) => {
                 const task = TASKS.find(t => t.id === tid);
                 if (!task) return null;
                 const { bg, text, border } = CATEGORY_CONFIG[task.category];
                 return (
-                  <div key={tid} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className={`flex items-center gap-3 px-4 py-2 ${bg} ${border} border-b`}>
-                      <span className="text-xs text-gray-400 w-5">{idx + 1}.</span>
+                  // No `overflow-hidden` on the card itself (moved rounding
+                  // onto the header/description directly instead) so the
+                  // number badge below can actually overlap the left edge
+                  // rather than getting clipped by this card's own corner.
+                  <div key={tid} className="border border-gray-200 rounded-lg">
+                    {/* `relative` lives on the header row specifically
+                        (not the whole card) so the badge centres on just
+                        this row, not the row+description block below. */}
+                    <div className={`relative flex items-center gap-3 pl-6 pr-4 py-2 rounded-t-lg ${bg} ${border} border-b`}>
                       <span className={`text-sm font-semibold ${text}`}>{task.title}</span>
                       <ActiveBadge status="active" />
                       <div className="ml-auto flex gap-1">
@@ -271,8 +345,20 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
                         ))}
                         <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer">⋮</button>
                       </div>
+                      {/* Position number — bold, white-filled, bordered in
+                          the task's own category hue, overlapping the
+                          row's left edge by half its own width
+                          (`-translate-x-1/2`, which is relative to the
+                          badge's own size) so it reads as a strong
+                          external marker rather than another small inline
+                          label. */}
+                      <div
+                        className={`absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border-2 ${border} flex items-center justify-center text-sm font-bold ${text} shadow-sm`}
+                      >
+                        {idx + 1}
+                      </div>
                     </div>
-                    <p className="px-4 py-2 text-sm text-gray-600">{task.description}</p>
+                    <p className="px-4 py-2 text-sm text-gray-600 rounded-b-lg">{task.description}</p>
                   </div>
                 );
               })}

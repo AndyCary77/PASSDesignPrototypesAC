@@ -25,13 +25,24 @@ export const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
 
 export const CATEGORY_CONFIG: Record<TaskCategory, {
   bg: string; text: string; border: string; headerBg: string; circleBg: string; Icon: React.ComponentType<{ className?: string }>;
+  /**
+   * Faded version of `bg`/`border`, for an unchecked task row in the
+   * Tasks selector (see VisitsTab) — the badge tint stays visible rather
+   * than disappearing entirely, it's just lighter. Declared as complete
+   * literal classes (not built at runtime from `bg`/`border` via string
+   * concatenation) because Tailwind statically scans source text for
+   * whole class names — a class assembled from a JS template literal at
+   * runtime is invisible to it and silently generates no CSS, the same
+   * gotcha already hit once this session with a runtime `accent-[...]`.
+   */
+  bgFaded: string; borderFaded: string;
 }> = {
-  General:           { bg: 'bg-yellow-50',  text: 'text-yellow-800',  border: 'border-yellow-200', headerBg: 'bg-yellow-50',  circleBg: 'bg-yellow-200',  Icon: TickSolidIcon },
-  Nutrition:         { bg: 'bg-[#edf7e9]',  text: 'text-[#2D5F1E]',   border: 'border-[#cce6c3]',  headerBg: 'bg-[#edf7e9]',  circleBg: 'bg-[#d5eccc]',  Icon: NutritionSolidIcon },
-  Medications:       { bg: 'bg-red-50',     text: 'text-red-800',     border: 'border-red-200',    headerBg: 'bg-red-50',     circleBg: 'bg-red-200',     Icon: PlusSolidIcon },
-  Hydration:         { bg: 'bg-cyan-50',    text: 'text-cyan-800',    border: 'border-cyan-200',   headerBg: 'bg-cyan-50',    circleBg: 'bg-cyan-200',    Icon: HydrateSolidIcon },
-  'Outcome Tracking':{ bg: 'bg-orange-50',  text: 'text-orange-800',  border: 'border-orange-200', headerBg: 'bg-orange-50',  circleBg: 'bg-orange-200',  Icon: StarSolidIcon },
-  Observations:      { bg: 'bg-purple-50',  text: 'text-purple-800',  border: 'border-purple-200', headerBg: 'bg-purple-50',  circleBg: 'bg-purple-200',  Icon: Eye },
+  General:           { bg: 'bg-yellow-50',  text: 'text-yellow-800',  border: 'border-yellow-200', headerBg: 'bg-yellow-50',  circleBg: 'bg-yellow-200',  Icon: TickSolidIcon,      bgFaded: 'bg-yellow-50/50',  borderFaded: 'border-yellow-200/50' },
+  Nutrition:         { bg: 'bg-[#edf7e9]',  text: 'text-[#2D5F1E]',   border: 'border-[#cce6c3]',  headerBg: 'bg-[#edf7e9]',  circleBg: 'bg-[#d5eccc]',  Icon: NutritionSolidIcon, bgFaded: 'bg-[#edf7e9]/50',  borderFaded: 'border-[#cce6c3]/50' },
+  Medications:       { bg: 'bg-red-50',     text: 'text-red-800',     border: 'border-red-200',    headerBg: 'bg-red-50',     circleBg: 'bg-red-200',     Icon: PlusSolidIcon,      bgFaded: 'bg-red-50/50',     borderFaded: 'border-red-200/50' },
+  Hydration:         { bg: 'bg-cyan-50',    text: 'text-cyan-800',    border: 'border-cyan-200',   headerBg: 'bg-cyan-50',    circleBg: 'bg-cyan-200',    Icon: HydrateSolidIcon,   bgFaded: 'bg-cyan-50/50',    borderFaded: 'border-cyan-200/50' },
+  'Outcome Tracking':{ bg: 'bg-orange-50',  text: 'text-orange-800',  border: 'border-orange-200', headerBg: 'bg-orange-50',  circleBg: 'bg-orange-200',  Icon: StarSolidIcon,      bgFaded: 'bg-orange-50/50',  borderFaded: 'border-orange-200/50' },
+  Observations:      { bg: 'bg-purple-50',  text: 'text-purple-800',  border: 'border-purple-200', headerBg: 'bg-purple-50',  circleBg: 'bg-purple-200',  Icon: Eye,                bgFaded: 'bg-purple-50/50',  borderFaded: 'border-purple-200/50' },
 };
 
 export function EmptyTab({ label }: { label: string }) {

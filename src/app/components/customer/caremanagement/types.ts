@@ -138,6 +138,361 @@ export const TASKS: CareTask[] = [
     description: 'Please ask me if I have taken my medication and document my response. Bluebird care are not responsible for my medication. Family will check the care notes',
     startDate: '25/11/2025', outcomeIds: ['o3', 'o4'], visitIds: ['v1'], status: 'active',
   },
+  // ─── "Busy visit" tasks (t11+) — a deliberately dense, realistic set
+  // transcribed from a real live task-selector export, added purely to
+  // stress-test the Visit Schedule/Tasks layout with the kind of long
+  // titles, ALL-CAPS emphasis, and mixed active/inactive status a busy
+  // real care plan actually has. See visit 'v3'. ───────────────────────
+  {
+    id: 't11', title: '** RECORDING FINANCE / SHOPPING / RECEIPTS / HANDLING CASH **', category: 'General',
+    description: 'Please record any money handled for shopping, and keep all receipts in the folder in the kitchen drawer.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: [], status: 'active',
+  },
+  {
+    id: 't12', title: '*** OBSERVE CHANGES ***', category: 'General',
+    description: 'Please observe and report any changes in mood, mobility or skin condition to the office immediately.',
+    startDate: '01/09/2026', outcomeIds: ['o3'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't13', title: '*** ORDER MEDICATION *** (Once a month on shopping call)', category: 'General',
+    description: 'Please order repeat medication from the pharmacy once a month during the shopping call.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'active',
+  },
+  {
+    id: 't14', title: '*** SAFETY CHECKS *** (Ensure everything is on my RIGHT SIDE)', category: 'General',
+    description: 'Please ensure the call bell, drinks and any other essentials are placed on the right-hand side within easy reach.',
+    startDate: '01/09/2026', outcomeIds: ['o3'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't15', title: 'Bedding', category: 'General',
+    description: 'Please change and launder bedding as required.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't16', title: 'Catheter Care (CHANGE leg bag every MONDAY)', category: 'General',
+    description: 'Please observe the catheter, tubing and bag. Change the leg bag every Monday and report any concerns to the office.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't17', title: 'Consent & PPE', category: 'General',
+    description: 'Please confirm consent before providing personal care and wear appropriate PPE throughout.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't18', title: 'Continence Care', category: 'General',
+    description: 'Please assist with continence care, changing pads as required and maintaining dignity throughout.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't19', title: 'Continence Care - Bed Bound at present all care takes place in bed', category: 'General',
+    description: 'This individual is currently bed bound — please carry out all continence care in bed rather than in the bathroom.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: [], status: 'inactive',
+  },
+  {
+    id: 't20', title: 'Hoist Transfer - Currently out of use - Bed Bound', category: 'General',
+    description: 'The hoist is not currently in use while this individual remains bed bound.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: [], status: 'inactive',
+  },
+  {
+    id: 't21', title: 'Housekeeping Laundry & Bedding', category: 'General',
+    description: 'Please carry out general housekeeping, including laundry and bedding changes.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't22', title: 'Laundry', category: 'General',
+    description: 'Please put on a load of laundry and hang out/fold any that is already washed.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: [], status: 'inactive',
+  },
+  {
+    id: 't23', title: 'LUNCH - Request to go to bed', category: 'General',
+    description: 'If requested after lunch, please assist this individual back to bed.',
+    startDate: '01/09/2026', outcomeIds: ['o2'], visitIds: [], status: 'inactive',
+  },
+  {
+    id: 't24', title: 'Personal Care (Bed Bound)', category: 'General',
+    description: 'Please carry out personal care in bed, following the moving and handling plan.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't25', title: 'Personal Care / Strip Wash', category: 'General',
+    description: 'Please assist with a full strip wash as part of personal care.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: [], status: 'inactive',
+  },
+  {
+    id: 't26', title: 'Pet Care - Ensure dogs get fed on every call.', category: 'General',
+    description: 'Please ensure the dogs are fed fresh water and food on every call.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't27', title: 'Receipts', category: 'General',
+    description: 'Please keep receipts for anything purchased and leave them in the folder in the kitchen drawer.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: [], status: 'active',
+  },
+  {
+    id: 't28', title: 'Repose Wedge', category: 'General',
+    description: 'Please use the repose wedge to assist with repositioning and pressure relief.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't29', title: 'Repositioning', category: 'General',
+    description: 'Please reposition this individual regularly to reduce the risk of pressure sores.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't30', title: 'Shopping Call', category: 'General',
+    description: 'Please complete the weekly shopping list and put items away where they belong.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: [], status: 'active',
+  },
+  {
+    id: 't31', title: 'Skin integrity *Baby wipes not to be used directly on skin', category: 'General',
+    description: 'Please check skin integrity at each visit. Baby wipes must not be used directly on the skin — use the prescribed barrier cream instead.',
+    startDate: '01/09/2026', outcomeIds: ['o1'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't32', title: 'Wellbeing & Safety', category: 'General',
+    description: 'Please check general wellbeing and safety in the home at every visit.',
+    startDate: '01/09/2026', outcomeIds: ['o3'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't33', title: 'XX Care Plan Updates XX', category: 'General',
+    description: 'Placeholder marker used by the office to flag that this care plan has pending updates.',
+    startDate: '01/09/2026', outcomeIds: ['o4'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't34', title: '100ml Amoxicillin 250mg/5ml', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '100ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't35', title: '100ml Metformin 500mg/5ml oral solution', category: 'Medications',
+    description: 'Administer as prescribed with food.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '100ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  // The rest of the real Medications list, plus Nutrition — both were cut
+  // off by a 50,000-character truncation on the original pasted export
+  // (it stopped mid-way through Medications, before Nutrition even
+  // appeared), so these were missing from the first pass. Transcribed
+  // from the follow-up screenshot instead, matching its checked/unchecked
+  // and Inactive-badge states exactly (see `v3`'s taskIds below for which
+  // of these are actually checked for the Busy visit).
+  {
+    id: 't36', title: '150ml atorvastatin 20mg/5ml', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '150ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't37', title: '150ml Atrovastatin 20mg', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'active',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '150ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't38', title: '150ml Folic Acid 5mg/5ml', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '150ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't39', title: '150ml metformin 1g/5ml oral', category: 'Medications',
+    description: 'Administer as prescribed with food.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '150ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't40', title: '150ml Ramipril 2.5mg/5ml oral', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '150ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't41', title: '300ml levetiracem 100mg/1ml', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '300ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't42', title: '70ml Clarithromycin', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '70ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't43', title: 'Adcal-d3 1500mg/400 unit', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't44', title: 'Adcal-d3 dissolve', category: 'Medications',
+    description: 'Dissolve in water and administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Effervescent', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't45', title: 'Amoxicillin 250mg/5ml oral suspension', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '5ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't46', title: 'Amoxicillin 500mg', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't47', title: 'Amoxicillin 500mg capsules', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Capsule', route: 'Oral', dosage: '1 capsule', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't48', title: 'Amoxicillin Sugarfree Suspension', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'active',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: '5ml', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't49', title: 'Apixaban 2.5mg', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't50', title: 'Betamethasone 0.1% Fusidic Acid 2% Cream', category: 'Medications',
+    description: 'Apply as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Cream', route: 'Cutaneous', dosage: 'Apply thinly', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't51', title: 'Bisoprolol 2.5mg', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't52', title: 'Buscopan 10mg tablets', category: 'Medications',
+    description: 'Administer as prescribed, PRN.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: true },
+  },
+  {
+    id: 't53', title: 'Cavilon barrier cream', category: 'Medications',
+    description: 'Apply as prescribed to protect skin integrity.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Cream', route: 'Cutaneous', dosage: 'Apply thinly', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't54', title: 'Cavilon no sting barrier cream', category: 'Medications',
+    description: 'Apply as prescribed to protect skin integrity.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Cream', route: 'Cutaneous', dosage: 'Apply thinly', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't55', title: 'Feeding', category: 'Nutrition',
+    description: 'Please assist with feeding at mealtimes as required.',
+    startDate: '01/09/2026', outcomeIds: ['o2'], visitIds: ['v3'], status: 'active',
+  },
+  {
+    id: 't56', title: 'Meals - Level 6 Food Diet', category: 'Nutrition',
+    description: 'Please prepare meals in line with the Level 6 (soft/bite-sized) food diet — see SALT guidance in the care file.',
+    startDate: '01/09/2026', outcomeIds: ['o2'], visitIds: ['v3'], status: 'active',
+  },
+  // Rest of the real Medications list, plus the Hydration task — from the
+  // "bottom part" screenshot the user sent after the first pass was
+  // already found to be missing Medications/Nutrition rows.
+  {
+    id: 't57', title: 'Hyoscine Butylbromide 10mg tablets', category: 'Medications',
+    description: 'Administer as prescribed, PRN.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: true },
+  },
+  {
+    id: 't58', title: 'Lansoprazole 30mg', category: 'Medications',
+    description: 'Administer as prescribed, before breakfast.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Capsule', route: 'Oral', dosage: '1 capsule', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't59', title: 'Lansoprazole 30mg gastro-resistant capsules', category: 'Medications',
+    description: 'Administer as prescribed, before breakfast.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Capsule', route: 'Oral', dosage: '1 capsule', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't60', title: 'Levetiracetam 100mg/ml oral solution sugar free', category: 'Medications',
+    description: 'Administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Liquid', route: 'Oral', dosage: 'As prescribed', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't61', title: 'Macrogol Compound SF satchets', category: 'Medications',
+    description: 'Dissolve in water and administer as prescribed.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Sachet', route: 'Oral', dosage: '1 sachet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't62', title: 'Mirtazapine 45mg orodisp tablet', category: 'Medications',
+    description: 'Administer as prescribed, at night.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'active',
+    medicationDetails: { form: 'Orodispersible tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't63', title: 'Mirtazapine 45mg Orodispersible tablets', category: 'Medications',
+    description: 'Administer as prescribed, at night.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Orodispersible tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't64', title: 'Mirtazapine 45mg orodispersible tablets', category: 'Medications',
+    description: 'Administer as prescribed, at night.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Orodispersible tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't65', title: 'Nitrofurantoin 100mg tablets', category: 'Medications',
+    description: 'Administer as prescribed for the current course only.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't66', title: 'Paracetamol 500mg', category: 'Medications',
+    description: 'Administer as prescribed, PRN.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: ['v3'], status: 'active',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '2 tablets', controlCategory: 'N/A', supportRequired: 'Administer', prn: true },
+  },
+  {
+    id: 't67', title: 'Paracetamol 500mg caplets', category: 'Medications',
+    description: 'Administer as prescribed, PRN.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Caplet', route: 'Oral', dosage: '2 caplets', controlCategory: 'N/A', supportRequired: 'Administer', prn: true },
+  },
+  {
+    id: 't68', title: 'Promethazine Hydrochloride 25mg tablets', category: 'Medications',
+    description: 'Administer as prescribed, PRN.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Tablet', route: 'Oral', dosage: '1 tablet', controlCategory: 'N/A', supportRequired: 'Administer', prn: true },
+  },
+  {
+    id: 't69', title: 'Salbutamol 100mcg/Inhaler', category: 'Medications',
+    description: 'Administer as prescribed, PRN.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Inhaler', route: 'Inhaled', dosage: 'As prescribed', controlCategory: 'N/A', supportRequired: 'Administer', prn: true },
+  },
+  {
+    id: 't70', title: 'Sorbaderm Spray - please read description', category: 'Medications',
+    description: 'Apply as prescribed — see full product description before use.',
+    startDate: '01/09/2026', outcomeIds: ['o5'], visitIds: [], status: 'inactive',
+    medicationDetails: { form: 'Spray', route: 'Cutaneous', dosage: 'Apply as directed', controlCategory: 'N/A', supportRequired: 'Administer', prn: false },
+  },
+  {
+    id: 't71', title: 'Fluids ** Level 1 Fluid Diet - PLEASE NOTE THAT DRINKS MUST BE FRESH ON EACH VISIT DUE TO THICKENER PRESENT **', category: 'Hydration',
+    description: 'Please prepare fluids in line with the Level 1 fluid diet. Drinks must be freshly thickened at each visit — do not carry over from a previous visit.',
+    startDate: '01/09/2026', outcomeIds: ['o2'], visitIds: ['v3'], status: 'active',
+  },
 ];
 
 export const OUTCOMES: Outcome[] = [
@@ -222,6 +577,37 @@ export const VISITS: CareVisit[] = [
     weeks: [{ activeDays: [0, 2] }, { activeDays: [0, 2] }],
     outcomeIds: ['o1', 'o2', 'o3', 'o4'],
     taskIds: ['t1', 't2', 't4', 't6', 't9', 't10'],
+    status: 'active',
+  },
+  // Deliberately overloaded example — every task/outcome Arthur has,
+  // real long/ALL-CAPS titles included — so the Visit Schedule/Task
+  // selector/Task ordering layout has genuinely busy content to refine
+  // against, not just the tidy 1-2 task examples above.
+  {
+    id: 'v3',
+    title: 'Busy visit',
+    visitType: 'Care visit',
+    numEmployees: 2,
+    startDate: '01/09/2026',
+    startTime: '09:00',
+    endTime: '10:30',
+    duration: '1.5 hours',
+    cadence: 'Weekly',
+    weeks: [{ activeDays: [0, 1, 2, 3, 4, 5, 6] }],
+    outcomeIds: ['o1', 'o2', 'o3', 'o4', 'o5'],
+    // Only the tasks actually *checked* in the reference screenshot — the
+    // rest above (t11, t13, t19, t20, t22, t23, t25, t27, t30, t34, and
+    // most of the new Medications ones) genuinely exist as options in
+    // their category column but aren't ticked for this visit, matching
+    // the real data exactly rather than assuming everything's selected.
+    taskIds: [
+      't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10',
+      't12', 't14', 't15', 't16', 't17', 't18',
+      't21', 't24', 't26', 't28', 't29', 't31', 't32', 't33',
+      't35', 't38', 't40', 't43', 't49', 't51',
+      't55', 't56', 't57', 't58', 't60', 't66',
+      't71',
+    ],
     status: 'active',
   },
 ];
