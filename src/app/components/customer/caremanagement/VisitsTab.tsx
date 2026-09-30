@@ -1,13 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2, Plus } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2, Plus, GripVertical } from 'lucide-react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { CalendarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../ui/tooltip';
+import { useWrapRowLimit } from '../../../hooks/useWrapRowLimit';
 import { useCareManagement } from './CareManagementContext';
 import { useCareData } from './useCareData';
-import { TASK_CATEGORIES, type CareVisit } from './types';
+import { TASK_CATEGORIES, type CareTask, type CareVisit } from './types';
 import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, CareManagementFooter, labelClass, CATEGORY_CONFIG, CarePlanDraftBanner } from './shared';
 
 const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+// The customer layout's own <DndProvider> (routes.tsx) only wraps
+// RosteringLayout, not Care Management, so Task ordering needs its own —
+// react-dnd supports multiple independent providers in the same app as
+// long as a drag source and its drop targets share one (they do here,
+// both live inside this same provider around the list below).
+const TASK_DRAG_TYPE = 'task-order-card';
+interface TaskDragItem { index: number; }
 
 /** A "Title" / "Type" style field: bold label above, plain value below — the pairing used throughout the Visit Details/Visit Schedule panels. */
 function SummaryField({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
@@ -60,6 +72,63 @@ function DayPill({ label, active, isToday }: { label: string; active: boolean; i
         : 'bg-white border-gray-200 text-gray-400'
     }`}>
       {label}
+    </div>
+  );
+}
+
+// A busy visit (see the "Busy visit" stress-test example) can have dozens
+// of tasks, which used to render as one huge wall of badges and made the
+// whole card absurdly tall in the Visits list. Caps the wrapped badge row
+// at MAX_ROWS, appending a "+X more" chip once it overflows — hovering
+// the chip shows the complete task list (not just the hidden remainder)
+// so the full picture is available without opening the visit.
+const VISIT_CARD_MAX_TASK_ROWS = 8;
+
+function VisitCardTasks({ tasks }: { tasks: CareTask[] }) {
+  const { containerRef, itemRefs, visibleCount, hasOverflow } = useWrapRowLimit(tasks.length, VISIT_CARD_MAX_TASK_ROWS);
+  const shown = tasks.slice(0, visibleCount);
+  const hiddenCount = tasks.length - visibleCount;
+
+  return (
+    <div ref={containerRef as React.RefObject<HTMLDivElement>} className="relative">
+      <div className="flex flex-wrap gap-1.5 content-start">
+        {shown.map(t => <TaskBadge key={t.id} title={t.title} category={t.category} />)}
+        {hasOverflow && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                onClick={e => e.stopPropagation()}
+                className="inline-flex items-center rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-sm font-semibold text-gray-600 cursor-default hover:bg-gray-200"
+              >
+                +{hiddenCount} more
+              </span>
+            </TooltipTrigger>
+            {/* Overrides the shared Tooltip's default dark fill — scoped
+                to this instance only (not the shared ui/tooltip default,
+                which other tooltips like DraftSourcesNote still rely
+                on). */}
+            <TooltipContent
+              side="top"
+              className="max-w-xs bg-white text-gray-900 border border-gray-200 shadow-lg"
+              arrowClassName="bg-white fill-white"
+            >
+              <ul className="space-y-0.5 max-h-60 overflow-y-auto">
+                {tasks.map(t => <li key={t.id}>{t.title}</li>)}
+              </ul>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      {/* Hidden measuring copy — every task badge at natural size, so
+          useWrapRowLimit can measure real row-wrapping without the
+          visible card ever actually rendering all of them. */}
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 invisible flex flex-wrap gap-1.5 content-start pointer-events-none">
+        {tasks.map((t, i) => (
+          <span key={t.id} ref={el => { itemRefs.current[i] = el; }}>
+            <TaskBadge title={t.title} category={t.category} />
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -120,10 +189,95 @@ function VisitCard({ visit, onSelect }: { visit: CareVisit; onSelect: () => void
         </div>
 
         {/* Right: tasks */}
-        <div className="flex flex-wrap gap-1.5 content-start">
-          {tasks.map(t => <TaskBadge key={t.id} title={t.title} category={t.category} />)}
+        <VisitCardTasks tasks={tasks} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One card in the Task ordering list — drag-and-drop AND the ↑/↓ buttons
+ * both call the same `moveTask(from, to)`, so either mechanism keeps the
+ * same single `orderedTaskIds` state in sync. Split out into its own
+ * component (rather than calling useDrag/useDrop inline inside the
+ * parent's `.map()`) because the number of cards changes whenever a task
+ * gets checked/unchecked in the selector above — hooks can't have a
+ * variable call count within one component instance, so each card needs
+ * to be its own instance regardless of list length.
+ */
+function TaskOrderCard({
+  tid, idx, isFirst, isLast, moveTask,
+}: {
+  tid: string; idx: number; isFirst: boolean; isLast: boolean;
+  moveTask: (from: number, to: number) => void;
+}) {
+  const { TASKS } = useCareData();
+  const task = TASKS.find(t => t.id === tid);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const [{ isDragging }, drag] = useDrag({
+    type: TASK_DRAG_TYPE,
+    item: (): TaskDragItem => ({ index: idx }),
+    collect: monitor => ({ isDragging: monitor.isDragging() }),
+  });
+  const [, drop] = useDrop<TaskDragItem>({
+    accept: TASK_DRAG_TYPE,
+    hover(item) {
+      if (!ref.current || item.index === idx) return;
+      moveTask(item.index, idx);
+      // Standard react-dnd sortable-list trick: update the dragged item's
+      // own tracked index immediately so this hover handler doesn't keep
+      // re-firing the same swap on every subsequent mouse-move tick.
+      item.index = idx;
+    },
+  });
+  drag(drop(ref));
+
+  if (!task) return null;
+  const { bg, text, border } = CATEGORY_CONFIG[task.category];
+
+  return (
+    // No `overflow-hidden` on the card itself (moved rounding onto the
+    // header/description directly instead) so the number badge below can
+    // actually overlap the left edge rather than getting clipped by this
+    // card's own corner.
+    <div ref={ref} data-task-id={tid} className="border border-gray-200 rounded-lg" style={{ opacity: isDragging ? 0.4 : 1 }}>
+      {/* `relative` lives on the header row specifically (not the whole
+          card) so the badge centres on just this row, not the
+          row+description block below. */}
+      <div className={`relative flex items-center gap-2 pl-6 pr-4 py-2 rounded-t-lg ${bg} ${border} border-b`}>
+        <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+        <span className={`text-sm font-semibold ${text}`}>{task.title}</span>
+        <ActiveBadge status="active" />
+        <div className="ml-auto flex gap-1">
+          <button
+            onClick={() => !isFirst && moveTask(idx, idx - 1)}
+            disabled={isFirst}
+            className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+          >
+            ↑
+          </button>
+          <button
+            onClick={() => !isLast && moveTask(idx, idx + 1)}
+            disabled={isLast}
+            className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+          >
+            ↓
+          </button>
+          <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer">⋮</button>
+        </div>
+        {/* Position number — bold, white-filled, bordered in the task's
+            own category hue, overlapping the row's left edge by half its
+            own width (`-translate-x-1/2`, which is relative to the
+            badge's own size) so it reads as a strong external marker
+            rather than another small inline label. */}
+        <div
+          className={`absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border-2 ${border} flex items-center justify-center text-sm font-bold ${text} shadow-sm`}
+        >
+          {idx + 1}
         </div>
       </div>
+      <p className="px-4 py-2 text-sm text-gray-600 rounded-b-lg">{task.description}</p>
     </div>
   );
 }
@@ -151,6 +305,53 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
   const toggleTask = (taskId: string) => {
     setOrderedTaskIds(prev => (prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]));
   };
+  // Shared by the Task ordering list's drag-and-drop and its ↑/↓ buttons —
+  // both are just different triggers for the same reorder.
+  const moveTask = (from: number, to: number) => {
+    setOrderedTaskIds(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  // FLIP animation (First-Last-Invert-Play): plain array reordering just
+  // snaps cards to their new DOM position with no motion, which reads as
+  // the dragged card "replacing" whatever was there rather than the rest
+  // easing aside to open a gap for it. Every time the order changes (on
+  // every hover-swap mid-drag, and on a button click), this measures each
+  // card's position before vs. after, then animates from the old spot to
+  // the new one — so the others visibly slide to make room instead of
+  // teleporting. Reads live DOM rects via `data-task-id` rather than
+  // per-card ref callbacks, since the cards already need a stable ref for
+  // react-dnd and this avoids threading a second one through as a prop.
+  const taskOrderListRef = useRef<HTMLDivElement>(null);
+  const prevTaskRectsRef = useRef<Map<string, DOMRect>>(new Map());
+  useLayoutEffect(() => {
+    const container = taskOrderListRef.current;
+    if (!container) return;
+    const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-task-id]'));
+    const newRects = new Map<string, DOMRect>();
+    cards.forEach(card => newRects.set(card.dataset.taskId!, card.getBoundingClientRect()));
+
+    cards.forEach(card => {
+      const id = card.dataset.taskId!;
+      const prevRect = prevTaskRectsRef.current.get(id);
+      const newRect = newRects.get(id);
+      if (!prevRect || !newRect) return;
+      const deltaY = prevRect.top - newRect.top;
+      if (Math.abs(deltaY) < 1) return;
+      card.style.transition = 'none';
+      card.style.transform = `translateY(${deltaY}px)`;
+      requestAnimationFrame(() => {
+        card.style.transition = 'transform 200ms ease-out';
+        card.style.transform = '';
+      });
+    });
+
+    prevTaskRectsRef.current = newRects;
+  }, [orderedTaskIds]);
 
   return (
     <div>
@@ -206,15 +407,7 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
             <div className="space-y-5">
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Status</h4>
-                {visit.status === 'active' ? (
-                  <span className="inline-block text-sm font-medium px-4 py-2 rounded-md" style={{ backgroundColor: '#D4EBC3', color: '#2D5F1E' }}>
-                    Active
-                  </span>
-                ) : (
-                  <span className="inline-block text-sm font-medium px-4 py-2 rounded-md bg-gray-100 text-gray-500">
-                    Inactive
-                  </span>
-                )}
+                <ActiveBadge status={visit.status} />
               </div>
 
               <SummaryPanel title="Scheduled Times">
@@ -319,50 +512,21 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
           {/* Task ordering */}
           <div>
             <label className={labelClass}>Task ordering</label>
-            <p className="text-xs text-[rgb(154,38,214)] mb-3">Reorder the tasks using the position buttons</p>
-            <div className="space-y-2">
-              {orderedTaskIds.map((tid, idx) => {
-                const task = TASKS.find(t => t.id === tid);
-                if (!task) return null;
-                const { bg, text, border } = CATEGORY_CONFIG[task.category];
-                return (
-                  // No `overflow-hidden` on the card itself (moved rounding
-                  // onto the header/description directly instead) so the
-                  // number badge below can actually overlap the left edge
-                  // rather than getting clipped by this card's own corner.
-                  <div key={tid} className="border border-gray-200 rounded-lg">
-                    {/* `relative` lives on the header row specifically
-                        (not the whole card) so the badge centres on just
-                        this row, not the row+description block below. */}
-                    <div className={`relative flex items-center gap-3 pl-6 pr-4 py-2 rounded-t-lg ${bg} ${border} border-b`}>
-                      <span className={`text-sm font-semibold ${text}`}>{task.title}</span>
-                      <ActiveBadge status="active" />
-                      <div className="ml-auto flex gap-1">
-                        {['↑', '↓'].map(arrow => (
-                          <button key={arrow} className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer">
-                            {arrow}
-                          </button>
-                        ))}
-                        <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded bg-white text-gray-500 hover:bg-gray-50 text-sm cursor-pointer">⋮</button>
-                      </div>
-                      {/* Position number — bold, white-filled, bordered in
-                          the task's own category hue, overlapping the
-                          row's left edge by half its own width
-                          (`-translate-x-1/2`, which is relative to the
-                          badge's own size) so it reads as a strong
-                          external marker rather than another small inline
-                          label. */}
-                      <div
-                        className={`absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border-2 ${border} flex items-center justify-center text-sm font-bold ${text} shadow-sm`}
-                      >
-                        {idx + 1}
-                      </div>
-                    </div>
-                    <p className="px-4 py-2 text-sm text-gray-600 rounded-b-lg">{task.description}</p>
-                  </div>
-                );
-              })}
-            </div>
+            <p className="text-xs text-[rgb(154,38,214)] mb-3">Drag a card, or use the position buttons, to reorder the tasks</p>
+            <DndProvider backend={HTML5Backend}>
+              <div ref={taskOrderListRef} className="space-y-2">
+                {orderedTaskIds.map((tid, idx) => (
+                  <TaskOrderCard
+                    key={tid}
+                    tid={tid}
+                    idx={idx}
+                    isFirst={idx === 0}
+                    isLast={idx === orderedTaskIds.length - 1}
+                    moveTask={moveTask}
+                  />
+                ))}
+              </div>
+            </DndProvider>
           </div>
         </div>
       </div>
