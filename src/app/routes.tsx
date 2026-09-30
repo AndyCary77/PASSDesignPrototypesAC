@@ -367,6 +367,18 @@ export const router = createBrowserRouter([
     path: "/customers/:customerId/caremanagement",
     Component: CareManagementLayout,
   },
+  // Same component, just with the active tab (and optionally a selected
+  // item within it) as real path segments rather than local state, so
+  // both the tab and its detail view are sharable/reloadable URLs — see
+  // CareManagementContext's activeTab/useDetailParam.
+  {
+    path: "/customers/:customerId/caremanagement/:tab",
+    Component: CareManagementLayout,
+  },
+  {
+    path: "/customers/:customerId/caremanagement/:tab/:itemId",
+    Component: CareManagementLayout,
+  },
   {
     path: "/customers/:customerId/carenotes",
     Component: CareNotesLayout,

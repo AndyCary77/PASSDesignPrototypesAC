@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { StarSolidIcon } from '../../icons/CarePlanIcons';
-import { useCareManagement } from './CareManagementContext';
+import { useCareManagement, useDetailParam } from './CareManagementContext';
 import { useCareData } from './useCareData';
 import { TASK_CATEGORIES, type Outcome } from './types';
 import { TaskBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, CareManagementFooter, inputClass, labelClass, CATEGORY_CONFIG, DraftActionBar, CarePlanDraftBanner, CarePlanDraftFlow } from './shared';
@@ -240,7 +240,7 @@ function blankOutcome(): Outcome {
 
 export function OutcomesTab() {
   const { OUTCOMES, pending, draftSources } = useCareData();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useDetailParam();
   const selected = selectedId === NEW_OUTCOME_ID ? blankOutcome() : selectedId ? OUTCOMES.find(o => o.id === selectedId) : null;
   const { registerBack, clearBack, registerAdd, clearAdd, registerDelete, clearDelete, discard, draftStep } = useCareManagement();
   const drafting = draftStep !== null;

@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { useCustomer } from '../../../data/CustomerContext';
 
 type Tab = 'outcomes' | 'tasks' | 'visits' | 'caregroups';
+const DEFAULT_TAB: Tab = 'outcomes';
 
 /**
  * The simulated "draft the care plan from the recordings" run. Outcomes are
@@ -174,7 +176,24 @@ const CareManagementContext = createContext<CareManagementContextType>({
 
 export function CareManagementProvider({ children }: { children: React.ReactNode }) {
   const customer = useCustomer();
-  const [activeTab, setActiveTab] = useState<Tab>('outcomes');
+  // The active tab is a real URL segment (/caremanagement/:tab), not local
+  // state — so switching tabs, reloading, or sharing the URL all land on
+  // the same tab. `setActiveTab` navigates rather than setting state;
+  // dropping any :itemId in the process, same as opening a fresh list.
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  const activeTab = (tab as Tab) ?? DEFAULT_TAB;
+  const setActiveTab = useCallback(
+    (next: Tab) => navigate(`/customers/${customer.id}/caremanagement/${next}`),
+    [customer.id, navigate],
+  );
+  // The bare /caremanagement URL (no :tab) is only ever a landing point,
+  // never the address bar's resting state — redirect it to the default
+  // tab's own URL immediately so what's in the address bar always names
+  // the tab actually showing, matching every other tab's own URL.
+  useEffect(() => {
+    if (!tab) navigate(`/customers/${customer.id}/caremanagement/${DEFAULT_TAB}`, { replace: true });
+  }, [tab, customer.id, navigate]);
   const [backFn, setBackFn] = useState<{ fn: () => void } | null>(null);
   const [addFn, setAddFn] = useState<{ label: string; fn: () => void } | null>(null);
   const [deleteFn, setDeleteFn] = useState<{ label: string; fn: () => void } | null>(null);
@@ -298,4 +317,27 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
 
 export function useCareManagement() {
   return useContext(CareManagementContext);
+}
+
+/**
+ * Drop-in replacement for `useState<string | null>(null)` used by each
+ * tab (Outcomes/Tasks/Visits) for "which item's detail view is open" —
+ * same `[value, setValue]` shape, but backed by the URL's optional
+ * `:itemId` segment instead of local state, so a specific outcome/task/
+ * visit's detail view is its own sharable, reloadable URL too. Safe to
+ * call identically from any of the three tabs: each is only ever mounted
+ * while its own `:tab` segment matches (see CareManagementPage), so
+ * `tab` here is always that tab's own segment by construction.
+ */
+export function useDetailParam() {
+  const { customerId, tab, itemId } = useParams<{ customerId: string; tab: string; itemId?: string }>();
+  const navigate = useNavigate();
+  const setItemId = useCallback(
+    (id: string | null) => {
+      const base = `/customers/${customerId}/caremanagement/${tab}`;
+      navigate(id ? `${base}/${id}` : base);
+    },
+    [customerId, tab, navigate],
+  );
+  return [itemId ?? null, setItemId] as const;
 }

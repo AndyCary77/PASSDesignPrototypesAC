@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Calendar, CalendarClock, ArrowRight, Repeat2 } from 'lucide-react';
 import { BodymapDemo } from './BodymapDemo';
 import { Button } from '../../buttons/Button';
-import { useCareManagement } from './CareManagementContext';
+import { useCareManagement, useDetailParam } from './CareManagementContext';
 import { useCareData } from './useCareData';
 import { type CareTask } from './types';
 import { OutcomeBadge, VisitBadge, ActiveBadge, StatusToggle, EmptyTab, CareManagementFooter, inputClass, labelClass, CATEGORY_CONFIG, DraftActionBar, CarePlanDraftBanner, CarePlanDraftFlow } from './shared';
@@ -395,7 +395,7 @@ function blankTask(): CareTask {
 
 export function TasksTab() {
   const { TASKS, pending, draftSources } = useCareData();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useDetailParam();
   const selected = selectedId === NEW_TASK_ID ? blankTask() : selectedId ? TASKS.find(t => t.id === selectedId) : null;
   const { registerBack, clearBack, registerAdd, clearAdd, registerDelete, clearDelete, discard, draftStep } = useCareManagement();
   const drafting = draftStep !== null;

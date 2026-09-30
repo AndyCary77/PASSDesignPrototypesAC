@@ -7,7 +7,7 @@ import { CalendarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../ui/tooltip';
 import { useWrapRowLimit } from '../../../hooks/useWrapRowLimit';
-import { useCareManagement } from './CareManagementContext';
+import { useCareManagement, useDetailParam } from './CareManagementContext';
 import { useCareData } from './useCareData';
 import { TASK_CATEGORIES, type CareTask, type CareVisit } from './types';
 import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, CareManagementFooter, labelClass, CATEGORY_CONFIG, CarePlanDraftBanner } from './shared';
@@ -506,7 +506,7 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
 
 export function VisitsTab() {
   const { VISITS, pending, draftSource } = useCareData();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useDetailParam();
   const selected = selectedId ? VISITS.find(v => v.id === selectedId) : null;
   const { registerBack, clearBack } = useCareManagement();
 
