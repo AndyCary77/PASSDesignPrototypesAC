@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, CalendarClock, CalendarDays, Clock, ArrowRight, Repeat2, Plus, GripVertical } from 'lucide-react';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { CalendarSolidIcon } from '../../icons/CarePlanIcons';
 import { Button } from '../../buttons/Button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../ui/tooltip';
@@ -12,14 +13,6 @@ import { TASK_CATEGORIES, type CareTask, type CareVisit } from './types';
 import { OutcomeBadge, TaskBadge, ActiveBadge, EmptyTab, CareManagementFooter, labelClass, CATEGORY_CONFIG, CarePlanDraftBanner } from './shared';
 
 const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-// The customer layout's own <DndProvider> (routes.tsx) only wraps
-// RosteringLayout, not Care Management, so Task ordering needs its own —
-// react-dnd supports multiple independent providers in the same app as
-// long as a drag source and its drop targets share one (they do here,
-// both live inside this same provider around the list below).
-const TASK_DRAG_TYPE = 'task-order-card';
-interface TaskDragItem { index: number; }
 
 /** A "Title" / "Type" style field: bold label above, plain value below — the pairing used throughout the Visit Details/Visit Schedule panels. */
 function SummaryField({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
@@ -199,11 +192,22 @@ function VisitCard({ visit, onSelect }: { visit: CareVisit; onSelect: () => void
  * One card in the Task ordering list — drag-and-drop AND the ↑/↓ buttons
  * both call the same `moveTask(from, to)`, so either mechanism keeps the
  * same single `orderedTaskIds` state in sync. Split out into its own
- * component (rather than calling useDrag/useDrop inline inside the
- * parent's `.map()`) because the number of cards changes whenever a task
- * gets checked/unchecked in the selector above — hooks can't have a
- * variable call count within one component instance, so each card needs
- * to be its own instance regardless of list length.
+ * component (rather than calling useSortable inline inside the parent's
+ * `.map()`) because the number of cards changes whenever a task gets
+ * checked/unchecked in the selector above — hooks can't have a variable
+ * call count within one component instance, so each card needs to be its
+ * own instance regardless of list length.
+ *
+ * Uses dnd-kit rather than react-dnd's HTML5Backend (used for the rest
+ * of this app's DnD) — HTML5Backend drives native browser drag-and-drop,
+ * which renders its own drag-ghost snapshot of the source element. That
+ * ghost doesn't know about this card's number badge overlapping outside
+ * the card's own box (`-translate-x-1/2`), so it clipped/shadowed it
+ * during a drag; combined with an earlier hand-rolled FLIP animation
+ * that mutated this same element's `transform` mid-drag, it actually
+ * broke native drag tracking outright. dnd-kit is pointer-event driven
+ * (no native drag, no ghost image at all) and has smooth sortable
+ * reordering built in, so neither problem exists here any more.
  */
 function TaskOrderCard({
   tid, idx, isFirst, isLast, moveTask,
@@ -213,25 +217,8 @@ function TaskOrderCard({
 }) {
   const { TASKS } = useCareData();
   const task = TASKS.find(t => t.id === tid);
-  const ref = useRef<HTMLDivElement>(null);
-
-  const [{ isDragging }, drag] = useDrag({
-    type: TASK_DRAG_TYPE,
-    item: (): TaskDragItem => ({ index: idx }),
-    collect: monitor => ({ isDragging: monitor.isDragging() }),
-  });
-  const [, drop] = useDrop<TaskDragItem>({
-    accept: TASK_DRAG_TYPE,
-    hover(item) {
-      if (!ref.current || item.index === idx) return;
-      moveTask(item.index, idx);
-      // Standard react-dnd sortable-list trick: update the dragged item's
-      // own tracked index immediately so this hover handler doesn't keep
-      // re-firing the same swap on every subsequent mouse-move tick.
-      item.index = idx;
-    },
-  });
-  drag(drop(ref));
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: tid });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
 
   if (!task) return null;
   const { bg, text, border } = CATEGORY_CONFIG[task.category];
@@ -241,12 +228,19 @@ function TaskOrderCard({
     // header/description directly instead) so the number badge below can
     // actually overlap the left edge rather than getting clipped by this
     // card's own corner.
-    <div ref={ref} data-task-id={tid} className="border border-gray-200 rounded-lg" style={{ opacity: isDragging ? 0.4 : 1 }}>
+    <div ref={setNodeRef} style={style} className="border border-gray-200 rounded-lg">
       {/* `relative` lives on the header row specifically (not the whole
           card) so the badge centres on just this row, not the
           row+description block below. */}
       <div className={`relative flex items-center gap-2 pl-6 pr-4 py-2 rounded-t-lg ${bg} ${border} border-b`}>
-        <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+        {/* Only the handle itself is the drag trigger (attributes+
+            listeners), not the whole row — so dragging never conflicts
+            with clicking the title, badge, or the buttons. */}
+        <GripVertical
+          {...attributes}
+          {...listeners}
+          className="w-4 h-4 text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
+        />
         <span className={`text-sm font-semibold ${text}`}>{task.title}</span>
         <ActiveBadge status="active" />
         <div className="ml-auto flex gap-1">
@@ -315,43 +309,17 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
       return next;
     });
   };
-
-  // FLIP animation (First-Last-Invert-Play): plain array reordering just
-  // snaps cards to their new DOM position with no motion, which reads as
-  // the dragged card "replacing" whatever was there rather than the rest
-  // easing aside to open a gap for it. Every time the order changes (on
-  // every hover-swap mid-drag, and on a button click), this measures each
-  // card's position before vs. after, then animates from the old spot to
-  // the new one — so the others visibly slide to make room instead of
-  // teleporting. Reads live DOM rects via `data-task-id` rather than
-  // per-card ref callbacks, since the cards already need a stable ref for
-  // react-dnd and this avoids threading a second one through as a prop.
-  const taskOrderListRef = useRef<HTMLDivElement>(null);
-  const prevTaskRectsRef = useRef<Map<string, DOMRect>>(new Map());
-  useLayoutEffect(() => {
-    const container = taskOrderListRef.current;
-    if (!container) return;
-    const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-task-id]'));
-    const newRects = new Map<string, DOMRect>();
-    cards.forEach(card => newRects.set(card.dataset.taskId!, card.getBoundingClientRect()));
-
-    cards.forEach(card => {
-      const id = card.dataset.taskId!;
-      const prevRect = prevTaskRectsRef.current.get(id);
-      const newRect = newRects.get(id);
-      if (!prevRect || !newRect) return;
-      const deltaY = prevRect.top - newRect.top;
-      if (Math.abs(deltaY) < 1) return;
-      card.style.transition = 'none';
-      card.style.transform = `translateY(${deltaY}px)`;
-      requestAnimationFrame(() => {
-        card.style.transition = 'transform 200ms ease-out';
-        card.style.transform = '';
-      });
-    });
-
-    prevTaskRectsRef.current = newRects;
-  }, [orderedTaskIds]);
+  // Requires an actual pointer move (not just a click) before a drag
+  // starts, so clicking the grip handle doesn't fight with clicking
+  // anything else in the row.
+  const taskDragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const handleTaskDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = orderedTaskIds.indexOf(String(active.id));
+    const to = orderedTaskIds.indexOf(String(over.id));
+    if (from !== -1 && to !== -1) moveTask(from, to);
+  };
 
   return (
     <div>
@@ -513,20 +481,22 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
           <div>
             <label className={labelClass}>Task ordering</label>
             <p className="text-xs text-[rgb(154,38,214)] mb-3">Drag a card, or use the position buttons, to reorder the tasks</p>
-            <DndProvider backend={HTML5Backend}>
-              <div ref={taskOrderListRef} className="space-y-2">
-                {orderedTaskIds.map((tid, idx) => (
-                  <TaskOrderCard
-                    key={tid}
-                    tid={tid}
-                    idx={idx}
-                    isFirst={idx === 0}
-                    isLast={idx === orderedTaskIds.length - 1}
-                    moveTask={moveTask}
-                  />
-                ))}
-              </div>
-            </DndProvider>
+            <DndContext sensors={taskDragSensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+              <SortableContext items={orderedTaskIds} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {orderedTaskIds.map((tid, idx) => (
+                    <TaskOrderCard
+                      key={tid}
+                      tid={tid}
+                      idx={idx}
+                      isFirst={idx === 0}
+                      isLast={idx === orderedTaskIds.length - 1}
+                      moveTask={moveTask}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         </div>
       </div>
