@@ -481,8 +481,9 @@ function ConsentScreen({ customer, template, docsLabel, consent, setConsent, onB
       <AppHeader title="Consent to Record" onBack={onBack} />
       <div className="cb-body cb-body-flush">
         <div className="cb-consent-intro">
-          With consent, <strong>Assessment Hero</strong> records the conversation and fills
-          in the {docsLabel} as you talk — so you can focus on {first}, not paperwork.
+          With consent, <strong>Assessment Hero</strong> records the conversation, then
+          drafts the {docsLabel} once it's uploaded — so you can focus on {first}, not
+          paperwork.
         </div>
 
         <div className="cb-consent-points">
