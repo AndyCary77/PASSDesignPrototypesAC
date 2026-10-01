@@ -1,0 +1,187 @@
+/* ── Screen ──────────────────────────────────────────────────── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.empdoc-body {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--ui-purple-7-lightest-lavendar);
+  position: relative;
+}
+
+/* ── Profile card ────────────────────────────────────────────── */
+.empdoc-profile-card {
+  margin: 16px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.empdoc-avatar {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--greyscale-13-grey-90);
+}
+.empdoc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.empdoc-profile-info { flex: 1; min-width: 0; }
+.empdoc-name {
+  font-family: Barlow, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 6px;
+}
+.empdoc-role-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 9px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--greyscale-12-grey-85);
+  color: var(--greyscale-4-grey-40);
+  font-family: Barlow, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+.empdoc-contact-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+.empdoc-contact-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ── Assessment Hero banner — copied verbatim from
+   mobile/customer-documents' own .docs-cb-banner, for visual parity. ───── */
+.docs-cb-banner {
+  margin: 0 16px 16px;
+  border: 1px solid var(--ui-purple-4-lavendar);
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #fff;
+}
+.docs-cb-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 10px 12px;
+}
+.docs-cb-banner-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--brand-purple-8-purple-10);
+  color: var(--brand-purple-6-purple-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.docs-cb-banner-body { flex: 1; min-width: 0; }
+.docs-cb-banner-title {
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand-purple-1-purple-0);
+  margin: 0;
+}
+.docs-cb-banner-cta-row {
+  background: var(--brand-purple-8-purple-10);
+  border-top: 1px solid var(--ui-purple-4-lavendar);
+  padding: 10px 12px;
+}
+.docs-cb-banner-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Documents section ───────────────────────────────────────── */
+.empdoc-section-label {
+  padding: 8px 16px;
+  background: var(--greyscale-14-grey-95);
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--greyscale-4-grey-40);
+}
+.empdoc-doc-list { background: #fff; }
+.empdoc-body-pad { height: 96px; }
+
+/* ── Document rows — copied verbatim from mobile/customer-documents' own
+   .docs-doc-row, for visual parity. ──────────────────────────────────── */
+.docs-doc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
+}
+.docs-doc-row-icon { color: #000; flex-shrink: 0; margin-top: 2px; }
+.docs-doc-row-body { flex: 1; min-width: 0; }
+.docs-doc-row-title { font-family: Barlow, sans-serif; font-size: 16px; font-weight: 500; color: #000; }
+.docs-doc-row-sub { font-family: Barlow, sans-serif; font-size: 13px; color: var(--greyscale-6-grey-50); margin-top: 2px; }
+.docs-doc-row-status { flex-shrink: 0; margin-top: 2px; }
+
+/* ── FAB — copied verbatim from mobile/customer-documents' own .docs-fab. */
+.docs-fab-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 30;
+}
+.docs-fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--purple-5, #b02cf7);
+  color: #fff;
+  border: none;
+  border-radius: 28px;
+  padding: 16px 28px;
+  font-family: Barlow, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}

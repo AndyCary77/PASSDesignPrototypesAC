@@ -1179,14 +1179,14 @@ export default function App() {
           <AppNav
             activeTab="account"
             messagesUnread={messageBadge}
-            links={{ notifications: '../notifications/' }}
+            links={{ customers: '../customers/', employees: '../employees/', notifications: '../notifications/' }}
           />
         ) : (
           <AppNav
             activeTab={null}
             messagesUnread={messageBadge}
             notifCount={UNREAD_NOTIFICATIONS_COUNT}
-            links={{ notifications: '../notifications/', account: '../account/' }}
+            links={{ customers: '../customers/', employees: '../employees/', notifications: '../notifications/', account: '../account/' }}
           />
         )}
         {actionTarget && (

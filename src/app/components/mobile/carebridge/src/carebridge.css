@@ -874,8 +874,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--brand-purple-6-purple-4);
-  color: #fff;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;

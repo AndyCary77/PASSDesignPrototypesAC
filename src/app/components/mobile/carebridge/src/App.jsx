@@ -3,10 +3,14 @@ import PhoneFrame from '../../assets/PhoneFrame'
 import StatusBar from '../../assets/StatusBar'
 import AppHeader from '../../assets/AppHeader'
 import CareBridgeIcon from '../../assets/CareBridgeIcon'
+import AssessmentHeroIcon from '../../assets/AssessmentHeroIcon'
 import { usePlatform } from '../../assets/platform'
 import { addRecording } from '../../assets/recordings'
 import { handleSystemBack, useBackHandler } from '../../assets/backStack'
-import arthurImg from '../../assets/img/Customer=Arthur.png'
+// Same photo as the web app's Arthur Barrington (src/app/data/customers.ts'
+// `photo: arthurPhoto`) and mobile/customer-documents' own Arthur — all
+// three prototypes show the same person.
+import arthurImg from '../../assets/img/Customer=Arthur Barrington.jpg'
 import davidImg from '../../assets/img/Customer=David Farrington.png'
 import jimImg from '../../assets/img/Customer=Jim McLean.png'
 import harinderImg from '../../assets/img/Customer=Harinder Kulkarni.png'
@@ -407,7 +411,7 @@ function TemplateScreen({ customer, onBack, onPick }) {
             <div className="menu-section-label">Suggested</div>
             <button className="cb-suggested" onClick={() => onPick(suggested)}>
               <div className="cb-suggested-top">
-                <CareBridgeIcon size={16} />
+                <AssessmentHeroIcon size={16} />
                 <span className="cb-suggested-tag">Suggested for {customer.name.split(' ')[0]}</span>
               </div>
               <div className="cb-suggested-name">{suggested.name}</div>
@@ -798,7 +802,7 @@ function ReviewScreen({ customer, template, seconds, states, title, setTitle, on
       <AppHeader title="Before You Finish" onBack={onResume} />
       <div className="cb-body">
         <div className="cb-review-summary">
-          <div className="cb-review-check"><CareBridgeIcon size={18} /></div>
+          <div className="cb-review-check"><AssessmentHeroIcon size={26} /></div>
           <div>
             {SHOW_COMPLETION_CHECKLIST ? (
               <>

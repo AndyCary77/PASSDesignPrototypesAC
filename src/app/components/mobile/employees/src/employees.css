@@ -1,0 +1,77 @@
+/* ── Screen ──────────────────────────────────────────────────── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Employees list ──────────────────────────────────────────── */
+.emp-list {
+  flex: 1;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.list-group-label {
+  padding: 6px 16px;
+  background: var(--greyscale-14-grey-95);
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--greyscale-4-grey-40);
+}
+
+.emp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--greyscale-13-grey-90);
+  text-decoration: none;
+  color: inherit;
+}
+
+.emp-row-tap { cursor: pointer; }
+.emp-row-tap:active { background: var(--greyscale-15-grey-97); }
+
+.emp-avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--greyscale-13-grey-90);
+}
+
+.emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.emp-name {
+  font-family: Barlow, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.emp-address {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  color: var(--greyscale-6-grey-50);
+  margin-top: 2px;
+}
+
+.emp-role {
+  font-family: Barlow, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--greyscale-6-grey-50);
+  margin-top: 2px;
+}
+
+/* The logged-in persona's own row reads a touch heavier, same distinction
+   the real app's "You" row has over everyone else's. */
+.emp-row-you .emp-name,
+.emp-row-you .emp-role {
+  font-weight: 700;
+}

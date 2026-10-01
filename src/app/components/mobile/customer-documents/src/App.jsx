@@ -3,6 +3,7 @@ import StatusBar from '../../assets/StatusBar'
 import ScreenSlider from '../../assets/ScreenSlider'
 import PhoneFrame from '../../assets/PhoneFrame'
 import CareBridgeIcon from '../../assets/CareBridgeIcon'
+import AssessmentHeroIcon from '../../assets/AssessmentHeroIcon'
 import { handleSystemBack, useBackHandler } from '../../assets/backStack'
 import { useRecordings, resetRecordings, isDefaultRecordings, markUploaded } from '../../assets/recordings'
 import {
@@ -848,8 +849,7 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge }) {
     <div className="screen">
       <StatusBar />
       <div className="app-header">
-        {/* No "all customers" list exists in this mobile prototype set yet — falls back to the landing page, same as the outer back-link. */}
-        <a className="app-header-back" href="/"><ArrowLeftIcon /></a>
+        <a className="app-header-back" href="../customers/?transition=back"><ArrowLeftIcon /></a>
         <span className="app-header-title">All customers</span>
         <div style={{ width: 36 }} />
       </div>
@@ -967,14 +967,14 @@ function CareBridgeBanner({ onSelect }) {
   return (
     <div className="docs-cb-banner">
       <div className="docs-cb-banner-top">
-        <span className="docs-cb-banner-icon"><CareBridgeIcon size={18} /></span>
+        <span className="docs-cb-banner-icon"><AssessmentHeroIcon size={18} /></span>
         <div className="docs-cb-banner-body">
           <p className="docs-cb-banner-title">Record and Draft with Assessment Hero</p>
         </div>
       </div>
       <div className="docs-cb-banner-cta-row">
         <button className="docs-cb-banner-cta" onClick={onSelect}>
-          <CareBridgeIcon size={16} /> Select documents
+          Select documents
         </button>
       </div>
     </div>
@@ -1034,7 +1034,7 @@ function RecordingsSection({ recordings, initialExpanded, customerId }) {
             const retrying = retryingIds.has(rec.id)
             return (
               <div key={rec.id} className="docs-recording-row">
-                <span className="docs-recording-row-icon"><CareBridgeIcon size={16} /></span>
+                <span className="docs-recording-row-icon"><AssessmentHeroIcon size={16} /></span>
                 <span className="docs-recording-row-title">{rec.title}</span>
                 {retrying ? (
                   <span className="docs-recording-badge docs-recording-badge--retrying">
@@ -1801,6 +1801,12 @@ function IncidentsScreen({ onClose }) {
 // ─── Root ────────────────────────────────────────────────────
 
 export default function App() {
+  // Plays a slide-in-from-right entrance only when arriving from a tap on
+  // the Customers list (which links here with ?transition=1) — a direct
+  // visit or reload shouldn't replay it.
+  const [entering] = useState(() =>
+    new URLSearchParams(window.location.search).get('transition') === '1'
+  )
   const [section, setSection] = useState(() => new URLSearchParams(window.location.search).get('section'))
   // What's actually mounted inside the modal sheet — kept one step behind
   // `section` on close, so the sheet's own content is still visible sliding
@@ -1851,15 +1857,15 @@ export default function App() {
   useBackHandler(section !== null, closeSection)
   useBackHandler(careBridgeSelect.active, careBridgeSelect.close)
 
-  // Nothing left to dismiss — on a real device this is where the app would
-  // drop to the home screen.
-  const systemBack = () => handleSystemBack(() => { window.location.href = '/' })
+  // Nothing left to dismiss — back out to the Customers list this screen
+  // would have been reached from.
+  const systemBack = () => handleSystemBack(() => { window.location.href = '../customers/?transition=back' })
 
   return (
     <>
       <a href="/" className="back-link"><ChevronLeftIcon size={16} /> Prototypes</a>
       <PhoneFrame onSystemBack={systemBack}>
-        <div className="screen-area">
+        <div className={`screen-area page-slide${entering ? ' slide-entering' : ''}`}>
           <DocumentsRootScreen onOpenSection={openSection} onOpenCareBridge={careBridgeSelect.open} />
           {/* Assessments/Other Documents/Incidents present as a modal sheet
               (closed via an X, not a back-chevron) sliding up from the

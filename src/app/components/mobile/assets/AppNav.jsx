@@ -10,6 +10,17 @@ const CustomersNavIcon = () => (
   </svg>
 )
 
+const EmployeesNavIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path fillRule="evenodd" clipRule="evenodd" d="M4 4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4H4ZM4 6H20V18H4V6Z"/>
+    <path d="M8.5 13.25C9.74264 13.25 10.75 12.2426 10.75 11C10.75 9.75736 9.74264 8.75 8.5 8.75C7.25736 8.75 6.25 9.75736 6.25 11C6.25 12.2426 7.25736 13.25 8.5 13.25Z"/>
+    <path d="M5 16.5C5 15.1193 6.73858 14.25 8.5 14.25C10.2614 14.25 12 15.1193 12 16.5V17.25H5V16.5Z"/>
+    <path d="M13.5 9H19V10.5H13.5V9Z"/>
+    <path d="M13.5 12.25H19V13.75H13.5V12.25Z"/>
+    <path d="M13.5 15.5H17V17H13.5V15.5Z"/>
+  </svg>
+)
+
 const BellNavIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
@@ -30,18 +41,22 @@ export default function AppNav({ activeTab = null, messagesUnread = 0, notifCoun
     <div className="app-nav">
       <NavItem id="bookings" activeTab={activeTab} href={links.bookings}>
         <BookingsNavIcon />
-        <span className="nav-label">Bookings</span>
+        {activeTab === 'bookings' && <span className="nav-label">Bookings</span>}
       </NavItem>
       <NavItem id="customers" activeTab={activeTab} href={links.customers}>
         <CustomersNavIcon />
-        <span className="nav-label">Customers</span>
+        {activeTab === 'customers' && <span className="nav-label">Customers</span>}
+      </NavItem>
+      <NavItem id="employees" activeTab={activeTab} href={links.employees}>
+        <EmployeesNavIcon />
+        {activeTab === 'employees' && <span className="nav-label">Employees</span>}
       </NavItem>
       <NavItem id="notifications" activeTab={activeTab} href={links.notifications}>
         <div className="nav-messages-wrap">
           <BellNavIcon />
           {notifCount > 0 && <span className="nav-badge">{notifCount}</span>}
         </div>
-        <span className="nav-label">Notifications</span>
+        {activeTab === 'notifications' && <span className="nav-label">Notifications</span>}
       </NavItem>
       <NavItem id="account" activeTab={activeTab} href={links.account}>
         <div className="nav-messages-wrap">

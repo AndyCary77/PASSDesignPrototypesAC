@@ -54,7 +54,7 @@ export default function App() {
             }
           />
         </div>
-        <AppNav activeTab="account" messagesUnread={messagesUnread} links={{ notifications: '../notifications/' }} />
+        <AppNav activeTab="account" messagesUnread={messagesUnread} links={{ customers: '../customers/', employees: '../employees/', notifications: '../notifications/' }} />
       </PhoneFrame>
     </>
   )

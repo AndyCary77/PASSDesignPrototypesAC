@@ -1,7 +1,7 @@
 import AppHeader from './AppHeader'
 import StatusBar from './StatusBar'
 import AppNav from './AppNav'
-import CareBridgeIcon from './CareBridgeIcon'
+import AssessmentHeroIcon from './AssessmentHeroIcon'
 
 // Extracted from mobile/mileage-pay (where Account used to live as the app's
 // primary screen). Now shared by mobile/account (standalone entry point) and
@@ -148,7 +148,7 @@ export default function AccountScreen({ onGoToMessages, onGoToMileage, messagesU
         <div className="menu-section-label">Assessments</div>
         <div className="menu-rows-card">
           <MenuRow
-            icon={<CareBridgeIcon />}
+            icon={<AssessmentHeroIcon />}
             label="Assessment Hero"
             onClick={() => { window.location.href = '../carebridge/?transition=1' }}
             right={
@@ -207,7 +207,7 @@ export default function AccountScreen({ onGoToMessages, onGoToMileage, messagesU
         <div className="account-version">Version 3.6.0</div>
       </div>
       {!hideNav && (
-        <AppNav activeTab="account" messagesUnread={messagesUnread} links={{ notifications: '../notifications/' }} />
+        <AppNav activeTab="account" messagesUnread={messagesUnread} links={{ customers: '../customers/', employees: '../employees/', notifications: '../notifications/' }} />
       )}
     </>
   )

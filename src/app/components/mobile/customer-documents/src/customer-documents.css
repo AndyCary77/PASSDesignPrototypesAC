@@ -71,21 +71,25 @@
   display: inline-flex;
   align-items: center;
   height: 24px;
-  padding: 0 10px;
+  padding: 0 9px;
   border-radius: 12px;
-  background: var(--rag-red-action-med-pastel);
+  background: #fff;
+  border: 2px solid var(--rag-red-red-overdue);
   color: var(--rag-red-red-overdue);
   font-family: Barlow, sans-serif;
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+  box-sizing: border-box;
 }
+/* Stays its own distinct, more urgent treatment — solid fill, smaller/sharper
+   corners — unlike .docs-legal-chip's outline pill. */
 .docs-high-risk-badge {
   position: absolute;
   top: 78px;
   right: 16px;
   height: 24px;
-  padding: 0 8px;
+  padding: 0 9px;
   border-radius: 8px;
   background: var(--rag-red-red-overdue);
   color: #fff;
@@ -94,6 +98,7 @@
   font-weight: 700;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
 }
 .docs-customer-avatar {
   position: absolute;
