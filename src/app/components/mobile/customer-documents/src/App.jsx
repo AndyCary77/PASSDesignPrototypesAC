@@ -4,7 +4,7 @@ import ScreenSlider from '../../assets/ScreenSlider'
 import PhoneFrame from '../../assets/PhoneFrame'
 import CareBridgeIcon from '../../assets/CareBridgeIcon'
 import { handleSystemBack, useBackHandler } from '../../assets/backStack'
-import { useRecordings, resetRecordings, isDefaultRecordings } from '../../assets/recordings'
+import { useRecordings, resetRecordings, isDefaultRecordings, markUploaded } from '../../assets/recordings'
 import {
   CUSTOMER, ASSESSMENTS, ASSESSMENT_FOLDERS, OPTIONAL_ASSESSMENT_TEMPLATES,
   OTHER_DOCUMENTS, OTHER_DOCUMENT_FOLDERS, DOCUMENT_TEMPLATES,
@@ -36,6 +36,12 @@ const CloseIcon = ({ size = 20 }) => (
 const PlusIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+  </svg>
+)
+const RetryIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 )
 const EditActionIcon = ({ size = 18 }) => (
@@ -983,6 +989,21 @@ function CareBridgeBanner({ onSelect }) {
 // since it's useful on any visit, not just the one that just finished.
 function RecordingsSection({ recordings, initialExpanded, customerId }) {
   const [expanded, setExpanded] = useState(initialExpanded)
+  // Ids currently mid-retry — local/transient only, never persisted, since
+  // it's just "spinner's running" and doesn't need to survive a reload the
+  // way the underlying failed/queued/uploaded status does.
+  const [retryingIds, setRetryingIds] = useState(() => new Set())
+  const handleRetry = (id) => {
+    setRetryingIds(prev => new Set(prev).add(id))
+    setTimeout(() => {
+      markUploaded(customerId, id)
+      setRetryingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }, 1400)
+  }
   // Quiet, deliberately unstyled-as-a-feature text link — this is a demo
   // reset switch, not something a real reviewer would ever need, so it
   // shouldn't compete visually with the rows above it. Confirmed first:
@@ -1009,15 +1030,32 @@ function RecordingsSection({ recordings, initialExpanded, customerId }) {
         <div className="docs-recordings-list">
           {recordings.length === 0 ? (
             <div className="docs-recordings-empty">No recordings yet.</div>
-          ) : recordings.map(rec => (
-            <div key={rec.id} className="docs-recording-row">
-              <span className="docs-recording-row-icon"><CareBridgeIcon size={16} /></span>
-              <span className="docs-recording-row-title">{rec.title}</span>
-              <span className={`docs-recording-badge docs-recording-badge--${rec.status}`}>
-                {rec.status === 'uploaded' ? 'Uploaded' : 'Queued'}
-              </span>
-            </div>
-          ))}
+          ) : recordings.map(rec => {
+            const retrying = retryingIds.has(rec.id)
+            return (
+              <div key={rec.id} className="docs-recording-row">
+                <span className="docs-recording-row-icon"><CareBridgeIcon size={16} /></span>
+                <span className="docs-recording-row-title">{rec.title}</span>
+                {retrying ? (
+                  <span className="docs-recording-badge docs-recording-badge--retrying">
+                    <span className="docs-recording-spinner" />
+                    Retrying
+                  </span>
+                ) : rec.status === 'failed' ? (
+                  <div className="docs-recording-status">
+                    <span className="docs-recording-badge docs-recording-badge--failed">Failed</span>
+                    <button type="button" className="docs-recording-retry" onClick={() => handleRetry(rec.id)}>
+                      <RetryIcon size={11} /> Retry
+                    </button>
+                  </div>
+                ) : (
+                  <span className={`docs-recording-badge docs-recording-badge--${rec.status}`}>
+                    {rec.status === 'uploaded' ? 'Uploaded' : 'Queued'}
+                  </span>
+                )}
+              </div>
+            )
+          })}
           {!isDefault && (
             <button type="button" className="docs-recordings-reset" onClick={handleReset}>
               Reset for demo

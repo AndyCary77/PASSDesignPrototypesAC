@@ -611,6 +611,56 @@
   background: var(--rag-amber-amber-lightest);
   color: var(--rag-amber-amber-6);
 }
+.docs-recording-badge--failed {
+  background: var(--rag-red-action-med-pastel);
+  color: var(--rag-red-red-overdue-dark);
+}
+/* Reuses the count-pill's purple pairing rather than inventing a third
+   "in progress" colour — it's already this app's language for "neutral,
+   not done yet". */
+.docs-recording-badge--retrying {
+  background: var(--brand-purple-8-purple-10);
+  color: var(--brand-purple-6-purple-4);
+  gap: 5px;
+}
+.docs-recording-spinner {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: docsRecordingSpin 0.7s linear infinite;
+}
+@keyframes docsRecordingSpin {
+  to { transform: rotate(360deg); }
+}
+/* Groups the Failed badge with its Retry action so both sit flush right
+   together, same as the plain status badge does on its own. */
+.docs-recording-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Same box as .docs-recording-badge (height/padding/radius/type) so Retry
+   reads as the same size as the badge it sits beside, just actionable. */
+.docs-recording-retry {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 11px;
+  border: 1px solid var(--ui-purple-4-lavendar);
+  background: #fff;
+  font-family: Barlow, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand-purple-1-purple-0);
+  cursor: pointer;
+}
+.docs-recording-retry:active { background: var(--brand-purple-8-purple-10); }
 
 /* CareBridgeSelectScreen — the document picker itself: an intro line above
    the same doc-row list Assessments already uses, so the checkboxes read

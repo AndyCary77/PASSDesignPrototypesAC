@@ -14,11 +14,13 @@ import { useSyncExternalStore } from 'react'
 
 const STORAGE_KEY = 'pass-proto-recordings'
 
-// One seed recording so the demo always shows the requested scenario: an
-// earlier visit already uploaded, and the one just finished landing as
-// queued alongside it.
+// Seed recordings so the demo always shows the requested scenarios: a more
+// recent visit that failed to upload (sits above, so Retry is the first
+// thing seen), an earlier visit that uploaded fine, and the one just
+// finished landing as queued alongside both.
 const DEFAULT_RECORDINGS = {
   arthur: [
+    { id: 'seed-2', title: "Arthur's Review of Wellbeing – Mon 21 Sep 2026", status: 'failed' },
     { id: 'seed-1', title: "Arthur's Initial assessment – Mon 25 Aug 2026", status: 'uploaded' },
   ],
 }
@@ -76,6 +78,19 @@ export function addRecording(customerId, { title }) {
 
 export function useRecordings(customerId) {
   return useSyncExternalStore(subscribe, () => getRecordings(customerId))
+}
+
+/**
+ * Flips a single recording from 'failed' to 'uploaded' — the demo's Retry
+ * action. Only transition this data layer needs to support; a real retry
+ * could of course fail again, but that's not the scenario being demoed.
+ */
+export function markUploaded(customerId, id) {
+  const all = load()
+  const existing = all[customerId] ?? []
+  cache = { ...all, [customerId]: existing.map(r => (r.id === id ? { ...r, status: 'uploaded' } : r)) }
+  persist()
+  listeners.forEach(fn => fn())
 }
 
 /**
