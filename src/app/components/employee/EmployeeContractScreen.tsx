@@ -13,16 +13,19 @@ import {
 } from 'lucide-react';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Button } from '../buttons/Button';
+import { InfoBanner } from '../banners/InfoBanner';
 import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
 import { AvailabilityModal, type AvailabilityChange } from './AvailabilityModal';
 import {
   DAYS,
   availKey,
+  getCareType,
   buildInitialAvailability,
   formatDuration,
   formatRange,
   slotsMinutes,
   type DayAvail,
+  type TimeRange,
 } from './availabilityData';
 
 const NAV_ITEMS = [
@@ -122,7 +125,7 @@ export function EmployeeContractScreen() {
   const [activeNav, setActiveNav] = useState('contract-summary');
   const [editingSummary, setEditingSummary] = useState(false);
   const [constraints, setConstraints] = useState<Constraints>(loadConstraints);
-  const [cadenceWeeks, setCadenceWeeks] = useState(2);
+  const [cadenceWeeks, setCadenceWeeks] = useState(4);
   // Selected availability days, keyed `${weekIndex}-${day}`. Keys for weeks
   // that no longer exist (cadence shortened) are ignored rather than cleared.
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
@@ -148,6 +151,15 @@ export function EmployeeContractScreen() {
     setSelectedDays(new Set([key]));
     setEditAvailabilityOpen(true);
   };
+  const setWeekSelected = (weekIndex: number, selected: boolean) =>
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      for (const d of DAYS) {
+        if (selected) next.add(availKey(weekIndex, d.short));
+        else next.delete(availKey(weekIndex, d.short));
+      }
+      return next;
+    });
   const toggleDay = (key: string) =>
     setSelectedDays((prev) => {
       const next = new Set(prev);
@@ -343,6 +355,8 @@ export function EmployeeContractScreen() {
               </div>
             </div>
 
+            <InfoBanner className="mb-5">Click the days or select weeks you wish to edit</InfoBanner>
+
             {Array.from({ length: cadenceWeeks }, (_, i) => (
               <WeekBlock
                 key={i}
@@ -351,6 +365,7 @@ export function EmployeeContractScreen() {
                 weekIndex={i}
                 availability={availability}
                 onAddHours={addHoursForDay}
+                onSetWeek={setWeekSelected}
                 selectedDays={selectedDays}
                 onToggleDay={toggleDay}
               />
@@ -381,9 +396,6 @@ export function EmployeeContractScreen() {
               onConfirm={applyAvailabilityChange}
             />
 
-            <div className="mt-2">
-              <Button variant="secondary">Multiselect</Button>
-            </div>
           </section>
 
           {/* Holiday */}
@@ -869,6 +881,7 @@ function WeekBlock({
   selectedDays,
   onToggleDay,
   onAddHours,
+  onSetWeek,
 }: {
   title: string;
   current?: boolean;
@@ -877,7 +890,18 @@ function WeekBlock({
   selectedDays: Set<string>;
   onToggleDay: (key: string) => void;
   onAddHours: (key: string) => void;
+  onSetWeek: (weekIndex: number, selected: boolean) => void;
 }) {
+  const weekAllSelected = DAYS.every((d) => selectedDays.has(availKey(weekIndex, d.short)));
+  // Distinct care types worked this week, in the order they first appear
+  const weekCareTypes = [
+    ...new Set(
+      DAYS.flatMap((d) => {
+        const a = availability[availKey(weekIndex, d.short)];
+        return [...(a?.regular ?? []), ...(a?.optional ?? [])].map((r) => r.careType);
+      }),
+    ),
+  ].map(getCareType);
   const regularMinutes = DAYS.reduce((sum, d) => sum + slotsMinutes(availability[availKey(weekIndex, d.short)]?.regular), 0);
   const optionalMinutes = DAYS.reduce((sum, d) => sum + slotsMinutes(availability[availKey(weekIndex, d.short)]?.optional), 0);
   return (
@@ -891,14 +915,26 @@ function WeekBlock({
           current ? 'mb-5 border-b border-gray-300 pb-3' : 'mb-3'
         }`}
       >
-        {/* Current week gets a filled pill label, matching the live app */}
-        <div
-          className={`text-lg font-semibold ${
-            current ? 'rounded-full bg-[#DCD9E4] px-4 py-1 text-gray-800' : 'text-gray-900'
-          }`}
-        >
-          {title}
-          {current && <span className="ml-2 text-base font-normal text-gray-800">(current week)</span>}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* Current week gets a filled pill label, matching the live app */}
+          <div
+            className={`text-lg font-semibold ${
+              current ? 'rounded-full bg-[#DCD9E4] px-4 py-1 text-gray-800' : 'text-gray-900'
+            }`}
+          >
+            {title}
+            {current && <span className="ml-2 text-base font-normal text-gray-800">(current week)</span>}
+          </div>
+          {/* Care types worked this week — makes a 2-weeks-one-type / 2-weeks-another pattern scannable */}
+          {weekCareTypes.map((c) => (
+            <span key={c.id} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700">
+              <span aria-hidden="true" className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: c.colour }} />
+              {c.label}
+            </span>
+          ))}
+          <Button variant="tertiary" size="sm" onClick={() => onSetWeek(weekIndex, !weekAllSelected)}>
+            {weekAllSelected ? 'Deselect week' : 'Select week'}
+          </Button>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-base text-gray-600">
           <span><b className="font-semibold">Total available:</b> {formatDuration(regularMinutes + optionalMinutes)}</span>
@@ -922,6 +958,40 @@ function WeekBlock({
             />
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One slot: the care type as an eyebrow above the time, with the time block
+ * tinted in that care type's colour. Name + dot so colour is never the only
+ * signal; the tint stays light enough for dark text to keep AA contrast.
+ * Optional overtime keeps its dashed outline (and a lighter tint) so it still
+ * reads as different from regular hours.
+ */
+function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) {
+  const care = getCareType(slot.careType);
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-center gap-1.5 text-sm font-medium text-gray-800">
+        <span
+          aria-hidden="true"
+          className="inline-block h-3 w-3 shrink-0 rounded-full"
+          style={{ backgroundColor: care.colour }}
+        />
+        {care.label}
+      </div>
+      <div
+        className={`w-full rounded-full px-3 text-base font-semibold text-gray-900 whitespace-nowrap ${
+          optional ? 'border-2 border-dashed py-1' : 'py-1.5'
+        }`}
+        style={{
+          backgroundColor: `${care.colour}${optional ? '14' : '2E'}`,
+          borderColor: optional ? care.colour : undefined,
+        }}
+      >
+        {formatRange(slot)}
       </div>
     </div>
   );
@@ -981,11 +1051,9 @@ function DayCard({
           {regularSlots.length > 0 && (
             <div>
               <div className="text-base text-gray-900 mb-1">Regular hours</div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {regularSlots.map((r, i) => (
-                  <div key={i} className="w-full rounded-full bg-[#DCD9E4] px-3 py-1.5 text-base font-semibold text-gray-900 whitespace-nowrap">
-                    {formatRange(r)}
-                  </div>
+                  <SlotBlock key={i} slot={r} />
                 ))}
               </div>
             </div>
@@ -993,11 +1061,9 @@ function DayCard({
           {optionalSlots.length > 0 && (
             <div>
               <div className="text-base text-gray-900 mb-1">Optional overtime</div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {optionalSlots.map((r, i) => (
-                  <div key={i} className="w-full rounded-full border-2 border-dashed border-[#9b97b3] bg-white px-3 py-1 text-base font-semibold text-gray-900 whitespace-nowrap">
-                    {formatRange(r)}
-                  </div>
+                  <SlotBlock key={i} slot={r} optional />
                 ))}
               </div>
             </div>

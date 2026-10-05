@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Info, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Button } from '../buttons/Button';
+import { InfoBanner } from '../banners/InfoBanner';
 import {
+  CARE_TYPES,
   DAYS,
   formatDuration,
   isValidRange,
@@ -10,6 +13,7 @@ import {
   sameSlots,
   slotsMinutes,
   slotsOverlap,
+  type CareTypeId,
   type DayAvail,
   type TimeRange,
 } from './availabilityData';
@@ -62,7 +66,7 @@ function effectiveDayLines(selectedKeys: string[]) {
     .sort(([a], [b]) => a - b)
     .map(([w, days]) => ({
       week: w + 1,
-      names: DAYS.filter((d) => days.has(d.short)).map((d) => d.full),
+      names: days.size === DAYS.length ? ['All days'] : DAYS.filter((d) => days.has(d.short)).map((d) => d.full),
     }));
 }
 
@@ -131,8 +135,7 @@ function AvailabilityForm({
         </ul>
       </div>
 
-      <div className="mt-6 flex items-start gap-3 rounded-md border border-[#2f77b7] bg-[#f0f8fd] px-5 py-3.5 text-base text-gray-900">
-        <Info className="w-6 h-6 shrink-0 text-[#2f77b7]" aria-hidden="true" />
+      <InfoBanner size="md" className="mt-6">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>Please note</span>
           <span aria-hidden="true">•</span>
@@ -140,7 +143,7 @@ function AvailabilityForm({
           <span aria-hidden="true">•</span>
           <span>Ad-hoc availability will be replaced by recurring availability where overlaps occur</span>
         </div>
-      </div>
+      </InfoBanner>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 items-start">
         <HoursCard
@@ -200,7 +203,8 @@ function HoursCard({
         {slots.length > 0 ? (
           <div className="space-y-3">
             {slots.map((slot, i) => (
-              <div key={i} className="flex items-end gap-3">
+              <div key={i} className="space-y-3">
+              <div className="flex items-end gap-3">
                 <TimeField
                   id={`${idBase}-${i}-start`}
                   label="From"
@@ -221,6 +225,12 @@ function HoursCard({
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
+              </div>
+              <CareTypeField
+                id={`${idBase}-${i}-care-type`}
+                value={slot.careType}
+                onChange={(careType) => updateSlot(i, { careType })}
+              />
               </div>
             ))}
 
@@ -266,6 +276,47 @@ function HoursCard({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function CareTypeDot({ colour }: { colour: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block h-3.5 w-3.5 shrink-0 rounded-full"
+      style={{ backgroundColor: colour }}
+    />
+  );
+}
+
+function CareTypeField({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: CareTypeId;
+  onChange: (v: CareTypeId) => void;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+        Care type
+      </label>
+      <Select value={value} onValueChange={(v) => onChange(v as CareTypeId)}>
+        <SelectTrigger id={id} className="h-10 w-full text-base border-gray-300 bg-white">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="z-[60]">
+          {CARE_TYPES.map((c) => (
+            <SelectItem key={c.id} value={c.id} className="text-base">
+              <CareTypeDot colour={c.colour} />
+              {c.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
