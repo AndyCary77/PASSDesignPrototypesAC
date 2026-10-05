@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { X, Calendar, ChevronDown, EllipsisVertical, CheckCircle2, Coffee, Utensils, Pill, PhoneCall, AlertTriangle } from 'lucide-react';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Tag } from '../ui/tag';
 import { VisitNoteIcon } from '../icons/VisitNoteIcon';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
+import { Button } from '../buttons/Button';
 import davidPhoto from '../../imports/david_b.jpg';
 import customerPhoto from '../../imports/david_f.jpg';
 
@@ -429,20 +430,23 @@ const CARE_TASKS = [
 ];
 
 function CareRequiredContent() {
+  const navigate = useNavigate();
   return (
     <div className="grid gap-y-6 gap-x-20 items-start" style={{ gridTemplateColumns: '30% 1fr' }}>
       {/* Left: scheduling constraints */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Care Requirements</p>
         <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200 relative">
-          <Link
-            to="/customers/list"
-            className="absolute top-3 right-3 p-2 text-gray-600 hover:text-gray-900 rounded-full border border-gray-200 transition-colors"
-            style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+          <Button
+            variant="tertiary"
+            size="sm"
+            iconOnly
+            onClick={() => navigate('/customers/list')}
+            className="absolute top-3 right-3"
             aria-label="Edit care requirements"
           >
             <PencilSolidIcon className="w-4 h-4" />
-          </Link>
+          </Button>
           <CareSection
             title="Mandatory"
             items={[{ label: 'Area', value: 'Sutton Coldfield' }]}

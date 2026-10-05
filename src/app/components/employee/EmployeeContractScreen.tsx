@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FileText,
   CalendarDays,
@@ -12,11 +12,32 @@ import {
   Info,
 } from 'lucide-react';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
+import { Button } from '../buttons/Button';
+import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
+import { AvailabilityModal, type AvailabilityChange } from './AvailabilityModal';
+import {
+  DAYS,
+  availKey,
+  buildInitialAvailability,
+  formatDuration,
+  formatRange,
+  slotsMinutes,
+  type DayAvail,
+} from './availabilityData';
 
 const NAV_ITEMS = [
   { id: 'contract-summary', label: 'Contract summary', Icon: FileText },
   { id: 'availability', label: 'Availability', Icon: CalendarDays },
   { id: 'holiday', label: 'Holiday', Icon: Palmtree },
+];
+
+// Availability repeats on a 1–4 week cycle; the cadence picked decides how many
+// week blocks the pattern shows for review and editing.
+const CADENCE_OPTIONS = [
+  { weeks: 1, label: 'Weekly' },
+  { weeks: 2, label: 'Bi-Weekly' },
+  { weeks: 3, label: 'Tri-Weekly (3 weeks)' },
+  { weeks: 4, label: 'Every 4 weeks' },
 ];
 
 const SUMMARY_FIELDS = [
@@ -90,18 +111,6 @@ const FINANCE_FIELDS = [
   { label: 'Mode of transport', value: 'Driving' },
 ];
 
-type Day = { day: string; hours?: string };
-
-const WEEK: Day[] = [
-  { day: 'Mon', hours: '08:00 – 11:00' },
-  { day: 'Tue', hours: '07:00 – 17:30' },
-  { day: 'Wed', hours: '07:00 – 17:30' },
-  { day: 'Thu', hours: '07:00 – 17:30' },
-  { day: 'Fri', hours: '07:00 – 17:30' },
-  { day: 'Sat', hours: '07:00 – 10:00' },
-  { day: 'Sun' },
-];
-
 const HOLIDAY_STATS = [
   { label: 'Entitlement', value: '28 Days' },
   { label: 'Adjustment', value: '0 Days' },
@@ -113,6 +122,55 @@ export function EmployeeContractScreen() {
   const [activeNav, setActiveNav] = useState('contract-summary');
   const [editingSummary, setEditingSummary] = useState(false);
   const [constraints, setConstraints] = useState<Constraints>(loadConstraints);
+  const [cadenceWeeks, setCadenceWeeks] = useState(2);
+  // Selected availability days, keyed `${weekIndex}-${day}`. Keys for weeks
+  // that no longer exist (cadence shortened) are ignored rather than cleared.
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  const [availability, setAvailability] = useState<Record<string, DayAvail>>(buildInitialAvailability);
+  const [editAvailabilityOpen, setEditAvailabilityOpen] = useState(false);
+  const activeSelection = [...selectedDays].filter((k) => Number(k.split('-')[0]) < cadenceWeeks);
+  const applyAvailabilityChange = (change: AvailabilityChange) => {
+    setAvailability((prev) => {
+      const next = { ...prev };
+      for (const key of activeSelection) {
+        const day = { ...next[key] };
+        if (change.regular !== undefined) day.regular = change.regular;
+        if (change.optional !== undefined) day.optional = change.optional;
+        next[key] = day;
+      }
+      return next;
+    });
+    setSelectedDays(new Set());
+    setEditAvailabilityOpen(false);
+  };
+  // Clicking "+" on an empty day selects just that day and opens the modal.
+  const addHoursForDay = (key: string) => {
+    setSelectedDays(new Set([key]));
+    setEditAvailabilityOpen(true);
+  };
+  const toggleDay = (key: string) =>
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  // The title row and left nav pin beneath AppShell's sticky info-bar. The
+  // info-bar's real bottom edge is measured live (it shrinks on scroll), and
+  // the title row's own height is measured so the nav can sit flush below it.
+  const infoBarBottom = useInfoBarBottom();
+  const titleRowRef = useRef<HTMLDivElement>(null);
+  const [titleRowHeight, setTitleRowHeight] = useState(0);
+  useEffect(() => {
+    const el = titleRowRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setTitleRowHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const stickyOffset = infoBarBottom + titleRowHeight;
+  const sectionStyle = { scrollMarginTop: stickyOffset + 16 };
 
   const handleSaveConstraints = (next: Constraints) => {
     setConstraints(next);
@@ -132,24 +190,25 @@ export function EmployeeContractScreen() {
       </ul>
 
       {/* Title + actions */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-900">Employee Contract</h3>
-        <div className="flex items-center gap-4">
-          <button className="border border-[rgb(154,38,214)] text-[rgb(154,38,214)] hover:bg-purple-50 px-5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer">
-            Add version
-          </button>
-          <button
-            disabled
-            className="bg-gray-200 text-gray-600 px-6 py-2 rounded-full text-sm font-semibold cursor-not-allowed"
-          >
-            Save
-          </button>
+      {/* Pinned flush beneath the info-bar, on an opaque page-coloured shell so
+          content scrolling underneath doesn't show through. */}
+      <div
+        ref={titleRowRef}
+        className="sticky z-30 bg-gray-50 pt-4 pb-4 mb-6 border-b border-gray-200"
+        style={{ top: infoBarBottom }}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-gray-900">Employee Contract</h3>
+          <div className="flex items-center gap-4">
+            <Button variant="secondary">Add version</Button>
+            <Button disabled>Save</Button>
+          </div>
         </div>
       </div>
 
       <div className="flex gap-8 items-start">
         {/* Left nav */}
-        <div className="w-60 flex-shrink-0 sticky top-4">
+        <div className="w-60 flex-shrink-0 sticky" style={{ top: stickyOffset + 24 }}>
           <ul className="space-y-1">
             {NAV_ITEMS.map(({ id, label, Icon }) => {
               const isActive = activeNav === id;
@@ -184,7 +243,8 @@ export function EmployeeContractScreen() {
           {/* Contract summary */}
           <section
             id="contract-summary"
-            className="bg-white rounded-[10px] border border-gray-200 p-6 scroll-mt-4"
+            className="bg-white rounded-[10px] border border-gray-200 p-6"
+          style={sectionStyle}
           >
             {editingSummary ? (
               <ContractSummaryEdit
@@ -196,14 +256,16 @@ export function EmployeeContractScreen() {
               <>
                 <div className="flex items-start justify-between mb-5">
                   <h4 className="text-xl font-semibold text-gray-900">Mr David Buckowski contract summary</h4>
-                  <button
+                  <Button
+                    variant="tertiary"
+                    size="sm"
+                    iconOnly
                     onClick={() => setEditingSummary(true)}
-                    className="flex-shrink-0 p-2 text-gray-600 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
-                    style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+                    className="flex-shrink-0"
                     aria-label="Edit contract summary"
                   >
                     <PencilSolidIcon className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
 
                 <dl className="space-y-4">
@@ -254,7 +316,8 @@ export function EmployeeContractScreen() {
           {/* Availability */}
           <section
             id="availability"
-            className="bg-white rounded-[10px] border border-gray-200 p-6 scroll-mt-4"
+            className="bg-white rounded-[10px] border border-gray-200 p-6"
+          style={sectionStyle}
           >
             <div className="mb-5">
               <h4 className="text-xl font-semibold text-gray-900">Availability</h4>
@@ -267,28 +330,67 @@ export function EmployeeContractScreen() {
             <div className="mb-6 max-w-xs">
               <label className="block text-base font-medium text-gray-700 mb-2">Cadence</label>
               <div className="relative">
-                <select className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-base bg-white pr-9">
-                  <option>Bi-Weekly</option>
-                  <option>Weekly</option>
+                <select
+                  value={cadenceWeeks}
+                  onChange={(e) => setCadenceWeeks(Number(e.target.value))}
+                  className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-base bg-white pr-9"
+                >
+                  {CADENCE_OPTIONS.map((o) => (
+                    <option key={o.weeks} value={o.weeks}>{o.label}</option>
+                  ))}
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            <WeekBlock title="Week 1" />
-            <WeekBlock title="Week 2" current />
+            {Array.from({ length: cadenceWeeks }, (_, i) => (
+              <WeekBlock
+                key={i}
+                title={`Week ${i + 1}`}
+                current={i === Math.min(1, cadenceWeeks - 1)}
+                weekIndex={i}
+                availability={availability}
+                onAddHours={addHoursForDay}
+                selectedDays={selectedDays}
+                onToggleDay={toggleDay}
+              />
+            ))}
+
+            {/* Appears once any day is selected; sticks to the bottom of the
+                viewport so it's reachable from whichever week the selection
+                was made in. */}
+            {activeSelection.length > 0 && (
+              <div className="sticky bottom-4 z-20 mb-4 flex items-center justify-between gap-4 rounded-[10px] border-2 border-[rgb(154,38,214)] bg-white px-4 py-3 shadow-md">
+                <span className="text-base font-semibold text-gray-900">
+                  {activeSelection.length} {activeSelection.length === 1 ? 'day' : 'days'} selected
+                </span>
+                <div className="flex items-center gap-3">
+                  <Button variant="tertiary" onClick={() => setSelectedDays(new Set())}>
+                    Clear selection
+                  </Button>
+                  <Button onClick={() => setEditAvailabilityOpen(true)}>Edit availability</Button>
+                </div>
+              </div>
+            )}
+
+            <AvailabilityModal
+              open={editAvailabilityOpen && activeSelection.length > 0}
+              onOpenChange={setEditAvailabilityOpen}
+              selectedKeys={activeSelection}
+              availability={availability}
+              onConfirm={applyAvailabilityChange}
+            />
 
             <div className="mt-2">
-              <button className="border border-[rgb(154,38,214)] text-[rgb(154,38,214)] hover:bg-purple-50 px-5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer">
-                Multiselect
-              </button>
+              <Button variant="secondary">Multiselect</Button>
             </div>
           </section>
 
           {/* Holiday */}
           <section
             id="holiday"
-            className="bg-white rounded-[10px] border border-gray-200 p-6 scroll-mt-4"
+            className="bg-white rounded-[10px] border border-gray-200 p-6"
+          style={sectionStyle}
           >
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <h4 className="text-xl font-semibold text-gray-900">Holiday</h4>
@@ -631,19 +733,8 @@ function ContractSummaryEdit({
 
       {/* Actions */}
       <div className="flex justify-end gap-3 mt-8">
-        <button
-          onClick={onClose}
-          className="text-gray-700 px-6 py-2 rounded-full text-sm font-semibold cursor-pointer"
-          style={{ backgroundColor: 'rgb(237, 236, 241)' }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer"
-        >
-          Save
-        </button>
+        <Button variant="tertiary" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSave}>Save</Button>
       </div>
     </div>
   );
@@ -770,49 +861,162 @@ function RadioPair({
   );
 }
 
-function WeekBlock({ title, current }: { title: string; current?: boolean }) {
+function WeekBlock({
+  title,
+  current,
+  weekIndex,
+  availability,
+  selectedDays,
+  onToggleDay,
+  onAddHours,
+}: {
+  title: string;
+  current?: boolean;
+  weekIndex: number;
+  availability: Record<string, DayAvail>;
+  selectedDays: Set<string>;
+  onToggleDay: (key: string) => void;
+  onAddHours: (key: string) => void;
+}) {
+  const regularMinutes = DAYS.reduce((sum, d) => sum + slotsMinutes(availability[availKey(weekIndex, d.short)]?.regular), 0);
+  const optionalMinutes = DAYS.reduce((sum, d) => sum + slotsMinutes(availability[availKey(weekIndex, d.short)]?.optional), 0);
   return (
-    <div className="mb-6">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="text-lg font-semibold text-gray-900">
+    <div
+      className={`mb-6 ${
+        current ? 'rounded-[10px] border border-gray-300 bg-[#F5F4F7] p-4' : ''
+      }`}
+    >
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 ${
+          current ? 'mb-5 border-b border-gray-300 pb-3' : 'mb-3'
+        }`}
+      >
+        {/* Current week gets a filled pill label, matching the live app */}
+        <div
+          className={`text-lg font-semibold ${
+            current ? 'rounded-full bg-[#DCD9E4] px-4 py-1 text-gray-800' : 'text-gray-900'
+          }`}
+        >
           {title}
-          {current && <span className="ml-2 text-base font-normal text-[rgb(154,38,214)]">(current week)</span>}
+          {current && <span className="ml-2 text-base font-normal text-gray-800">(current week)</span>}
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-base text-gray-600">
-          <span><b className="font-semibold">Total available:</b> 48 hours</span>
-          <span><b className="font-semibold">Optional hrs:</b> 0</span>
+          <span><b className="font-semibold">Total available:</b> {formatDuration(regularMinutes + optionalMinutes)}</span>
+          <span><b className="font-semibold">Optional hrs:</b> {optionalMinutes ? formatDuration(optionalMinutes) : 0}</span>
           <span><b className="font-semibold">Contracted hrs:</b> 40 hours</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-        {WEEK.map((d) => (
-          <DayCard key={d.day} day={d.day} hours={d.hours} />
-        ))}
+        {DAYS.map((d) => {
+          const key = availKey(weekIndex, d.short);
+          return (
+            <DayCard
+              key={d.short}
+              day={d.short}
+              avail={availability[key] ?? {}}
+              weekLabel={title}
+              selected={selectedDays.has(key)}
+              onToggle={() => onToggleDay(key)}
+              onAddHours={() => onAddHours(key)}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function DayCard({ day, hours }: { day: string; hours?: string }) {
+function DayCard({
+  day,
+  avail,
+  weekLabel,
+  selected,
+  onToggle,
+  onAddHours,
+}: {
+  day: string;
+  avail: DayAvail;
+  weekLabel: string;
+  selected: boolean;
+  onToggle: () => void;
+  onAddHours: () => void;
+}) {
+  const regularSlots = avail.regular ?? [];
+  const optionalSlots = avail.optional ?? [];
+  const hasHours = regularSlots.length > 0 || optionalSlots.length > 0;
   return (
     <div
-      className={`rounded-[10px] border p-3 min-h-[110px] flex flex-col ${
-        hours ? 'border-gray-200 bg-white' : 'border-dashed border-gray-300 bg-gray-50'
+      onClick={onToggle}
+      className={`group relative rounded-[10px] border-2 p-3 min-h-[180px] flex flex-col items-center text-center cursor-pointer transition-colors hover:border-[rgb(154,38,214)] ${
+        selected
+          ? 'border-[rgb(154,38,214)] bg-[rgba(154,38,214,0.05)]'
+          : `bg-white ${hasHours ? 'border-[#9b97b3]' : 'border-[#cfcddb]'}`
       }`}
     >
-      <span className="inline-block self-start px-2.5 py-0.5 rounded-full text-sm font-semibold bg-purple-50 text-[rgb(154,38,214)] mb-2">
+      {/* Radio — revealed on hover/focus, always shown once selected */}
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={selected}
+        aria-label={`Select ${day}, ${weekLabel}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className={`absolute top-3 left-3 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-white cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50 ${
+          selected
+            ? 'border-[rgb(154,38,214)] opacity-100'
+            : 'border-gray-400 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+        }`}
+      >
+        {selected && <span className="h-3 w-3 rounded-full bg-[rgb(154,38,214)]" />}
+      </button>
+
+      <span className={`text-lg font-semibold mb-2 ${hasHours ? 'text-gray-900' : 'text-gray-500'}`}>
         {day}
       </span>
-      {hours ? (
-        <div className="flex-1">
-          <div className="text-sm text-gray-600">Regular hours</div>
-          <div className="text-base font-medium text-gray-900">{hours}</div>
+      {hasHours ? (
+        <div className="w-full space-y-2">
+          {regularSlots.length > 0 && (
+            <div>
+              <div className="text-base text-gray-900 mb-1">Regular hours</div>
+              <div className="space-y-1.5">
+                {regularSlots.map((r, i) => (
+                  <div key={i} className="w-full rounded-full bg-[#DCD9E4] px-3 py-1.5 text-base font-semibold text-gray-900 whitespace-nowrap">
+                    {formatRange(r)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {optionalSlots.length > 0 && (
+            <div>
+              <div className="text-base text-gray-900 mb-1">Optional overtime</div>
+              <div className="space-y-1.5">
+                {optionalSlots.map((r, i) => (
+                  <div key={i} className="w-full rounded-full border-2 border-dashed border-[#9b97b3] bg-white px-3 py-1 text-base font-semibold text-gray-900 whitespace-nowrap">
+                    {formatRange(r)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <button className="flex-1 flex items-center justify-center text-gray-600 hover:text-[rgb(154,38,214)] cursor-pointer">
-          <Plus className="w-6 h-6" />
-        </button>
+        <div className="flex-1 flex items-center justify-center">
+          <Button
+            variant="tertiary"
+            iconOnly
+            aria-label={`Add hours for ${day}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddHours();
+            }}
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+        </div>
       )}
     </div>
   );

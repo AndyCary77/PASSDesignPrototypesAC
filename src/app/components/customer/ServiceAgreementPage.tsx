@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Info } from 'lucide-react';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
+import { Button } from '../buttons/Button';
 import { Tag } from '../ui/tag';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { VisitEditSlideout } from './VisitEditSlideout';
@@ -164,14 +165,16 @@ function VisitCard({ visitNumber, data, onEdit }: { visitNumber: number; data: V
 
         {/* LEFT — visit details */}
         <div className="flex-1 px-6 pt-4 pb-2 relative min-w-0">
-          <button
+          <Button
+            variant="tertiary"
+            size="sm"
+            iconOnly
             onClick={onEdit}
-            className="absolute top-4 right-4 flex-shrink-0 p-2 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
-            style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+            className="absolute top-4 right-4 flex-shrink-0"
             aria-label="Edit visit"
           >
             <PencilSolidIcon className="w-4 h-4" />
-          </button>
+          </Button>
 
           <FieldRow label="Visit title">{data.title}</FieldRow>
           <FieldRow label="Start date">{data.startDate}</FieldRow>
@@ -254,13 +257,15 @@ function VisitCard({ visitNumber, data, onEdit }: { visitNumber: number; data: V
         <div className="w-[340px] flex-shrink-0 px-6 pt-4 pb-2">
           <div className="flex items-start justify-between gap-3 mb-0.5">
             <p className="text-base font-semibold text-gray-900">Care requirements</p>
-            <button
-              className="flex-shrink-0 p-2 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
-              style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+            <Button
+              variant="tertiary"
+              size="sm"
+              iconOnly
+              className="flex-shrink-0"
               aria-label="Edit care requirements"
             >
               <PencilSolidIcon className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
           <p className="text-sm text-gray-500 mb-1 leading-snug">
             Inherited from customer defaults — <br></br>
@@ -472,13 +477,15 @@ export function ServiceAgreementPage() {
 
         {/* Weekly Schedule */}
         <div className="bg-white rounded-lg border border-gray-200 relative">
-          <button
-            className="absolute top-4 right-4 flex-shrink-0 p-1.5 text-gray-500 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
-            style={{ backgroundColor: 'rgb(220, 217, 228)' }}
+          <Button
+            variant="tertiary"
+            size="sm"
+            iconOnly
+            className="absolute top-4 right-4 flex-shrink-0"
             aria-label="Edit weekly schedule"
           >
-            <PencilSolidIcon className="w-3.5 h-3.5" />
-          </button>
+            <PencilSolidIcon className="w-4 h-4" />
+          </Button>
           <div className="px-6 pt-4 pb-2">
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Weekly schedule</h3>
             <FieldRow label="Send">Yes</FieldRow>

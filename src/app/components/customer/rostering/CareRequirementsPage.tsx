@@ -1,5 +1,6 @@
 import { Tag } from "../../ui/tag";
 import { PencilSolidIcon } from "../../icons/PencilSolidIcon";
+import { Button } from "../../buttons/Button";
 import { useCustomer } from "../../../data/CustomerContext";
 import { TabEmptyState } from "../TabEmptyState";
 
@@ -111,14 +112,16 @@ function CareRequirementSection({
             <span className="text-gray-400 text-sm italic">None specified</span>
           )}
         </div>
-        <button
-          className="flex-shrink-0 p-2 text-gray-600 hover:text-gray-900 rounded-full border border-gray-200 transition-colors cursor-pointer"
-          style={{ backgroundColor: "rgb(220, 217, 228)" }}
+        <Button
+          variant="tertiary"
+          size="sm"
+          iconOnly
+          className="flex-shrink-0"
           data-testid={`${testId}-edit-btn`}
           aria-label="Edit"
         >
           <PencilSolidIcon className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

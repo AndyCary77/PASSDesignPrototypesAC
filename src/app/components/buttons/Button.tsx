@@ -70,7 +70,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {icon && <span aria-hidden="true" className="shrink-0">{icon}</span>}
-        {!iconOnly && children}
+        {children}
         {badge !== undefined && (
           <span className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white/20 border border-white/30 text-xs font-semibold">
             {badge}
