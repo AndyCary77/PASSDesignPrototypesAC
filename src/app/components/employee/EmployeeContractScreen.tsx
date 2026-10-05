@@ -964,35 +964,33 @@ function WeekBlock({
 }
 
 /**
- * One slot: the care type as an eyebrow above the time, with the time block
- * tinted in that care type's colour. Name + dot so colour is never the only
- * signal; the tint stays light enough for dark text to keep AA contrast.
+ * One slot as a single tinted pill: care type (dot + name) over the time.
+ * The tint is the care type's colour, kept light enough for dark text to hold
+ * AA contrast, and the name + dot mean colour is never the only signal.
  * Optional overtime keeps its dashed outline (and a lighter tint) so it still
  * reads as different from regular hours.
  */
 function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) {
   const care = getCareType(slot.careType);
   return (
-    <div>
-      <div className="mb-1 flex items-center justify-center gap-1.5 text-sm font-medium text-gray-800">
+    <div
+      className={`w-full rounded-2xl px-2 text-gray-900 whitespace-nowrap flex flex-col items-center leading-tight ${
+        optional ? 'border-2 border-dashed py-1' : 'py-1.5'
+      }`}
+      style={{
+        backgroundColor: `${care.colour}${optional ? '14' : '2E'}`,
+        borderColor: optional ? care.colour : undefined,
+      }}
+    >
+      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
         <span
           aria-hidden="true"
-          className="inline-block h-3 w-3 shrink-0 rounded-full"
+          className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: care.colour }}
         />
         {care.label}
-      </div>
-      <div
-        className={`w-full rounded-full px-3 text-base font-semibold text-gray-900 whitespace-nowrap ${
-          optional ? 'border-2 border-dashed py-1' : 'py-1.5'
-        }`}
-        style={{
-          backgroundColor: `${care.colour}${optional ? '14' : '2E'}`,
-          borderColor: optional ? care.colour : undefined,
-        }}
-      >
-        {formatRange(slot)}
-      </div>
+      </span>
+      <span className="text-base font-semibold">{formatRange(slot)}</span>
     </div>
   );
 }
