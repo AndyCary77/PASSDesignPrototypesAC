@@ -62,6 +62,13 @@ const SCREENS = [
       { label: 'Schedule', to: '/schedule' },
     ],
   },
+  {
+    title: 'Office',
+    items: [
+      { label: 'Office — Tags', to: '/office/tags' },
+      { label: 'Office — Roster Settings', to: '/office/roster-settings' },
+    ],
+  },
 ];
 
 // The mobile prototypes are standalone HTML apps (their own React roots),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Header } from './components/layout/TopNavBarLegacy';
@@ -420,7 +420,13 @@ export const router = createBrowserRouter([
     Component: ScheduleLayout,
   },
   {
-    path: "/office/tags",
+    path: "/office",
+    Component: () => <Navigate to="/office/tags" replace />,
+  },
+  {
+    // /office/<tab-slug> — see OFFICE_TABS. (Tag type detail below is more
+    // specific, so it still wins for /office/tags/:tagTypeId.)
+    path: "/office/:tab",
     Component: OfficeLayout,
   },
   {

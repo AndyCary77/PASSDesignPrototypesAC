@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Button } from '../buttons/Button';
+import { useVisitTypes } from '../../data/RosterSettingsContext';
 import { InfoBanner } from '../banners/InfoBanner';
 import {
   CARE_TYPES,
@@ -30,6 +31,7 @@ export function AvailabilityModal({
   selectedKeys,
   availability,
   onConfirm,
+  showCareTypes,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,6 +39,8 @@ export function AvailabilityModal({
   selectedKeys: string[];
   availability: Record<string, DayAvail>;
   onConfirm: (change: AvailabilityChange) => void;
+  /** Availability by care type is on for this office. */
+  showCareTypes: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,6 +52,7 @@ export function AvailabilityModal({
           selectedKeys={selectedKeys}
           availability={availability}
           onConfirm={onConfirm}
+          showCareTypes={showCareTypes}
         />
       </DialogContent>
     </Dialog>
@@ -75,9 +80,10 @@ function commonSlots(
   selectedKeys: string[],
   availability: Record<string, DayAvail>,
   field: 'regular' | 'optional',
+  showCareTypes: boolean,
 ) {
   const first = availability[selectedKeys[0]]?.[field];
-  const mixed = selectedKeys.some((k) => !sameSlots(availability[k]?.[field], first));
+  const mixed = selectedKeys.some((k) => !sameSlots(availability[k]?.[field], first, !showCareTypes));
   return { slots: mixed ? [] : (first ?? []).map((r) => ({ ...r })), mixed };
 }
 
@@ -94,13 +100,15 @@ function AvailabilityForm({
   selectedKeys,
   availability,
   onConfirm,
+  showCareTypes,
 }: {
   selectedKeys: string[];
   availability: Record<string, DayAvail>;
   onConfirm: (change: AvailabilityChange) => void;
+  showCareTypes: boolean;
 }) {
-  const regularInit = commonSlots(selectedKeys, availability, 'regular');
-  const optionalInit = commonSlots(selectedKeys, availability, 'optional');
+  const regularInit = commonSlots(selectedKeys, availability, 'regular', showCareTypes);
+  const optionalInit = commonSlots(selectedKeys, availability, 'optional', showCareTypes);
   const [regular, setRegular] = useState<Editable>({ slots: regularInit.slots, touched: false });
   const [optional, setOptional] = useState<Editable>({ slots: optionalInit.slots, touched: false });
 
@@ -152,6 +160,7 @@ function AvailabilityForm({
           value={regular}
           onChange={setRegular}
           mixed={regularInit.mixed}
+          showCareTypes={showCareTypes}
         />
         <HoursCard
           title="Optional Overtime"
@@ -160,6 +169,7 @@ function AvailabilityForm({
           value={optional}
           onChange={setOptional}
           mixed={optionalInit.mixed}
+          showCareTypes={showCareTypes}
         />
       </div>
 
@@ -179,6 +189,7 @@ function HoursCard({
   value,
   onChange,
   mixed,
+  showCareTypes,
 }: {
   title: string;
   idBase: string;
@@ -186,6 +197,7 @@ function HoursCard({
   value: Editable;
   onChange: (next: Editable) => void;
   mixed: boolean;
+  showCareTypes: boolean;
 }) {
   const { slots } = value;
   const error = slotsError(value);
@@ -226,11 +238,13 @@ function HoursCard({
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
-              <CareTypeField
-                id={`${idBase}-${i}-care-type`}
-                value={slot.careType}
-                onChange={(careType) => updateSlot(i, { careType })}
-              />
+              {showCareTypes && (
+                <CareTypeField
+                  id={`${idBase}-${i}-care-type`}
+                  value={slot.careType}
+                  onChange={(careType) => updateSlot(i, { careType })}
+                />
+              )}
               </div>
             ))}
 
@@ -299,6 +313,9 @@ function CareTypeField({
   value: CareTypeId;
   onChange: (v: CareTypeId) => void;
 }) {
+  // Care types switched off in Roster Settings can't be picked for new availability
+  // (a slot already using one still shows it).
+  const enabledIds = new Set(useVisitTypes().filter((v) => v.enabled).map((v) => v.id));
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
@@ -309,7 +326,7 @@ function CareTypeField({
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="z-[60]">
-          {CARE_TYPES.map((c) => (
+          {CARE_TYPES.filter((c) => c.id === value || enabledIds.has(c.id)).map((c) => (
             <SelectItem key={c.id} value={c.id} className="text-base">
               <CareTypeDot colour={c.colour} />
               {c.label}

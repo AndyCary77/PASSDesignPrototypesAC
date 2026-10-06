@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import {
   FileText,
   CalendarDays,
@@ -14,6 +15,9 @@ import {
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Button } from '../buttons/Button';
 import { InfoBanner } from '../banners/InfoBanner';
+import { SectionNav } from '../layout/SectionNav';
+import { useScrollToHash } from '../../hooks/useScrollToHash';
+import { useAvailabilityByCareType } from '../../data/RosterSettingsContext';
 import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
 import { AvailabilityModal, type AvailabilityChange } from './AvailabilityModal';
 import {
@@ -125,6 +129,7 @@ export function EmployeeContractScreen() {
   const [activeNav, setActiveNav] = useState('contract-summary');
   const [editingSummary, setEditingSummary] = useState(false);
   const [constraints, setConstraints] = useState<Constraints>(loadConstraints);
+  const availabilityByCareType = useAvailabilityByCareType();
   const [cadenceWeeks, setCadenceWeeks] = useState(4);
   // Selected availability days, keyed `${weekIndex}-${day}`. Keys for weeks
   // that no longer exist (cadence shortened) are ignored rather than cleared.
@@ -182,6 +187,7 @@ export function EmployeeContractScreen() {
     return () => ro.disconnect();
   }, []);
   const stickyOffset = infoBarBottom + titleRowHeight;
+  useScrollToHash(titleRowHeight > 0 && infoBarBottom > 0);
   const sectionStyle = { scrollMarginTop: stickyOffset + 16 };
 
   const handleSaveConstraints = (next: Constraints) => {
@@ -220,29 +226,13 @@ export function EmployeeContractScreen() {
 
       <div className="flex gap-8 items-start">
         {/* Left nav */}
-        <div className="w-60 flex-shrink-0 sticky" style={{ top: stickyOffset + 24 }}>
-          <ul className="space-y-1">
-            {NAV_ITEMS.map(({ id, label, Icon }) => {
-              const isActive = activeNav === id;
-              return (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    onClick={() => setActiveNav(id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-purple-50 text-[rgb(154,38,214)]'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {label}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <SectionNav
+          items={NAV_ITEMS}
+          activeId={activeNav}
+          onSelect={setActiveNav}
+          top={stickyOffset + 24}
+          ariaLabel="Contract sections"
+        />
 
         {/* Content blocks */}
         <div className="flex-1 min-w-0 space-y-6">
@@ -355,7 +345,21 @@ export function EmployeeContractScreen() {
               </div>
             </div>
 
-            <InfoBanner className="mb-5">Click the days or select weeks you wish to edit</InfoBanner>
+            <InfoBanner className="mb-5">
+              <p>Click the days or select weeks you wish to edit</p>
+              {/* Pointer for offices where the setting is still off, so it can be found from here. */}
+              {!availabilityByCareType && (
+                <p className="mt-1">
+                  Do they work blocks of different care types, like homecare weeks then live-in weeks?{' '}
+                  <Link
+                    to="/office/roster-settings#availability-by-care-type"
+                    className="font-semibold text-[rgb(154,38,214)] underline underline-offset-2 hover:opacity-80"
+                  >
+                    Turn on availability by care type in Roster Settings
+                  </Link>
+                </p>
+              )}
+            </InfoBanner>
 
             {Array.from({ length: cadenceWeeks }, (_, i) => (
               <WeekBlock
@@ -394,6 +398,7 @@ export function EmployeeContractScreen() {
               selectedKeys={activeSelection}
               availability={availability}
               onConfirm={applyAvailabilityChange}
+              showCareTypes={availabilityByCareType}
             />
 
           </section>
@@ -892,6 +897,7 @@ function WeekBlock({
   onAddHours: (key: string) => void;
   onSetWeek: (weekIndex: number, selected: boolean) => void;
 }) {
+  const showCareTypes = useAvailabilityByCareType();
   const weekAllSelected = DAYS.every((d) => selectedDays.has(availKey(weekIndex, d.short)));
   // Distinct care types worked this week, in the order they first appear
   const weekCareTypes = [
@@ -926,7 +932,7 @@ function WeekBlock({
             {current && <span className="ml-2 text-base font-normal text-gray-800">(current week)</span>}
           </div>
           {/* Care types worked this week — makes a 2-weeks-one-type / 2-weeks-another pattern scannable */}
-          {weekCareTypes.map((c) => (
+          {showCareTypes && weekCareTypes.map((c) => (
             <span key={c.id} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <span aria-hidden="true" className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: c.colour }} />
               {c.label}
@@ -971,7 +977,22 @@ function WeekBlock({
  * reads as different from regular hours.
  */
 function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) {
+  const showCareTypes = useAvailabilityByCareType();
   const care = getCareType(slot.careType);
+  // Availability by care type is off for this office: a plain time pill, as
+  // before. The slot's care type is kept, just not shown, so it comes back if
+  // the setting is turned back on.
+  if (!showCareTypes) {
+    return (
+      <div
+        className={`w-full rounded-full px-3 text-base font-semibold text-gray-900 whitespace-nowrap ${
+          optional ? 'border-2 border-dashed border-[#9b97b3] bg-white py-1' : 'bg-[#DCD9E4] py-1.5'
+        }`}
+      >
+        {formatRange(slot)}
+      </div>
+    );
+  }
   return (
     <div
       className={`w-full rounded-2xl px-2 text-gray-900 whitespace-nowrap flex flex-col items-center leading-tight ${

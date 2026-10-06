@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router';
 import { router } from './routes';
 import { NavModeProvider } from './components/layout/NavModeContext';
 import { FeatureFlagsProvider } from './data/FeatureFlagsContext';
+import { RosterSettingsProvider } from './data/RosterSettingsContext';
 import { FontWeightProvider } from './data/FontWeightContext';
 import { FontWeightToggle } from './components/layout/FontWeightToggle';
 // PasswordGate (./auth) is built and ready but deliberately not wired in
@@ -17,6 +18,7 @@ export default function App() {
 
   return (
     <FeatureFlagsProvider>
+      <RosterSettingsProvider>
       <NavModeProvider>
         <FontWeightProvider>
           <RouterProvider router={router} />
@@ -27,6 +29,7 @@ export default function App() {
           <FontWeightToggle />
         </FontWeightProvider>
       </NavModeProvider>
+      </RosterSettingsProvider>
     </FeatureFlagsProvider>
   );
 }

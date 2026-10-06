@@ -1,15 +1,16 @@
 /**
  * The out-of-the-box visit care types from Roster settings → Visit and event
- * types. Colours match the swatches shown there.
+ * types (the settings page renders this same list). Colours match the swatches
+ * shown there.
  */
 export const CARE_TYPES = [
-  { id: 'personal-care', label: 'Personal care', colour: '#4A72E0' },
-  { id: 'companionship', label: 'Companionship', colour: '#B5651D' },
-  { id: 'live-in', label: 'Live-in', colour: '#8E52C8' },
-  { id: 'sleeping-night', label: 'Sleeping night', colour: '#3A8FBF' },
-  { id: 'waking-night', label: 'Waking night', colour: '#3F9A97' },
-  { id: 'complex-care', label: 'Complex care', colour: '#C94448' },
-  { id: 'shadowing', label: 'Shadowing', colour: '#9C6D1F' },
+  { id: 'personal-care', label: 'Personal care', description: 'Standard level of personal care', includeInHolidayPay: true, colour: '#3A72E9' },
+  { id: 'companionship', label: 'Companionship', description: 'General companionship time', includeInHolidayPay: true, colour: '#BB6000' },
+  { id: 'live-in', label: 'Live-in', description: 'Employee lives with the customer', includeInHolidayPay: true, colour: '#9853D0' },
+  { id: 'sleeping-night', label: 'Sleeping night', description: "Employee sleeps at customer's property, only wakes in an emergency", includeInHolidayPay: true, colour: '#0091BF' },
+  { id: 'waking-night', label: 'Waking night', description: 'Employee sleeps and is expected to wake and assist customer as required', includeInHolidayPay: true, colour: '#009997' },
+  { id: 'complex-care', label: 'Complex care', description: 'Complex care requiring appropriate training and/or qualifications', includeInHolidayPay: true, colour: '#D33944' },
+  { id: 'shadowing', label: 'Shadowing', description: 'Shadowing Booking', includeInHolidayPay: true, colour: '#9C6D1F' },
 ] as const;
 
 export type CareTypeId = (typeof CARE_TYPES)[number]['id'];
@@ -104,8 +105,9 @@ export const slotsMinutes = (slots?: TimeRange[]) =>
 export const isValidRange = (r: TimeRange) =>
   !!r.start && !!r.end && toMinutes(r.end) > toMinutes(r.start);
 export const formatRange = (r: TimeRange) => `${r.start} – ${r.end}`;
-export const sameSlots = (a: TimeRange[] = [], b: TimeRange[] = []) =>
-  a.length === b.length && a.every((r, i) => r.start === b[i].start && r.end === b[i].end && r.careType === b[i].careType);
+export const sameSlots = (a: TimeRange[] = [], b: TimeRange[] = [], ignoreCareType = false) =>
+  a.length === b.length &&
+  a.every((r, i) => r.start === b[i].start && r.end === b[i].end && (ignoreCareType || r.careType === b[i].careType));
 
 /** True if any two (valid) slots in the list overlap. */
 export function slotsOverlap(slots: TimeRange[]) {

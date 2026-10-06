@@ -1,6 +1,7 @@
 import { Info, Minus, Plus } from 'lucide-react';
 import { BRAND_OPTIONS, type OfficeDetails, type PpeStockItem } from './officeMockData';
 import { useOffice } from './OfficeContext';
+import { SegmentedToggle } from '../buttons/SegmentedToggle';
 
 // Rebuilt from the legacy AngularJS office-details form (see the pasted
 // DOM this was based on). Static-permission gating (ng-show="vm.isAdmin"
@@ -53,34 +54,6 @@ function CheckboxField({ id, label, checked, onChange }: { id: string; label: st
       <input id={id} type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="rounded border-gray-300" />
       <span>{label}</span>
     </label>
-  );
-}
-
-// A segmented pill for a binary state that's a real labelled choice rather
-// than a plain on/off flag (Active vs. Inactive, openPASS Yes vs. No) —
-// mirrors the legacy's own switch-toggle for these same fields, reused
-// across the page rather than introducing a second toggle idiom (e.g. a
-// shadcn Switch, which nothing else in the app currently uses either).
-function SegmentedToggle({
-  value, onChange, onLabel, offLabel, onColor = 'bg-green-600', offColor = 'bg-amber-500',
-}: { value: boolean; onChange: (v: boolean) => void; onLabel: string; offLabel: string; onColor?: string; offColor?: string }) {
-  return (
-    <div className="inline-flex rounded-full border border-gray-200 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => onChange(true)}
-        className={`px-4 py-1.5 text-sm font-medium transition-colors ${value ? `${onColor} text-white` : 'text-gray-500 hover:bg-gray-50'}`}
-      >
-        {onLabel}
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(false)}
-        className={`px-4 py-1.5 text-sm font-medium transition-colors ${!value ? `${offColor} text-white` : 'text-gray-500 hover:bg-gray-50'}`}
-      >
-        {offLabel}
-      </button>
-    </div>
   );
 }
 

@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
  * than deleted outright. Toggled from the Admin page (see
  * components/admin/AdminSettingsPage.tsx).
  */
-export type FeatureFlag = 'customerCareBridgeTab';
+export type FeatureFlag = 'customerCareBridgeTab' | 'canEditRosterSettings';
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlag, boolean> = {
   // Deprecated: CareBridge is no longer a customer tab of its own. Recordings
@@ -15,6 +15,9 @@ export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlag, boolean> = {
   // where the content lives. Off by default, kept behind this switch so the
   // old tab can still be looked at.
   customerCareBridgeTab: false,
+  // Stands in for the user's permission to change Roster settings. On by default
+  // so the prototype is editable; switch it off to review the read-only view.
+  canEditRosterSettings: true,
 };
 
 const STORAGE_KEY = 'pass-feature-flags';
