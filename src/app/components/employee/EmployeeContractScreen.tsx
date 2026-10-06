@@ -322,20 +322,20 @@ export function EmployeeContractScreen() {
           style={sectionStyle}
           >
             <div className="mb-5">
-              <h4 className="text-xl font-semibold text-gray-900">Availability</h4>
-              <p className="text-base text-gray-600 mt-0.5">
+              <h4 className="text-lg font-semibold text-gray-900">Availability</h4>
+              <p className="text-sm text-gray-600 mt-0.5">
                 Select days and times employee is expected to be available
               </p>
             </div>
 
             {/* Cadence */}
             <div className="mb-6 max-w-xs">
-              <label className="block text-base font-medium text-gray-700 mb-2">Cadence</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cadence</label>
               <div className="relative">
                 <select
                   value={cadenceWeeks}
                   onChange={(e) => setCadenceWeeks(Number(e.target.value))}
-                  className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-base bg-white pr-9"
+                  className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-sm bg-white pr-9"
                 >
                   {CADENCE_OPTIONS.map((o) => (
                     <option key={o.weeks} value={o.weeks}>{o.label}</option>
@@ -352,7 +352,7 @@ export function EmployeeContractScreen() {
                 <p className="mt-1">
                   Do they work blocks of different care types, like homecare weeks then live-in weeks?{' '}
                   <Link
-                    to="/office/roster-settings#availability-by-care-type"
+                    to="/office/roster-settings?edit=availability-by-care-type#availability-by-care-type"
                     className="font-semibold text-[rgb(154,38,214)] underline underline-offset-2 hover:opacity-80"
                   >
                     Turn on availability by care type in Roster Settings
@@ -380,7 +380,7 @@ export function EmployeeContractScreen() {
                 was made in. */}
             {activeSelection.length > 0 && (
               <div className="sticky bottom-4 z-20 mb-4 flex items-center justify-between gap-4 rounded-[10px] border-2 border-[rgb(154,38,214)] bg-white px-4 py-3 shadow-md">
-                <span className="text-base font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-gray-900">
                   {activeSelection.length} {activeSelection.length === 1 ? 'day' : 'days'} selected
                 </span>
                 <div className="flex items-center gap-3">
@@ -924,12 +924,12 @@ function WeekBlock({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {/* Current week gets a filled pill label, matching the live app */}
           <div
-            className={`text-lg font-semibold ${
+            className={`text-base font-semibold ${
               current ? 'rounded-full bg-[#DCD9E4] px-4 py-1 text-gray-800' : 'text-gray-900'
             }`}
           >
             {title}
-            {current && <span className="ml-2 text-base font-normal text-gray-800">(current week)</span>}
+            {current && <span className="ml-2 text-sm font-normal text-gray-800">(current week)</span>}
           </div>
           {/* Care types worked this week — makes a 2-weeks-one-type / 2-weeks-another pattern scannable */}
           {showCareTypes && weekCareTypes.map((c) => (
@@ -942,7 +942,7 @@ function WeekBlock({
             {weekAllSelected ? 'Deselect week' : 'Select week'}
           </Button>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-base text-gray-600">
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-600">
           <span><b className="font-semibold">Total available:</b> {formatDuration(regularMinutes + optionalMinutes)}</span>
           <span><b className="font-semibold">Optional hrs:</b> {optionalMinutes ? formatDuration(optionalMinutes) : 0}</span>
           <span><b className="font-semibold">Contracted hrs:</b> 40 hours</span>
@@ -985,8 +985,8 @@ function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) 
   if (!showCareTypes) {
     return (
       <div
-        className={`w-full rounded-full px-3 text-base font-semibold text-gray-900 whitespace-nowrap ${
-          optional ? 'border-2 border-dashed border-[#9b97b3] bg-white py-1' : 'bg-[#DCD9E4] py-1.5'
+        className={`w-full rounded-full px-3 text-sm font-semibold text-gray-900 whitespace-nowrap ${
+          optional ? 'border-2 border-dashed border-[#9b97b3] bg-white py-0.5' : 'bg-[#DCD9E4] py-1'
         }`}
       >
         {formatRange(slot)}
@@ -996,7 +996,7 @@ function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) 
   return (
     <div
       className={`w-full rounded-2xl px-2 text-gray-900 whitespace-nowrap flex flex-col items-center leading-tight ${
-        optional ? 'border-2 border-dashed py-1' : 'py-1.5'
+        optional ? 'border-2 border-dashed py-0.5' : 'py-1'
       }`}
       style={{
         backgroundColor: `${care.colour}${optional ? '14' : '2E'}`,
@@ -1011,7 +1011,7 @@ function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) 
         />
         {care.label}
       </span>
-      <span className="text-base font-semibold">{formatRange(slot)}</span>
+      <span className="text-sm font-semibold">{formatRange(slot)}</span>
     </div>
   );
 }
@@ -1037,7 +1037,7 @@ function DayCard({
   return (
     <div
       onClick={onToggle}
-      className={`group relative rounded-[10px] border-2 p-3 min-h-[180px] flex flex-col items-center text-center cursor-pointer transition-colors hover:border-[rgb(154,38,214)] ${
+      className={`group relative rounded-[10px] border-2 p-2.5 min-h-[140px] flex flex-col items-center text-center cursor-pointer transition-colors hover:border-[rgb(154,38,214)] ${
         selected
           ? 'border-[rgb(154,38,214)] bg-[rgba(154,38,214,0.05)]'
           : `bg-white ${hasHours ? 'border-[#9b97b3]' : 'border-[#cfcddb]'}`
@@ -1053,24 +1053,24 @@ function DayCard({
           e.stopPropagation();
           onToggle();
         }}
-        className={`absolute top-3 left-3 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-white cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50 ${
+        className={`absolute top-2.5 left-2.5 flex h-5 w-5 items-center justify-center rounded-full border-2 bg-white cursor-pointer outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50 ${
           selected
             ? 'border-[rgb(154,38,214)] opacity-100'
             : 'border-gray-400 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
         }`}
       >
-        {selected && <span className="h-3 w-3 rounded-full bg-[rgb(154,38,214)]" />}
+        {selected && <span className="h-2.5 w-2.5 rounded-full bg-[rgb(154,38,214)]" />}
       </button>
 
-      <span className={`text-lg font-semibold mb-2 ${hasHours ? 'text-gray-900' : 'text-gray-500'}`}>
+      <span className={`text-base font-semibold mb-1.5 ${hasHours ? 'text-gray-900' : 'text-gray-500'}`}>
         {day}
       </span>
       {hasHours ? (
-        <div className="w-full space-y-2">
+        <div className="w-full space-y-1.5">
           {regularSlots.length > 0 && (
             <div>
-              <div className="text-base text-gray-900 mb-1">Regular hours</div>
-              <div className="space-y-2">
+              <div className="text-sm text-gray-900 mb-0.5">Regular hours</div>
+              <div className="space-y-1.5">
                 {regularSlots.map((r, i) => (
                   <SlotBlock key={i} slot={r} />
                 ))}
@@ -1079,8 +1079,8 @@ function DayCard({
           )}
           {optionalSlots.length > 0 && (
             <div>
-              <div className="text-base text-gray-900 mb-1">Optional overtime</div>
-              <div className="space-y-2">
+              <div className="text-sm text-gray-900 mb-0.5">Optional overtime</div>
+              <div className="space-y-1.5">
                 {optionalSlots.map((r, i) => (
                   <SlotBlock key={i} slot={r} optional />
                 ))}

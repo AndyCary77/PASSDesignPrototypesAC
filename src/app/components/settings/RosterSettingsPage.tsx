@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Button } from '../buttons/Button';
 import { InfoBanner } from '../banners/InfoBanner';
 import { EditSlideout } from '../layout/EditSlideout';
@@ -715,9 +715,12 @@ function VisitEventTypesSlideout({
   isDomiciliary,
   onClose,
   onSaved,
+  focusAvailability = false,
 }: {
   isDomiciliary: boolean;
   onClose: () => void;
+  /** Opened from a "turn on availability by care type" link: bring that panel into view and focus its checkbox. */
+  focusAvailability?: boolean;
   /** Called after a save, once the slide-out has started closing. */
   onSaved: () => void;
 }) {
@@ -726,6 +729,18 @@ function VisitEventTypesSlideout({
   const [careTypeAvailability, setCareTypeAvailability] = useState(advanced.availabilityByCareType);
   const [showDisabledVisit, setShowDisabledVisit] = useState(false);
   const [showDisabledEvent, setShowDisabledEvent] = useState(false);
+  const availabilityPanelRef = useRef<HTMLDivElement>(null);
+  const availabilityCheckboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!focusAvailability) return;
+    // After the slide-in has settled
+    const t = window.setTimeout(() => {
+      availabilityPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      availabilityCheckboxRef.current?.focus({ preventScroll: true });
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [focusAvailability]);
 
   const set = (key: string, patch: TypeOverride) => setDraft((d) => ({ ...d, [key]: { ...d[key], ...patch } }));
 
@@ -817,11 +832,12 @@ function VisitEventTypesSlideout({
         </div>
 
         {isDomiciliary && (
-          <div className="rounded-[10px] border border-gray-200 bg-white p-5">
+          <div ref={availabilityPanelRef} className="rounded-[10px] border border-gray-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-gray-900">Availability by care type</h3>
             <InfoBanner className="mt-3">{CARE_TYPE_AVAILABILITY_HELPER}</InfoBanner>
             <label className="mt-4 flex items-center gap-2.5 text-base text-gray-800 cursor-pointer w-fit">
               <input
+                ref={availabilityCheckboxRef}
                 type="checkbox"
                 checked={careTypeAvailability}
                 onChange={(e) => setCareTypeAvailability(e.target.checked)}
@@ -992,7 +1008,20 @@ export function RosterSettingsPage() {
   const isDomiciliary = office.type === 'DOMICILIARY';
   const canEdit = useFeatureFlag('canEditRosterSettings');
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [visitEventOpen, setVisitEventOpen] = useState(false);
+  // `?edit=availability-by-care-type` opens the Visit and event types editor straight
+  // onto that setting (the contract's "turn on availability by care type" link).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [openedForCareType] = useState(() => searchParams.get('edit') === 'availability-by-care-type');
+  const [visitEventOpen, setVisitEventOpen] = useState(openedForCareType);
+  const closeVisitEvent = () => {
+    setVisitEventOpen(false);
+    // Drop the param so a reload doesn't reopen the editor.
+    if (searchParams.has('edit')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('edit');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   const [activeId, setActiveId] = useActiveSection(
     NAV.map((n) => n.id),
@@ -1349,7 +1378,8 @@ export function RosterSettingsPage() {
       {visitEventOpen && canEdit && (
         <VisitEventTypesSlideout
           isDomiciliary={isDomiciliary}
-          onClose={() => setVisitEventOpen(false)}
+          onClose={closeVisitEvent}
+          focusAvailability={openedForCareType}
           onSaved={() => window.setTimeout(() => document.getElementById('availability-by-care-type')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 350)}
         />
       )}
