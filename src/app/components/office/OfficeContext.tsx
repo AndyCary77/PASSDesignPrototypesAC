@@ -1,11 +1,13 @@
 import { createContext, useContext, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { MOCK_OFFICE, type OfficeDetails } from './officeMockData';
+import { DEFAULT_OFFICE_SETTINGS, type OfficeSettings } from './officeSettingsMockData';
 
 // Office-level tabs, matching the real tenant's tab bar (see the DOM sample
 // supplied when the Tags/Details tabs were built). Only "Tags" and
 // "Details" have real content — the rest still just placeholder. (Roster
-// Settings is now built too: see RosterSettingsPage.)
+// Settings and Settings and Permissions are now built too: see
+// RosterSettingsPage and OfficeSettingsPage.)
 // Each tab has its own URL (/office/<slug>) so it can be linked to directly.
 export const OFFICE_TABS = [
   { id: 'details', label: 'Details', slug: 'details' },
@@ -25,6 +27,9 @@ interface OfficeContextType {
   setActiveTab: (tab: string) => void;
   office: OfficeDetails;
   updateOffice: <K extends keyof OfficeDetails>(key: K, value: OfficeDetails[K]) => void;
+  /** Settings and Permissions tab values — saved card by card through each card's edit slide-out. */
+  settings: OfficeSettings;
+  saveSettings: (patch: Partial<OfficeSettings>) => void;
   justSaved: boolean;
   handleSave: () => void;
 }
@@ -48,6 +53,7 @@ export function OfficeProvider({ children }: { children: React.ReactNode }) {
   const activeTab = OFFICE_TABS.find(t => t.slug === tabSlug)?.id ?? 'tags';
   const setActiveTab = (id: string) => navigate(officeTabPath(id));
   const [office, setOffice] = useState<OfficeDetails>(MOCK_OFFICE);
+  const [settings, setSettings] = useState<OfficeSettings>(DEFAULT_OFFICE_SETTINGS);
   const [justSaved, setJustSaved] = useState(false);
 
   const updateOffice = <K extends keyof OfficeDetails>(key: K, value: OfficeDetails[K]) => {
@@ -60,8 +66,13 @@ export function OfficeProvider({ children }: { children: React.ReactNode }) {
     window.setTimeout(() => setJustSaved(false), 2500);
   };
 
+  const saveSettings = (patch: Partial<OfficeSettings>) => {
+    setSettings(prev => ({ ...prev, ...patch }));
+    handleSave();
+  };
+
   return (
-    <OfficeContext.Provider value={{ activeTab, setActiveTab, office, updateOffice, justSaved, handleSave }}>
+    <OfficeContext.Provider value={{ activeTab, setActiveTab, office, updateOffice, settings, saveSettings, justSaved, handleSave }}>
       {children}
     </OfficeContext.Provider>
   );

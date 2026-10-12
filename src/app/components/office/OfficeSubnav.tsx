@@ -27,18 +27,16 @@ export function OfficeSubnav() {
         {/* Centre — tabs */}
         <SubnavTabs tabs={OFFICE_TABS} activeTab={activeTab} onChange={setActiveTab} />
 
-        {/* Right — only the Details tab has anything to save right now. */}
+        {/* Right — Details has a page-level Save. Settings and Permissions saves
+            card by card through each card's own slide-out, so it only echoes
+            the "Saved" confirmation here. */}
         <div className="flex items-center gap-3 min-w-[120px] justify-end">
-          {activeTab === 'details' && (
-            <>
-              {justSaved && (
-                <span className="flex items-center gap-1.5 text-sm text-green-700 whitespace-nowrap">
-                  <Check className="w-4 h-4" /> Saved
-                </span>
-              )}
-              <Button onClick={handleSave}>Save</Button>
-            </>
+          {(activeTab === 'details' || activeTab === 'settings') && justSaved && (
+            <span className="flex items-center gap-1.5 text-sm text-green-700 whitespace-nowrap">
+              <Check className="w-4 h-4" /> Saved
+            </span>
           )}
+          {activeTab === 'details' && <Button onClick={handleSave}>Save</Button>}
         </div>
       </div>
     </div>

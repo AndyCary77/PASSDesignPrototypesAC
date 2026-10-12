@@ -5,6 +5,7 @@ import { TAG_TYPE_GROUPS } from './tagsMockData';
 import { TagTypeListItem } from './TagTypeListItem';
 import { OfficeDetailsPage } from './OfficeDetailsPage';
 import { RosterSettingsPage } from '../settings/RosterSettingsPage';
+import { OfficeSettingsPage } from './OfficeSettingsPage';
 import { useOffice, OFFICE_TABS } from './OfficeContext';
 
 export function TagsManagementPage() {
@@ -28,12 +29,14 @@ export function TagsManagementPage() {
   }, [query]);
 
   return (
-    <div className={`flex flex-col mx-auto w-full ${activeTab === 'roster' ? '' : activeTab === 'details' ? 'max-w-6xl' : 'max-w-5xl'}`}>
+    <div className={`flex flex-col mx-auto w-full ${activeTab === 'roster' || activeTab === 'settings' ? '' : activeTab === 'details' ? 'max-w-6xl' : 'max-w-5xl'}`}>
       {activeTab === 'details' ? (
         <OfficeDetailsPage />
       ) : activeTab === 'roster' ? (
         // Wider than the other tabs: the section menu plus 7-column tables need the room.
         <RosterSettingsPage />
+      ) : activeTab === 'settings' ? (
+        <OfficeSettingsPage />
       ) : activeTab !== 'tags' ? (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-400 text-sm">
           {OFFICE_TABS.find(t => t.id === activeTab)?.label} — coming soon
