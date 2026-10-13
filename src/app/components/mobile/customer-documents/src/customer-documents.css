@@ -679,6 +679,41 @@
   border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
   flex-shrink: 0;
 }
+/* Selection-limit banner (max 12 documents for Assessment Hero). iOS: an
+   inset, rounded, tinted card. Android overrides to a full-bleed Material
+   banner (see assets/android.css). Text is 15px/500 — over the 14px floor —
+   on a pale warm background, with a gold border + icon so the state isn't
+   carried by colour alone. */
+.docs-cb-limit-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 16px 4px;
+  padding: 12px;
+  background: #f7f4ee;
+  border: 1px solid #d59934;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.docs-cb-limit-banner-icon { color: #d59934; flex-shrink: 0; display: flex; margin-top: 1px; }
+.docs-cb-limit-banner-text {
+  margin: 0;
+  font-family: Barlow, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #000;
+}
+.docs-cb-limit-banner-text strong { font-weight: 700; }
+
+/* At the limit: unticked rows can't be picked. Dimmed + non-interactive
+   (and the checkbox itself is disabled, so it's also skipped by screen
+   readers' "available" controls and keyboard focus). */
+.docs-doc-row--blocked { opacity: 0.5; cursor: default; }
+.docs-doc-row--blocked .docs-doc-row-checkbox input { cursor: default; }
+.docs-cb-select-all--blocked { opacity: 0.5; cursor: default; }
+.docs-cb-select-all--blocked input { cursor: default; }
+
 /* Add row — first row under each section's header, styled as a row
    (not a button/FAB) with a purple label, so it reads as part of the list
    it adds to. */

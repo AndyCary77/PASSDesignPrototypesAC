@@ -288,6 +288,35 @@
   transform: rotate(45deg);
 }
 
+/* Indeterminate (some of a section ticked) — Material's filled box with a
+   horizontal dash instead of the check. */
+[data-platform="android"] .docs-cb-select-all input:indeterminate {
+  background: var(--brand-purple-6-purple-4);
+  border-color: var(--brand-purple-6-purple-4);
+}
+[data-platform="android"] .docs-cb-select-all input:indeterminate::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 10px;
+  height: 2px;
+  background: #fff;
+}
+[data-platform="android"] .docs-cb-select-all input:disabled,
+[data-platform="android"] .docs-doc-row-checkbox input:disabled { cursor: default; }
+
+/* Selection-limit banner — Material banner: full-bleed under the app bar,
+   square corners, divider below instead of a card outline, text at the
+   standard 14sp+ body size with the leading icon. */
+[data-platform="android"] .docs-cb-limit-banner {
+  margin: 0;
+  border-radius: 0;
+  border-width: 0 0 1px 0;
+  padding: 16px;
+  gap: 16px;
+}
+
 /* M3 switch — wider track, thumb grows and gains a check when on. The iOS
    original is a straight UISwitch clone (48×28, 24px thumb). */
 [data-platform="android"] .tog {

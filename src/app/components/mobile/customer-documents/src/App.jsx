@@ -1103,15 +1103,45 @@ function RecordingsSection({ recordings, initialExpanded, customerId }) {
 // true to bring the row back.
 const SHOW_ADD_OPTIONAL_ASSESSMENT = false
 
+// A single recording can be drafted into at most this many documents (across
+// Assessments and Other Documents together). A hard cap rather than a
+// warning after the fact: once 12 are ticked the rest are disabled, and
+// "Select all" fills only the remaining room (in list order) rather than
+// over-selecting and making the user untick the excess by hand.
+const MAX_ASSESSMENT_HERO_DOCUMENTS = 12
+
+// Inline, non-modal banner under the intro line (stays put while the list
+// scrolls). Not a toast/snackbar — it has to stay up for as long as the
+// limit is what's stopping the user, and it's announced politely to screen
+// readers (role="status") rather than interrupting like an alert.
+function SelectionLimitBanner() {
+  return (
+    <div className="docs-cb-limit-banner" role="status">
+      <span className="docs-cb-limit-banner-icon"><InfoIcon size={20} /></span>
+      <p className="docs-cb-limit-banner-text">
+        <strong>Maximum of {MAX_ASSESSMENT_HERO_DOCUMENTS} documents can be selected.</strong> Untick one to choose another.
+      </p>
+    </div>
+  )
+}
+
 function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssessment, onAddDocument, onContinue, onClose }) {
   const [selected, setSelected] = useState(new Set())
 
   // Anything just added from a section's add row is ticked straight away —
   // the point of adding it here is to record against it. `justAdded` is a
   // fresh { keys } object per add, so adding twice in a row still fires.
+  // Respects the selection cap — if it's already full the new item is still
+  // created, just left unticked.
   useEffect(() => {
-    if (justAdded) setSelected(prev => new Set([...prev, ...justAdded.keys]))
+    if (!justAdded) return
+    setSelected(prev => {
+      const next = new Set(prev)
+      justAdded.keys.forEach(k => { if (next.size < MAX_ASSESSMENT_HERO_DOCUMENTS) next.add(k) })
+      return next
+    })
   }, [justAdded])
+  const atLimit = selected.size >= MAX_ASSESSMENT_HERO_DOCUMENTS
   const eligibleAssessments = assessments.filter(a => a.carebridgeTemplateId)
   const eligibleDocuments = documents.filter(d => d.carebridgeTemplateId)
   const assessmentKeys = eligibleAssessments.map(item => `assessment:${item.id}`)
@@ -1121,7 +1151,8 @@ function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssess
 
   const toggle = (key) => setSelected(prev => {
     const next = new Set(prev)
-    next.has(key) ? next.delete(key) : next.add(key)
+    if (next.has(key)) next.delete(key)
+    else if (next.size < MAX_ASSESSMENT_HERO_DOCUMENTS) next.add(key)
     return next
   })
 
@@ -1129,11 +1160,25 @@ function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssess
   // section is selected; toggling it either adds every key in the section
   // or clears just that section's keys (other sections' selections are
   // untouched either way).
-  const toggleAll = (keys, checked) => setSelected(prev => {
-    const next = new Set(prev)
-    keys.forEach(k => checked ? next.add(k) : next.delete(k))
-    return next
-  })
+  // With the cap in play it fills the section in list order until the
+  // selection is full (the banner then explains the limit). If the
+  // section is already all ticked, or partly ticked with no room left,
+  // it clears the section instead (the usual indeterminate-checkbox
+  // behaviour) — so there's always a way back down from the limit.
+  const toggleAll = (keys) => {
+    const inSection = keys.filter(k => selected.has(k))
+    const room = MAX_ASSESSMENT_HERO_DOCUMENTS - selected.size
+    if (inSection.length === keys.length || (inSection.length > 0 && room <= 0)) {
+      setSelected(prev => {
+        const next = new Set(prev)
+        keys.forEach(k => next.delete(k))
+        return next
+      })
+      return
+    }
+    const added = keys.filter(k => !selected.has(k)).slice(0, Math.max(room, 0))
+    setSelected(prev => new Set([...prev, ...added]))
+  }
 
   const handleContinue = () => {
     const ids = [...selected]
@@ -1145,14 +1190,15 @@ function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssess
 
   const renderRow = (kind, item, label) => {
     const key = `${kind}:${item.id}`
+    const blocked = atLimit && !selected.has(key)
     return (
       <div
         key={key}
-        className={`docs-doc-row docs-doc-row--selectable${selected.has(key) ? ' docs-doc-row--selected' : ''}`}
-        onClick={() => toggle(key)}
+        className={`docs-doc-row docs-doc-row--selectable${selected.has(key) ? ' docs-doc-row--selected' : ''}${blocked ? ' docs-doc-row--blocked' : ''}`}
+        onClick={() => !blocked && toggle(key)}
       >
         <span className="docs-doc-row-checkbox">
-          <input type="checkbox" checked={selected.has(key)} onChange={() => toggle(key)} onClick={e => e.stopPropagation()} />
+          <input type="checkbox" checked={selected.has(key)} disabled={blocked} onChange={() => toggle(key)} onClick={e => e.stopPropagation()} />
         </span>
         <span className="docs-doc-row-icon"><DocumentIcon size={22} /></span>
         <span className="docs-doc-row-body">
@@ -1162,17 +1208,28 @@ function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssess
     )
   }
 
-  const renderSectionHeader = (label, keys, allSelected) => (
-    <div className="docs-cb-select-section-header">
-      <p className="docs-cb-select-section-label">{label}</p>
-      {keys.length > 0 && (
-        <label className="docs-cb-select-all">
-          <input type="checkbox" checked={allSelected} onChange={() => toggleAll(keys, !allSelected)} />
-          Select all
-        </label>
-      )}
-    </div>
-  )
+  const renderSectionHeader = (label, keys, allSelected) => {
+    const someSelected = keys.some(k => selected.has(k))
+    // Nothing in this section ticked and no room left — nothing it could do.
+    const blocked = atLimit && !someSelected
+    return (
+      <div className="docs-cb-select-section-header">
+        <p className="docs-cb-select-section-label">{label}</p>
+        {keys.length > 0 && (
+          <label className={`docs-cb-select-all${blocked ? ' docs-cb-select-all--blocked' : ''}`}>
+            <input
+              type="checkbox"
+              checked={allSelected}
+              disabled={blocked}
+              ref={el => { if (el) el.indeterminate = someSelected && !allSelected }}
+              onChange={() => toggleAll(keys)}
+            />
+            Select all
+          </label>
+        )}
+      </div>
+    )
+  }
 
   // First row under each section's header — styled as a row (not a button/
   // FAB) with a purple label, so it reads as part of the list it adds to.
@@ -1194,6 +1251,7 @@ function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssess
           <div style={{ width: 36 }} />
         </div>
         <p className="docs-cb-select-intro">Choose which documents this recording is for — Assessment Hero drafts each one from the conversation.</p>
+        {atLimit && <SelectionLimitBanner />}
         <div className="docs-screen-body">
           {renderSectionHeader('Assessments', assessmentKeys, allAssessmentsSelected)}
           {SHOW_ADD_OPTIONAL_ASSESSMENT && renderAddRow('Add optional assessment', onAddAssessment)}
