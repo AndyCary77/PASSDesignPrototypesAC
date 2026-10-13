@@ -261,6 +261,39 @@ const TEMPLATES = [
       { name: 'Risk factors', fields: 8 },
       { name: 'Score & plan', fields: 4 },
     ] },
+  // Blank-form templates from customer-documents' "Add document" list
+  // (DOCUMENT_TEMPLATES there) and its optional assessments
+  // (OPTIONAL_ASSESSMENT_TEMPLATES) — a document created from one is a
+  // fresh, empty instance meant to be filled from a recording, so each only
+  // needs a generic section shape here, not real field-level content.
+  ...[
+    ['interests', 'Interests and Activities', 'Interests & Activities'],
+    ['personal-goals', 'Personal Goals and Aspirations', 'Personal Goals'],
+    ['falls-risk', 'Falls Risk Assessment', 'Falls Risk'],
+    ['nutrition', 'Nutrition and Hydration Assessment', 'Nutrition & Hydration'],
+    ['sleep', 'Sleep Assessment', 'Sleep'],
+    ['skin-integrity', 'Skin Integrity Assessment', 'Skin Integrity'],
+    ['oral-health', 'Oral Health Assessment', 'Oral Health'],
+    ['mental-capacity', 'Mental Capacity Assessment', 'Mental Capacity'],
+    ['accident', 'Accident', 'Accident'],
+    ['falls-register', 'BBC SD15(7) Falls Register', 'Falls Register'],
+    ['complaint', 'Complaint', 'Complaint'],
+    ['covid-screening', 'COVID-19 Screening - DO NOT EDIT', 'COVID-19 Screening'],
+    ['info-governance', 'Information Governance Incident', 'Info Governance Incident'],
+    ['medication-incident', 'Medication Incident', 'Medication Incident'],
+    ['safeguarding-incident', 'Safeguarding Incident', 'Safeguarding Incident'],
+    ['financial-transaction', 'SD16(1) Financial Transaction Sheet and Audit', 'Financial Transaction'],
+    ['medication-disposal', 'SD18(5) Medication Disposal Form', 'Medication Disposal'],
+    ['repositioning-chart', 'SD20(2) Customer Repositioning Chart', 'Repositioning Chart'],
+    ['fluid-balance-chart', 'SD21(6) Fluid Balance Chart', 'Fluid Balance Chart'],
+    ['food-chart', 'SD21(7) Food chart', 'Food Chart'],
+  ].map(([id, name, short]) => ({
+    id, name, short, created: 'Today',
+    sections: [
+      { name: 'Details', fields: 6 },
+      { name: 'Outcome and actions', fields: 4 },
+    ],
+  })),
 ]
 
 // Which document to surface first, based on where the customer is in the cadence.

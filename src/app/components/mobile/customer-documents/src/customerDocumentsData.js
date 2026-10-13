@@ -67,16 +67,17 @@ export const ASSESSMENTS = [
 
 // Not-yet-added optional assessment templates — offered by "Add assessment".
 // Fictional (the web pack above is fixed/complete), just here to demo that
-// interaction.
+// interaction. carebridgeTemplateId matches a generic entry in
+// mobile/carebridge's TEMPLATES, so an added one can be recorded against.
 export const OPTIONAL_ASSESSMENT_TEMPLATES = [
-  { id: 'interests',       name: 'Interests and Activities' },
-  { id: 'personal-goals',  name: 'Personal Goals and Aspirations' },
-  { id: 'falls-risk',      name: 'Falls Risk Assessment' },
-  { id: 'nutrition',       name: 'Nutrition and Hydration Assessment' },
-  { id: 'sleep',           name: 'Sleep Assessment' },
-  { id: 'skin-integrity',  name: 'Skin Integrity Assessment' },
-  { id: 'oral-health',     name: 'Oral Health Assessment' },
-  { id: 'mental-capacity', name: 'Mental Capacity Assessment' },
+  { id: 'interests',       name: 'Interests and Activities', carebridgeTemplateId: 'interests' },
+  { id: 'personal-goals',  name: 'Personal Goals and Aspirations', carebridgeTemplateId: 'personal-goals' },
+  { id: 'falls-risk',      name: 'Falls Risk Assessment', carebridgeTemplateId: 'falls-risk' },
+  { id: 'nutrition',       name: 'Nutrition and Hydration Assessment', carebridgeTemplateId: 'nutrition' },
+  { id: 'sleep',           name: 'Sleep Assessment', carebridgeTemplateId: 'sleep' },
+  { id: 'skin-integrity',  name: 'Skin Integrity Assessment', carebridgeTemplateId: 'skin-integrity' },
+  { id: 'oral-health',     name: 'Oral Health Assessment', carebridgeTemplateId: 'oral-health' },
+  { id: 'mental-capacity', name: 'Mental Capacity Assessment', carebridgeTemplateId: 'mental-capacity' },
 ]
 
 // Empty — Arthur's real Assessments list is flat/top-level, no folders.
@@ -107,19 +108,24 @@ export const OTHER_DOCUMENT_FOLDERS = [
 // the new document; the template's own name becomes the new document's
 // `code` (matching the existing OTHER_DOCUMENTS shape above, e.g. "BBC
 // SD09(2) Best Interest Decision Making Framework").
+//
+// carebridgeTemplateId is stamped onto the new document so it's offered by
+// mobile/carebridge's "Select documents" picker straight away (that picker
+// only lists documents with one) — it matches the generic per-template
+// entries at the end of TEMPLATES in mobile/carebridge.
 export const DOCUMENT_TEMPLATES = [
-  { id: 'accident', name: 'Accident' },
-  { id: 'falls-register', name: 'BBC SD15(7) Falls Register' },
-  { id: 'complaint', name: 'Complaint' },
-  { id: 'covid-screening', name: 'COVID-19 Screening - DO NOT EDIT' },
-  { id: 'info-governance', name: 'Information Governance Incident' },
-  { id: 'medication-incident', name: 'Medication Incident' },
-  { id: 'safeguarding-incident', name: 'Safeguarding Incident' },
-  { id: 'financial-transaction', name: 'SD16(1) Financial Transaction Sheet and Audit' },
-  { id: 'medication-disposal', name: 'SD18(5) Medication Disposal Form' },
-  { id: 'repositioning-chart', name: 'SD20(2) Customer Repositioning Chart' },
-  { id: 'fluid-balance-chart', name: 'SD21(6) Fluid Balance Chart' },
-  { id: 'food-chart', name: 'SD21(7) Food chart' },
+  { id: 'accident', name: 'Accident', carebridgeTemplateId: 'accident' },
+  { id: 'falls-register', name: 'BBC SD15(7) Falls Register', carebridgeTemplateId: 'falls-register' },
+  { id: 'complaint', name: 'Complaint', carebridgeTemplateId: 'complaint' },
+  { id: 'covid-screening', name: 'COVID-19 Screening - DO NOT EDIT', carebridgeTemplateId: 'covid-screening' },
+  { id: 'info-governance', name: 'Information Governance Incident', carebridgeTemplateId: 'info-governance' },
+  { id: 'medication-incident', name: 'Medication Incident', carebridgeTemplateId: 'medication-incident' },
+  { id: 'safeguarding-incident', name: 'Safeguarding Incident', carebridgeTemplateId: 'safeguarding-incident' },
+  { id: 'financial-transaction', name: 'SD16(1) Financial Transaction Sheet and Audit', carebridgeTemplateId: 'financial-transaction' },
+  { id: 'medication-disposal', name: 'SD18(5) Medication Disposal Form', carebridgeTemplateId: 'medication-disposal' },
+  { id: 'repositioning-chart', name: 'SD20(2) Customer Repositioning Chart', carebridgeTemplateId: 'repositioning-chart' },
+  { id: 'fluid-balance-chart', name: 'SD21(6) Fluid Balance Chart', carebridgeTemplateId: 'fluid-balance-chart' },
+  { id: 'food-chart', name: 'SD21(7) Food chart', carebridgeTemplateId: 'food-chart' },
 ]
 
 let _nextAssessmentId = ASSESSMENTS.length + 1

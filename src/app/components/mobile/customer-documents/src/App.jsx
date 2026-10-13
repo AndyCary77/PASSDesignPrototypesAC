@@ -297,21 +297,25 @@ function useDocumentSearchFilter() {
 
 // ─── Shared: SearchFilterBar ─────────────────────────────────────────
 
-function SearchFilterBar({ searchText, onSearchChange, onFilterClick, filterActive }) {
+// The filter button only renders when onFilterClick is given — the Add
+// assessment / template picker screens reuse this as a plain search field.
+function SearchFilterBar({ searchText, onSearchChange, onFilterClick, filterActive, placeholder = 'Search' }) {
   return (
     <div className="docs-search-filter-bar">
       <div className="docs-search-input-wrap">
         <SearchIcon size={18} />
         <input
           type="text"
-          placeholder="Search"
+          placeholder={placeholder}
           value={searchText}
           onChange={e => onSearchChange(e.target.value)}
         />
       </div>
-      <button className={`docs-filter-btn${filterActive ? ' docs-filter-btn--active' : ''}`} onClick={onFilterClick} aria-label="Filter">
-        {filterActive ? <FilterActiveIcon /> : <FiltersIcon />}
-      </button>
+      {onFilterClick && (
+        <button className={`docs-filter-btn${filterActive ? ' docs-filter-btn--active' : ''}`} onClick={onFilterClick} aria-label="Filter">
+          {filterActive ? <FilterActiveIcon /> : <FiltersIcon />}
+        </button>
+      )}
     </div>
   )
 }
@@ -749,6 +753,11 @@ function AlertPrompt({ title, placeholder, submitLabel = 'OK', onSubmit, onCance
 
 function AddAssessmentScreen({ templates, onAdd, onClose }) {
   const [selected, setSelected] = useState(new Set())
+  const [search, setSearch] = useState('')
+  // Selections are kept while filtering — a ticked row that's searched out of
+  // view is still added, and still counted in "Add (n)".
+  const q = search.trim().toLowerCase()
+  const visibleTemplates = q ? templates.filter(t => t.name.toLowerCase().includes(q)) : templates
 
   const toggle = (id) => setSelected(prev => {
     const next = new Set(prev)
@@ -765,10 +774,15 @@ function AddAssessmentScreen({ templates, onAdd, onClose }) {
           <span className="app-header-title">Add assessment</span>
           <div style={{ width: 36 }} />
         </div>
+        {templates.length > 0 && (
+          <SearchFilterBar searchText={search} onSearchChange={setSearch} placeholder="Search assessments" />
+        )}
         <div className="docs-screen-body">
           {templates.length === 0 ? (
             <div className="docs-empty-state">No more assessments to add.</div>
-          ) : templates.map(item => (
+          ) : visibleTemplates.length === 0 ? (
+            <div className="docs-empty-state">No assessments match your search.</div>
+          ) : visibleTemplates.map(item => (
             <div
               key={item.id}
               className={`docs-doc-row docs-doc-row--selectable${selected.has(item.id) ? ' docs-doc-row--selected' : ''}`}
@@ -1083,8 +1097,15 @@ function RecordingsSection({ recordings, initialExpanded, customerId }) {
 // Selection keys are `${kind}:${id}` — Assessments and Other Documents use
 // separate, independently-assigned id sequences, so a bare id can collide
 // across the two lists.
-function CareBridgeSelectScreen({ assessments, documents, onContinue, onClose }) {
+function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssessment, onAddDocument, onContinue, onClose }) {
   const [selected, setSelected] = useState(new Set())
+
+  // Anything just added from a section's add row is ticked straight away —
+  // the point of adding it here is to record against it. `justAdded` is a
+  // fresh { keys } object per add, so adding twice in a row still fires.
+  useEffect(() => {
+    if (justAdded) setSelected(prev => new Set([...prev, ...justAdded.keys]))
+  }, [justAdded])
   const eligibleAssessments = assessments.filter(a => a.carebridgeTemplateId)
   const eligibleDocuments = documents.filter(d => d.carebridgeTemplateId)
   const assessmentKeys = eligibleAssessments.map(item => `assessment:${item.id}`)
@@ -1138,11 +1159,23 @@ function CareBridgeSelectScreen({ assessments, documents, onContinue, onClose })
   const renderSectionHeader = (label, keys, allSelected) => (
     <div className="docs-cb-select-section-header">
       <p className="docs-cb-select-section-label">{label}</p>
-      <label className="docs-cb-select-all">
-        <input type="checkbox" checked={allSelected} onChange={() => toggleAll(keys, !allSelected)} />
-        Select all
-      </label>
+      {keys.length > 0 && (
+        <label className="docs-cb-select-all">
+          <input type="checkbox" checked={allSelected} onChange={() => toggleAll(keys, !allSelected)} />
+          Select all
+        </label>
+      )}
     </div>
+  )
+
+  // First row under each section's header — styled as a row (not a button/
+  // FAB) with a purple label, so it reads as part of the list it adds to.
+  const renderAddRow = (label, onClick) => (
+    <button type="button" className="docs-cb-add-row" onClick={onClick}>
+      <span className="docs-cb-add-row-icon"><PlusIcon size={20} /></span>
+      <span className="docs-cb-add-row-label">{label}</span>
+      <span className="docs-section-row-chevron"><ChevronRightIcon size={20} /></span>
+    </button>
   )
 
   return (
@@ -1156,24 +1189,12 @@ function CareBridgeSelectScreen({ assessments, documents, onContinue, onClose })
         </div>
         <p className="docs-cb-select-intro">Choose which documents this recording is for — Assessment Hero drafts each one from the conversation.</p>
         <div className="docs-screen-body">
-          {eligibleAssessments.length === 0 && eligibleDocuments.length === 0 ? (
-            <div className="docs-empty-state">No completed documents to record against yet.</div>
-          ) : (
-            <>
-              {eligibleAssessments.length > 0 && (
-                <>
-                  {renderSectionHeader('Assessments', assessmentKeys, allAssessmentsSelected)}
-                  {eligibleAssessments.map(item => renderRow('assessment', item, item.name))}
-                </>
-              )}
-              {eligibleDocuments.length > 0 && (
-                <>
-                  {renderSectionHeader('Other Documents', documentKeys, allDocumentsSelected)}
-                  {eligibleDocuments.map(item => renderRow('document', item, item.title))}
-                </>
-              )}
-            </>
-          )}
+          {renderSectionHeader('Assessments', assessmentKeys, allAssessmentsSelected)}
+          {renderAddRow('Add optional assessment', onAddAssessment)}
+          {eligibleAssessments.map(item => renderRow('assessment', item, item.name))}
+          {renderSectionHeader('Other Documents', documentKeys, allDocumentsSelected)}
+          {renderAddRow('Add document from template', onAddDocument)}
+          {eligibleDocuments.map(item => renderRow('document', item, item.title))}
         </div>
         <div className="docs-fab-wrap">
           <button className="docs-fab" onClick={handleContinue} disabled={selected.size === 0}>
@@ -1227,7 +1248,7 @@ function AssessmentsScreen({ assessments, setAssessments, folders, setFolders, o
   const handleAddAssessments = (selectedIds) => {
     const newItems = OPTIONAL_ASSESSMENT_TEMPLATES
       .filter(t => selectedIds.has(t.id))
-      .map(t => ({ id: nextAssessmentId(), name: t.name, group: 'optional', status: 'notStarted', date: todayDMY(), folderId }))
+      .map(t => ({ id: nextAssessmentId(), name: t.name, group: 'optional', status: 'notStarted', date: todayDMY(), folderId, carebridgeTemplateId: t.carebridgeTemplateId }))
     setAssessments(prev => [...prev, ...newItems])
     addAssessment.close()
   }
@@ -1450,6 +1471,9 @@ function OtherDocumentRow({ item, selecting, selected, onToggle, folderName }) {
 // where Save actually creates the document.
 
 function DocumentTemplatePicker({ templates, onPick, onClose }) {
+  const [search, setSearch] = useState('')
+  const q = search.trim().toLowerCase()
+  const visibleTemplates = q ? templates.filter(t => t.name.toLowerCase().includes(q)) : templates
   return (
     <div className="screen">
       <StatusBar />
@@ -1459,8 +1483,10 @@ function DocumentTemplatePicker({ templates, onPick, onClose }) {
           <span className="app-header-title">Choose New Document Template</span>
           <div style={{ width: 36 }} />
         </div>
+        <SearchFilterBar searchText={search} onSearchChange={setSearch} placeholder="Search templates" />
         <div className="docs-screen-body">
-          {templates.map(t => (
+          {visibleTemplates.length === 0 && <div className="docs-empty-state">No templates match your search.</div>}
+          {visibleTemplates.map(t => (
             <button key={t.id} className="docs-section-row" onClick={() => onPick(t)}>
               <span className="docs-section-row-icon"><DocumentListIcon /></span>
               <span className="docs-section-row-body"><span className="docs-section-row-title">{t.name}</span></span>
@@ -1566,6 +1592,7 @@ function OtherDocumentsScreen({ documents, setDocuments, folders, setFolders, on
       status: 'notStarted',
       date: todayDMY(),
       folderId,
+      carebridgeTemplateId: selectedTemplate.carebridgeTemplateId,
     }])
     docPreview.close()
     setSelectedTemplate(null)
@@ -1827,6 +1854,41 @@ export default function App() {
   // Documents.
   const careBridgeSelect = useSlideUpScreen()
 
+  // The add rows inside that picker (one per section). "Add optional
+  // assessment" reuses AddAssessmentScreen; "Add document from template"
+  // picks a template, names it, and creates the instance. Either way the new
+  // (not started) item is ticked in the list. No preview/Save step like
+  // Other Documents' own Add document: Assessment Hero fills it from the
+  // recording, so there's nothing to fill in by hand first.
+  const cbAddAssessment = useSlideUpScreen()
+  const cbTemplatePicker = useSlideUpScreen()
+  const [cbPickedTemplate, setCbPickedTemplate] = useState(null)
+  const [cbJustAdded, setCbJustAdded] = useState(null)
+  const handleCbAddAssessments = (selectedIds) => {
+    const newItems = OPTIONAL_ASSESSMENT_TEMPLATES
+      .filter(t => selectedIds.has(t.id))
+      .map(t => ({ id: nextAssessmentId(), name: t.name, group: 'optional', status: 'notStarted', date: todayDMY(), folderId: null, carebridgeTemplateId: t.carebridgeTemplateId }))
+    setAssessments(prev => [...prev, ...newItems])
+    setCbJustAdded({ keys: newItems.map(i => `assessment:${i.id}`) })
+    cbAddAssessment.close()
+  }
+  const cbAvailableAssessmentTemplates = OPTIONAL_ASSESSMENT_TEMPLATES.filter(t => !assessments.some(a => a.name === t.name))
+  const handleCbConfirmName = (name) => {
+    const id = nextOtherDocId()
+    setOtherDocuments(prev => [...prev, {
+      id,
+      title: name,
+      code: cbPickedTemplate.name,
+      status: 'notStarted',
+      date: todayDMY(),
+      folderId: null,
+      carebridgeTemplateId: cbPickedTemplate.carebridgeTemplateId,
+    }])
+    setCbJustAdded({ keys: [`document:${id}`] })
+    setCbPickedTemplate(null)
+    cbTemplatePicker.close()
+  }
+
   const startCareBridgeRecording = ({ assessmentIds, documentIds }) => {
     const templateIds = [
       ...assessments.filter(a => assessmentIds.includes(a.id)),
@@ -1856,6 +1918,9 @@ export default function App() {
   // blocks), so back pops exactly one layer per press wherever you are.
   useBackHandler(section !== null, closeSection)
   useBackHandler(careBridgeSelect.active, careBridgeSelect.close)
+  useBackHandler(cbAddAssessment.active, cbAddAssessment.close)
+  useBackHandler(cbTemplatePicker.active, cbTemplatePicker.close)
+  useBackHandler(!!cbPickedTemplate, () => setCbPickedTemplate(null))
 
   // Nothing left to dismiss — back out to the Customers list this screen
   // would have been reached from.
@@ -1901,11 +1966,39 @@ export default function App() {
               <CareBridgeSelectScreen
                 assessments={assessments}
                 documents={otherDocuments}
+                justAdded={cbJustAdded}
+                onAddAssessment={cbAddAssessment.open}
+                onAddDocument={cbTemplatePicker.open}
                 onContinue={startCareBridgeRecording}
                 onClose={careBridgeSelect.close}
               />
             )}
           </div>
+          <div className={`docs-modal-slide${cbAddAssessment.active ? ' docs-modal-active' : ''}`}>
+            {cbAddAssessment.mounted && (
+              <AddAssessmentScreen
+                templates={cbAvailableAssessmentTemplates}
+                onAdd={handleCbAddAssessments}
+                onClose={cbAddAssessment.close}
+              />
+            )}
+          </div>
+          <div className={`docs-modal-slide${cbTemplatePicker.active ? ' docs-modal-active' : ''}`}>
+            {cbTemplatePicker.mounted && (
+              <DocumentTemplatePicker
+                templates={DOCUMENT_TEMPLATES}
+                onPick={setCbPickedTemplate}
+                onClose={cbTemplatePicker.close}
+              />
+            )}
+          </div>
+          {cbPickedTemplate && (
+            <AlertPrompt
+              title="Please enter your new document name"
+              onSubmit={handleCbConfirmName}
+              onCancel={() => setCbPickedTemplate(null)}
+            />
+          )}
         </div>
       </PhoneFrame>
     </>

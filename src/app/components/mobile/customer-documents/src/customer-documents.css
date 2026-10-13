@@ -679,6 +679,26 @@
   border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
   flex-shrink: 0;
 }
+/* Add row — first row under each section's header, styled as a row
+   (not a button/FAB) with a purple label, so it reads as part of the list
+   it adds to. */
+.docs-cb-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
+  font-family: Barlow, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.docs-cb-add-row:active { background: var(--ui-purple-7-lightest-lavendar); }
+.docs-cb-add-row-icon { color: var(--brand-purple-6-purple-4); flex-shrink: 0; display: flex; }
+.docs-cb-add-row-label { flex: 1; font-size: 16px; font-weight: 700; color: var(--brand-purple-6-purple-4); }
 /* Groups the picker's two sources (Assessments / Other Documents) within
    one scrollable list — same look as the filter drawer's own section
    labels (.docs-filter-section h3), plus a "Select all" for that section
