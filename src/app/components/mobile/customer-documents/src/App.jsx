@@ -1097,6 +1097,12 @@ function RecordingsSection({ recordings, initialExpanded, customerId }) {
 // Selection keys are `${kind}:${id}` — Assessments and Other Documents use
 // separate, independently-assigned id sequences, so a bare id can collide
 // across the two lists.
+// Temporarily off — "Add optional assessment" on this screen is still to be
+// designed. Everything behind it (AddAssessmentScreen wiring, the generic
+// carebridge templates for optional assessments) is left in place; flip to
+// true to bring the row back.
+const SHOW_ADD_OPTIONAL_ASSESSMENT = false
+
 function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssessment, onAddDocument, onContinue, onClose }) {
   const [selected, setSelected] = useState(new Set())
 
@@ -1190,7 +1196,7 @@ function CareBridgeSelectScreen({ assessments, documents, justAdded, onAddAssess
         <p className="docs-cb-select-intro">Choose which documents this recording is for — Assessment Hero drafts each one from the conversation.</p>
         <div className="docs-screen-body">
           {renderSectionHeader('Assessments', assessmentKeys, allAssessmentsSelected)}
-          {renderAddRow('Add optional assessment', onAddAssessment)}
+          {SHOW_ADD_OPTIONAL_ASSESSMENT && renderAddRow('Add optional assessment', onAddAssessment)}
           {eligibleAssessments.map(item => renderRow('assessment', item, item.name))}
           {renderSectionHeader('Other Documents', documentKeys, allDocumentsSelected)}
           {renderAddRow('Add document from template', onAddDocument)}
