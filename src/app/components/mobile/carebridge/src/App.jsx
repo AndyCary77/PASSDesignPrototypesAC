@@ -74,6 +74,12 @@ const UsersIcon = ({ size = 18 }) => (
     <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
   </svg>
 )
+const ClockIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </svg>
+)
 const MicIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" strokeWidth="1.6"/>
@@ -369,6 +375,40 @@ const RECORD_RAMP = 24 // seconds to a full first-pass capture (simulated)
 // pause/resume once the session is already under way.
 const SPEAKER_INTRO_WINDOW = 8
 
+// Maximum recording length and when the "stopping soon" warning starts. In
+// the real app both come from server config (so the limit can change
+// without an app release); here they're a mocked response of that config.
+// `?maxMinutes=` on the URL stands in for the server changing the value, so
+// the demo can show a different limit without touching code. The same limit
+// applies to every office type (Residential / Domiciliary / CPO).
+const DEFAULT_RECORDING_LIMITS = { maxSeconds: 90 * 60, warnSecondsBefore: 5 * 60 }
+function loadRecordingLimits() {
+  const minutes = Number(new URLSearchParams(window.location.search).get('maxMinutes'))
+  return minutes > 0
+    ? { ...DEFAULT_RECORDING_LIMITS, maxSeconds: Math.round(minutes * 60) }
+    : DEFAULT_RECORDING_LIMITS
+}
+
+// Inline warning that a recording is about to be stopped automatically.
+// Amber (same family as Documents' selection-limit banner) rather than red
+// — it's a heads-up with a few minutes to act on, not an error. The ticking
+// countdown is aria-hidden so a screen reader isn't interrupted every
+// second; the polite live region instead carries a static sentence that
+// only changes once a minute.
+function RecordingLimitBanner({ remaining, maxSeconds }) {
+  const minutesLeft = Math.max(1, Math.ceil(remaining / 60))
+  return (
+    <div className="cb-limit-banner" role="status">
+      <span className="cb-limit-banner-icon"><ClockIcon size={22} /></span>
+      <div className="cb-limit-banner-body">
+        <div className="cb-limit-banner-title" aria-hidden="true">Recording stops in {fmt(remaining)}</div>
+        <span className="cb-sr-only">Recording will stop automatically in {minutesLeft} {minutesLeft === 1 ? 'minute' : 'minutes'} or less.</span>
+        <div className="cb-limit-banner-text">Recordings stop automatically after {Math.round(maxSeconds / 60)} minutes, then you’ll be asked to send it.</div>
+      </div>
+    </div>
+  )
+}
+
 // Temporarily off — the per-section completion checklist on the "Before
 // You Finish" review screen (X of Y sections complete, the field-count
 // badges, the grouped section list) is a later-phase feature, not
@@ -616,12 +656,14 @@ function ConsentScreen({ customer, template, docsLabel, consent, setConsent, onB
 
 // ─── Screen 4: recording — "set it down and ignore it" ───────
 
-function RecordScreen({ customer, template, docsLabel, seconds, states, onEnd, onLock }) {
+function RecordScreen({ customer, template, docsLabel, seconds, states, limits, onEnd, onLock }) {
   const first = customer?.name.split(' ')[0] || 'the customer'
   const [platform] = usePlatform()
   const totalFields = sumFields(states, 'fields')
   const capturedFields = sumFields(states, 'captured')
   const pct = totalFields ? Math.round((capturedFields / totalFields) * 100) : 0
+  const remaining = limits.maxSeconds - seconds
+  const warning = remaining <= limits.warnSecondsBefore
   return (
     <div className="cb-screen cb-screen-record">
       {/* The one screen where the mic is genuinely open, so both platforms'
@@ -640,7 +682,9 @@ function RecordScreen({ customer, template, docsLabel, seconds, states, onEnd, o
         </div>
         <div className="cb-rec-timer">{fmt(seconds)}</div>
         <LiveWaveform />
-        {seconds < SPEAKER_INTRO_WINDOW ? (
+        {warning ? (
+          <RecordingLimitBanner remaining={remaining} maxSeconds={limits.maxSeconds} />
+        ) : seconds < SPEAKER_INTRO_WINDOW ? (
           // Its own tinted card rather than the plain caption below — this is
           // the one thing worth actually noticing in the first few seconds
           // (everything else on this screen is "ignore me, keep talking"),
@@ -694,7 +738,7 @@ function RecordScreen({ customer, template, docsLabel, seconds, states, onEnd, o
 // with its own actions. So Android gets a real notification card with
 // Pause/Stop on it, plus the green mic privacy indicator. Same moment in
 // the flow, materially different affordances.
-function LockScreen({ customer, seconds, onUnlock }) {
+function LockScreen({ customer, seconds, remaining, onUnlock }) {
   const [platform] = usePlatform()
   if (platform === 'android') {
     return (
@@ -721,8 +765,8 @@ function LockScreen({ customer, seconds, onUnlock }) {
             <span className="cb-lock-notif-sep">•</span>
             <span className="cb-lock-notif-elapsed">{fmt(seconds)}</span>
           </div>
-          <div className="cb-lock-notif-title">Recording assessment</div>
-          <div className="cb-lock-notif-body">{customer?.name || 'Assessment'}</div>
+          <div className="cb-lock-notif-title">{remaining != null ? `Recording stops in ${fmt(remaining)}` : 'Recording assessment'}</div>
+          <div className="cb-lock-notif-body">{customer?.name || 'Assessment'}{remaining != null && ' · time limit approaching'}</div>
           <div className="cb-lock-notif-actions">
             <button type="button" className="cb-lock-notif-action">Pause</button>
             <button type="button" className="cb-lock-notif-action">Stop</button>
@@ -760,10 +804,12 @@ function LockScreen({ customer, seconds, onUnlock }) {
           <span className="cb-lock-activity-brand"><CareBridgeIcon size={12} /> Assessment Hero</span>
         </div>
         <div className="cb-lock-activity-headline">
-          <span className="cb-lock-dot" />
-          Recording <span className="cb-lock-activity-timer">{fmt(seconds)}</span>
+          <span className={`cb-lock-dot${remaining != null ? ' cb-lock-dot--warn' : ''}`} />
+          {remaining != null
+            ? <>Stops in <span className="cb-lock-activity-timer">{fmt(remaining)}</span></>
+            : <>Recording <span className="cb-lock-activity-timer">{fmt(seconds)}</span></>}
         </div>
-        <div className="cb-lock-activity-sub">Assessment audio · captured in the background</div>
+        <div className="cb-lock-activity-sub">{remaining != null ? 'Recording time limit approaching' : 'Assessment audio · captured in the background'}</div>
         <LiveWaveform playing label="Recording in progress" />
       </div>
       <div className="cb-lock-bottom">
@@ -784,7 +830,7 @@ function LockScreen({ customer, seconds, onUnlock }) {
 // ongoing notification still ticking is the clearest way to demonstrate
 // that. iOS has no equivalent (its back is purely in-app), so this surface
 // is Android-only.
-function BackgroundedScreen({ customer, seconds, onReturn }) {
+function BackgroundedScreen({ customer, seconds, remaining, onReturn }) {
   return (
     <div className="cb-bg">
       <div className="cb-bg-status">
@@ -805,8 +851,8 @@ function BackgroundedScreen({ customer, seconds, onReturn }) {
           <span className="cb-lock-notif-sep">•</span>
           <span className="cb-lock-notif-elapsed">{fmt(seconds)}</span>
         </div>
-        <div className="cb-lock-notif-title">Recording assessment</div>
-        <div className="cb-lock-notif-body">{customer?.name || 'Assessment'}</div>
+        <div className="cb-lock-notif-title">{remaining != null ? `Recording stops in ${fmt(remaining)}` : 'Recording assessment'}</div>
+        <div className="cb-lock-notif-body">{customer?.name || 'Assessment'}{remaining != null && ' · time limit approaching'}</div>
         <div className="cb-lock-notif-actions">
           <span className="cb-lock-notif-action">Pause</span>
           <span className="cb-lock-notif-action">Stop</span>
@@ -822,7 +868,7 @@ function BackgroundedScreen({ customer, seconds, onReturn }) {
 
 // ─── Screen 5: end-of-visit coverage check ───────────────────
 
-function ReviewScreen({ customer, template, seconds, states, title, setTitle, onResume, onFinish, onDelete }) {
+function ReviewScreen({ customer, template, seconds, states, title, setTitle, limitReached, maxSeconds, onResume, onFinish, onDelete }) {
   const groups = groupStates(states)
   const totalFields = sumFields(states, 'fields')
   const capturedFields = sumFields(states, 'captured')
@@ -832,8 +878,19 @@ function ReviewScreen({ customer, template, seconds, states, title, setTitle, on
   return (
     <div className="cb-screen">
       <StatusBar />
-      <AppHeader title="Before You Finish" onBack={onResume} />
+      {/* No way back into a recording that's already at its limit — it would
+          just stop again immediately. */}
+      <AppHeader title="Before You Finish" onBack={limitReached ? undefined : onResume} />
       <div className="cb-body">
+        {limitReached && (
+          <div className="cb-limit-banner cb-limit-banner--review" role="status">
+            <span className="cb-limit-banner-icon"><ClockIcon size={22} /></span>
+            <div className="cb-limit-banner-body">
+              <div className="cb-limit-banner-title">Recording stopped automatically</div>
+              <div className="cb-limit-banner-text">It reached the {Math.round(maxSeconds / 60)}-minute limit. Everything up to that point is kept — send it below.</div>
+            </div>
+          </div>
+        )}
         <div className="cb-review-summary">
           <div className="cb-review-check"><AssessmentHeroIcon size={26} /></div>
           <div>
@@ -844,7 +901,7 @@ function ReviewScreen({ customer, template, seconds, states, title, setTitle, on
               </>
             ) : (
               <>
-                <div className="cb-review-title">Recording paused</div>
+                <div className="cb-review-title">{limitReached ? 'Recording stopped' : 'Recording paused'}</div>
                 <div className="cb-review-sub">{fmt(seconds)} recorded</div>
               </>
             )}
@@ -868,7 +925,9 @@ function ReviewScreen({ customer, template, seconds, states, title, setTitle, on
         <div className="cb-check-intro">
           {SHOW_COMPLETION_CHECKLIST
             ? 'Scan for anything left incomplete, then resume the conversation or finish up.'
-            : 'Give this recording a title, then resume the conversation or finish up.'}
+            : limitReached
+              ? 'Give this recording a title, then finish up.'
+              : 'Give this recording a title, then resume the conversation or finish up.'}
         </div>
 
         {SHOW_COMPLETION_CHECKLIST && groups.map(group => (
@@ -890,9 +949,11 @@ function ReviewScreen({ customer, template, seconds, states, title, setTitle, on
       </div>
 
       <div className="cb-footer cb-footer-stack">
-        <button className="round-btn secondary-btn cb-full-btn" onClick={onResume}>
-          <CareBridgeIcon size={18} /> Resume recording
-        </button>
+        {!limitReached && (
+          <button className="round-btn secondary-btn cb-full-btn" onClick={onResume}>
+            <CareBridgeIcon size={18} /> Resume recording
+          </button>
+        )}
         <button className="round-btn primary-btn cb-full-btn" onClick={onFinish}>
           Finish and Send
         </button>
@@ -929,6 +990,10 @@ export default function App() {
   const [consent, setConsent] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [limits] = useState(loadRecordingLimits)
+  // Set when the recording was stopped by the time limit rather than by the
+  // user — changes the Before You Finish screen (notice, no Resume).
+  const [limitReached, setLimitReached] = useState(false)
   // Android only: the app moved to the background but the foreground
   // service is still recording. Deliberately not a step change — the
   // record clock keys off `step`, so leaving it on 'record' is what keeps
@@ -949,6 +1014,23 @@ export default function App() {
     const id = setInterval(() => setSeconds(s => s + 1), 1000)
     return () => clearInterval(id)
   }, [step])
+
+  // Reaching the maximum length stops the recording and goes straight to
+  // Before You Finish — even from the lock screen or with the app in the
+  // background (the notification would take them there).
+  useEffect(() => {
+    if (step === 'record' && seconds >= limits.maxSeconds) {
+      setLocked(false)
+      setBackgrounded(false)
+      setLimitReached(true)
+      setStep('review')
+    }
+  }, [step, seconds, limits.maxSeconds])
+  const remaining = limits.maxSeconds - seconds
+  // Only while actually recording and still inside the warning window —
+  // passed to the lock-screen/notification surfaces so they carry the same
+  // warning as the in-app banner.
+  const warnRemaining = step === 'record' && remaining <= limits.warnSecondsBefore ? remaining : null
 
   // CareBridge fills every selected document automatically as the
   // conversation flows.
@@ -1005,8 +1087,8 @@ export default function App() {
   // Account, which has no relation to how this recording began.
   const entryPointHref = deepLink ? '../customer-documents/' : '../account/'
 
-  const pickCustomer = (c) => { setCustomer(c); setTemplate(null); setExtraTemplates([]); setConsent(false); setSeconds(0); setTitle(''); setStep('template') }
-  const pickTemplate = (t) => { setTemplate(t); setExtraTemplates([]); setConsent(false); setSeconds(0); setTitle(''); setStep('consent') }
+  const pickCustomer = (c) => { setCustomer(c); setTemplate(null); setExtraTemplates([]); setConsent(false); setSeconds(0); setLimitReached(false); setTitle(''); setStep('template') }
+  const pickTemplate = (t) => { setTemplate(t); setExtraTemplates([]); setConsent(false); setSeconds(0); setLimitReached(false); setTitle(''); setStep('consent') }
   // No blocking "uploading" modal — the app can't rely on a user staying put
   // for one, especially on a poor connection. Write the recording as queued
   // and leave immediately; the Recordings list on the far end is the
@@ -1024,7 +1106,7 @@ export default function App() {
   useBackHandler(locked, () => setLocked(false))
 
   const systemBack = () => handleSystemBack(() => {
-    if (step === 'review') { setStep('record'); return }
+    if (step === 'review') { if (!limitReached) setStep('record'); return }
     // NOT "stop and go to review": back from the root of a task backgrounds
     // the app, and the foreground service keeps the mic open. Stopping the
     // recording here would contradict the capability this whole flow is
@@ -1041,6 +1123,15 @@ export default function App() {
   return (
     <>
       <a href="/" className="back-link"><ChevronLeftIcon size={16} /> Prototypes</a>
+      {/* Demo-only, outside the phone and deliberately faint (full strength
+          on hover/focus): jumps the clock so the time-limit warning and the
+          automatic stop can be shown without waiting an hour. */}
+      {step === 'record' && (
+        <div className="cb-demo-controls">
+          <button type="button" onClick={() => setSeconds(s => Math.max(s, limits.maxSeconds - limits.warnSecondsBefore))}>Demo: warning (5 min left)</button>
+          <button type="button" onClick={() => setSeconds(s => Math.max(s, limits.maxSeconds - 10))}>Demo: stop (10 s left)</button>
+        </div>
+      )}
       <PhoneFrame onSystemBack={systemBack}>
         <div className={`screen-area page-slide ${entering ? 'slide-entering' : ''}`}>
           <div className="cb-track" style={{ width: `${STEPS.length * 100}%`, transform: `translateX(-${idx * (100 / STEPS.length)}%)` }}>
@@ -1063,19 +1154,19 @@ export default function App() {
               />
             </div>
             <div className="cb-track-item" style={{ width: `${100 / STEPS.length}%` }}>
-              <RecordScreen customer={customer} template={template} docsLabel={docsLabel} seconds={seconds} states={recStates} onEnd={() => { setLocked(false); setStep('review') }} onLock={() => setLocked(true)} />
+              <RecordScreen customer={customer} template={template} docsLabel={docsLabel} seconds={seconds} states={recStates} limits={limits} onEnd={() => { setLocked(false); setStep('review') }} onLock={() => setLocked(true)} />
             </div>
             <div className="cb-track-item" style={{ width: `${100 / STEPS.length}%` }}>
-              <ReviewScreen customer={customer} template={template} seconds={seconds} states={finalStates} title={title} setTitle={setTitle} onResume={() => setStep('record')} onFinish={finish} onDelete={() => setConfirmingDelete(true)} />
+              <ReviewScreen customer={customer} template={template} seconds={seconds} states={finalStates} title={title} setTitle={setTitle} limitReached={limitReached} maxSeconds={limits.maxSeconds} onResume={() => setStep('record')} onFinish={finish} onDelete={() => setConfirmingDelete(true)} />
             </div>
           </div>
 
           {locked && step === 'record' && (
-            <LockScreen customer={customer} seconds={seconds} onUnlock={() => setLocked(false)} />
+            <LockScreen customer={customer} seconds={seconds} remaining={warnRemaining} onUnlock={() => setLocked(false)} />
           )}
 
           {backgrounded && step === 'record' && (
-            <BackgroundedScreen customer={customer} seconds={seconds} onReturn={() => setBackgrounded(false)} />
+            <BackgroundedScreen customer={customer} seconds={seconds} remaining={warnRemaining} onReturn={() => setBackgrounded(false)} />
           )}
 
           {confirmingDelete && (

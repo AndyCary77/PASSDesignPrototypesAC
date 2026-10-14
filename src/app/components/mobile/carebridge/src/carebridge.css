@@ -1023,3 +1023,74 @@
   color: var(--greyscale-5-grey-45);
   line-height: 1.5;
 }
+
+/* ── Recording time limit (AIOP-24762) ─────────────────────────────
+   Warning card on the record screen / notice on Before You Finish when a
+   recording is about to be, or has been, stopped by the maximum length.
+   Amber, matching Documents' selection-limit banner. Text is 14px+; the
+   clock icon and the wording carry the state, not colour alone. */
+.cb-limit-banner {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: calc(100% - 40px);
+  max-width: 320px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #f7f4ee;
+  border: 1px solid #d59934;
+  border-radius: 12px;
+  text-align: left;
+}
+.cb-limit-banner-icon { color: #d59934; flex-shrink: 0; display: flex; margin-top: 1px; }
+.cb-limit-banner-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cb-limit-banner-title {
+  font-family: Barlow, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  font-variant-numeric: tabular-nums;
+}
+.cb-limit-banner-text {
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--greyscale-2-grey-20);
+}
+.cb-limit-banner--review { width: auto; max-width: none; margin: 16px 16px 0; }
+.cb-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.cb-lock-dot--warn { background: #d59934; }
+
+/* Demo-only controls (see App) — faint until hovered/focused. */
+.cb-demo-controls {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 200;
+  display: flex;
+  gap: 8px;
+  opacity: 0.3;
+  transition: opacity 0.15s;
+}
+.cb-demo-controls:hover,
+.cb-demo-controls:focus-within { opacity: 1; }
+.cb-demo-controls button {
+  padding: 8px 14px;
+  border: 1px solid var(--greyscale-9-grey-70);
+  border-radius: 20px;
+  background: #fff;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--greyscale-2-grey-20);
+  cursor: pointer;
+}
