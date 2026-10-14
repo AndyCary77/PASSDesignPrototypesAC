@@ -74,6 +74,13 @@ const UsersIcon = ({ size = 18 }) => (
     <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
   </svg>
 )
+// Filled, to sit with the other filled icons in the Consent list (Shield /
+// Stop / Lock) — ClockIcon below is the outlined one used in the limit banners.
+const ClockFilledIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
+  </svg>
+)
 const ClockIcon = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="9" />
@@ -516,7 +523,7 @@ function TemplateScreen({ customer, onBack, onPick }) {
 
 // ─── Screen 3: consent ───────────────────────────────────────
 
-function ConsentScreen({ customer, template, docsLabel, consent, setConsent, onBack, onStart }) {
+function ConsentScreen({ customer, template, docsLabel, consent, setConsent, limits, onBack, onStart }) {
   const first = customer?.name.split(' ')[0] || 'the customer'
   const [platform] = usePlatform()
   const [micTest, setMicTest] = useState('idle') // idle | testing | ok
@@ -583,8 +590,18 @@ function ConsentScreen({ customer, template, docsLabel, consent, setConsent, onB
               <div className="cb-cpoint-d">
                 {platform === 'android'
                   ? 'Through screen lock and other apps, with a notification you can stop it from. Works offline.'
-                  : 'Through screen lock, backgrounding and calls. Works offline.'}
+                  : 'Through screen lock and calls. Works offline.'}
               </div>
+            </div>
+          </div>
+          {/* A fact about how recording works (the limit is server-driven, see
+              loadRecordingLimits), so it sits in the same list rather than as
+              a separate notice. */}
+          <div className="cb-cpoint">
+            <ClockFilledIcon />
+            <div>
+              <div className="cb-cpoint-t">Up to {Math.round(limits.maxSeconds / 60)} minutes</div>
+              <div className="cb-cpoint-d">Recordings stop automatically at {Math.round(limits.maxSeconds / 60)} minutes.</div>
             </div>
           </div>
         </div>
@@ -1144,7 +1161,7 @@ export default function App() {
             <div className="cb-track-item" style={{ width: `${100 / STEPS.length}%` }}>
               <ConsentScreen
                 customer={customer} template={template} docsLabel={docsLabel}
-                consent={consent} setConsent={setConsent}
+                consent={consent} setConsent={setConsent} limits={limits}
                 // A deep-linked visit never went through Customer/Template
                 // (those steps only exist to make the choices the picker
                 // upstream already made) — so backing out of Consent should
