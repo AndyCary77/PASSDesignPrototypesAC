@@ -136,3 +136,20 @@ export function nextOtherDocId() { return _nextOtherDocId++ }
 
 let _nextFolderId = ASSESSMENT_FOLDERS.length + OTHER_DOCUMENT_FOLDERS.length + 1
 export function nextFolderId() { return `f${_nextFolderId++}` }
+
+// ─── Assessment Hero drafting allowance ─────────────────────────
+// Mocked response of the allowance API (same shape as the desktop
+// prototype's src/app/data/assessmentHeroAllowance.ts): documents drafted for
+// this customer in the rolling last 30 days vs the office's limit (default
+// 12, server-driven). Every document Assessment Hero drafts counts — even
+// ones later discarded — and each frees up again 30 days after it was
+// generated, so there's no single renewal date: `nextAvailableAt` is when the
+// oldest counted drafts age out. Only used by the demo toggle ("limit
+// reached" scenario); otherwise the customer has allowance left.
+export function getExhaustedAllowance() {
+  // Relative to "now" so the demo never shows a date in the past.
+  const next = new Date()
+  next.setDate(next.getDate() + 4)
+  next.setHours(14, 15, 0, 0)
+  return { used: 12, limit: 12, remaining: 0, nextAvailableAt: next, nextAvailableCount: 2 }
+}

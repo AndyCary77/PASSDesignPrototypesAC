@@ -9,7 +9,7 @@ import { useRecordings, resetRecordings, isDefaultRecordings, markUploaded } fro
 import {
   CUSTOMER, ASSESSMENTS, ASSESSMENT_FOLDERS, OPTIONAL_ASSESSMENT_TEMPLATES,
   OTHER_DOCUMENTS, OTHER_DOCUMENT_FOLDERS, DOCUMENT_TEMPLATES,
-  nextAssessmentId, nextOtherDocId, nextFolderId,
+  nextAssessmentId, nextOtherDocId, nextFolderId, getExhaustedAllowance,
 } from './customerDocumentsData'
 
 // ─── Icons ───────────────────────────────────────────────────
@@ -851,7 +851,7 @@ function FolderDetailScreen({ folder, items, renderRow, selecting, selectedCount
 
 // ─── Level 1: DocumentsRootScreen ────────────────────────────────────
 
-function DocumentsRootScreen({ onOpenSection, onOpenCareBridge }) {
+function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
   const recordings = useRecordings('arthur')
   // Auto-expand only on the return trip from finishing a recording — a
   // one-shot read at mount (not re-consulted on re-render), so the section
@@ -901,7 +901,9 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge }) {
         <button className="docs-menu-action" type="button"><GridMenuIcon size={18} /> Menu</button>
       </div>
 
-      <CareBridgeBanner onSelect={onOpenCareBridge} />
+      {allowance
+        ? <AssessmentHeroLimitBanner customerName={CUSTOMER.name} allowance={allowance} />
+        : <CareBridgeBanner onSelect={onOpenCareBridge} />}
 
       <RecordingsSection recordings={recordings} initialExpanded={showRecordings} customerId="arthur" />
 
@@ -976,6 +978,87 @@ function AssessmentRow({ item, selecting, selected, onToggle, folderName }) {
 // picker sheet rather than a desktop Dialog: this app's own full-screen
 // slide-up (see AddAssessmentScreen) is the pattern that actually works as
 // a native gesture on iOS, where a centred modal dialog doesn't.
+
+// "Thu 18 Oct, 14:15"
+function formatAllowanceDate(date) {
+  const day = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const time = date.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: false })
+  return `${day}, ${time}`
+}
+
+// Replaces the "Record and Draft with Assessment Hero" banner (and so its
+// Select documents button) once the customer's drafting allowance is used
+// up. Same slim single-row shape, in amber (blocked for now, clears by
+// itself) rather than red; the detail is behind the info button, as a
+// bottom sheet — the phone equivalent of the desktop popover.
+function AssessmentHeroLimitBanner({ customerName, allowance }) {
+  const [open, setOpen] = useState(false)
+  const first = customerName.split(' ')[0]
+  useBackHandler(open, () => setOpen(false))
+  return (
+    <>
+      <div className="docs-cb-limit" role="status">
+        <span className="docs-cb-limit-icon"><AssessmentHeroIcon size={20} /></span>
+        <p className="docs-cb-limit-text">
+          <strong>Assessment Hero limit reached.</strong>{' '}
+          Available again from {formatAllowanceDate(allowance.nextAvailableAt)}
+        </p>
+        <button
+          type="button"
+          className="docs-cb-limit-info"
+          aria-label="About the Assessment Hero drafting limit"
+          onClick={() => setOpen(true)}
+        >
+          <InfoIcon size={22} />
+        </button>
+      </div>
+
+      {open && (
+        <div className="docs-sheet-overlay" onClick={() => setOpen(false)}>
+          <div className="docs-sheet-panel" role="dialog" aria-label="Assessment Hero drafting limit" onClick={e => e.stopPropagation()}>
+            <div className="docs-sheet-handle" />
+            <div className="docs-sheet-header">
+              <h2>Drafting limit</h2>
+              <button className="docs-sheet-close-btn" onClick={() => setOpen(false)} aria-label="Close"><CloseIcon /></button>
+            </div>
+            <div className="docs-cb-limit-sheet-body">
+              <p className="docs-sheet-message docs-cb-limit-sheet-intro">
+                {first} has reached the limit of {allowance.limit} Assessment Hero drafts in the last 30 days, so no new documents
+                can be drafted for {first} right now.
+              </p>
+              <div className="docs-cb-limit-meter">
+                <p className="docs-cb-limit-meter-label">{allowance.used} of {allowance.limit} drafts used · rolling 30 days</p>
+                <div
+                  className="docs-cb-limit-meter-bar"
+                  role="progressbar"
+                  aria-label="Drafts used"
+                  aria-valuemin={0}
+                  aria-valuemax={allowance.limit}
+                  aria-valuenow={allowance.used}
+                >
+                  <span style={{ width: `${Math.min(100, (allowance.used / allowance.limit) * 100)}%` }} />
+                </div>
+              </div>
+              <p className="docs-cb-limit-next">
+                Next available: <strong>{formatAllowanceDate(allowance.nextAvailableAt)}</strong>
+                {allowance.nextAvailableCount > 0 && ` (${allowance.nextAvailableCount === 1 ? '1 draft' : `${allowance.nextAvailableCount} drafts`})`}
+              </p>
+              <ul className="docs-cb-limit-rules">
+                <li>The limit is per customer and shared across everyone in your office.</li>
+                <li>Every document Assessment Hero drafts counts, including drafts that are later discarded.</li>
+                <li>Each draft frees up again 30 days after it was generated.</li>
+                <li>Recordings and transcripts are still saved, and documents can still be completed by hand.</li>
+              </ul>
+            </div>
+            <div className="docs-sheet-footer">
+              <button className="round-btn primary-btn docs-cb-limit-sheet-btn" onClick={() => setOpen(false)}>Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
 function CareBridgeBanner({ onSelect }) {
   return (
@@ -1918,6 +2001,17 @@ export default function App() {
   // Documents.
   const careBridgeSelect = useSlideUpScreen()
 
+  // Demo-only: simulates this customer having used up their Assessment Hero
+  // drafting allowance (see getExhaustedAllowance) — driven by the faint
+  // button outside the phone. Turning it on also closes the document picker
+  // if it's open, since drafting is no longer possible.
+  const [allowance, setAllowance] = useState(null)
+  const toggleLimitDemo = () => {
+    if (allowance) { setAllowance(null); return }
+    if (careBridgeSelect.active) careBridgeSelect.close()
+    setAllowance(getExhaustedAllowance())
+  }
+
   // The add rows inside that picker (one per section). "Add optional
   // assessment" reuses AddAssessmentScreen; "Add document from template"
   // picks a template, names it, and creates the instance. Either way the new
@@ -1993,9 +2087,16 @@ export default function App() {
   return (
     <>
       <a href="/" className="back-link"><ChevronLeftIcon size={16} /> Prototypes</a>
+      {/* Demo-only, outside the phone: toggles the "Assessment Hero drafting
+          limit reached" scenario on the Documents screen. */}
+      <div className="docs-demo-controls">
+        <button type="button" onClick={toggleLimitDemo} aria-pressed={!!allowance}>
+          {allowance ? 'Demo: reset drafting limit' : 'Demo: drafting limit reached'}
+        </button>
+      </div>
       <PhoneFrame onSystemBack={systemBack}>
         <div className={`screen-area page-slide${entering ? ' slide-entering' : ''}`}>
-          <DocumentsRootScreen onOpenSection={openSection} onOpenCareBridge={careBridgeSelect.open} />
+          <DocumentsRootScreen onOpenSection={openSection} onOpenCareBridge={careBridgeSelect.open} allowance={allowance} />
           {/* Assessments/Other Documents/Incidents present as a modal sheet
               (closed via an X, not a back-chevron) sliding up from the
               bottom, distinct from the horizontal .screen-slide drill-down
