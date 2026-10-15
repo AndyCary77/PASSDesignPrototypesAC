@@ -1081,19 +1081,15 @@ const LOW_DRAFTS_THRESHOLD = 2
 // "10 of 12 drafts used in the last 30 days" — how much of the customer's
 // rolling-30-day drafting allowance is gone, so the limit never comes as a
 // surprise. Plain text (no extra chrome) that turns amber and bold once few
-// drafts are left, or — on the document picker, where `selectedCount` is
-// known — once the current selection is bigger than what's left.
-function DraftAllowanceNote({ allowance, customerName, selectedCount = 0, showCostHint = false, className = '' }) {
+// drafts are left. (The document picker doesn't just warn about picking too
+// many — it stops the selection at what's left, see maxSelectable.)
+function DraftAllowanceNote({ allowance, customerName, showCostHint = false, className = '' }) {
   const { used, limit, remaining } = allowance
   const first = customerName.split(' ')[0]
-  const over = selectedCount > remaining
   const low = remaining <= LOW_DRAFTS_THRESHOLD
-  const draftsLeft = `${remaining} ${remaining === 1 ? 'draft' : 'drafts'}`
   return (
-    <p className={`docs-cb-allowance${over || low ? ' docs-cb-allowance--low' : ''}${className ? ` ${className}` : ''}`}>
-      {over
-        ? <>Only {draftsLeft} left for {first} — you’ve selected {selectedCount}.</>
-        : <>{used} of {limit} drafts used for {first} in the last 30 days{showCostHint && ' · each document uses 1'}</>}
+    <p className={`docs-cb-allowance${low ? ' docs-cb-allowance--low' : ''}${className ? ` ${className}` : ''}`}>
+      {used} of {limit} drafts used for {first} in the last 30 days{showCostHint && ' · each document uses 1'}
     </p>
   )
 }
@@ -1275,12 +1271,15 @@ const MAX_ASSESSMENT_HERO_DOCUMENTS = 12
 // scrolls). Not a toast/snackbar — it has to stay up for as long as the
 // limit is what's stopping the user, and it's announced politely to screen
 // readers (role="status") rather than interrupting like an alert.
-function SelectionLimitBanner() {
+function SelectionLimitBanner({ maxSelectable, limitedByAllowance, customerName, remaining }) {
+  const first = customerName.split(' ')[0]
   return (
     <div className="docs-cb-limit-banner" role="status">
       <span className="docs-cb-limit-banner-icon"><InfoIcon size={20} /></span>
       <p className="docs-cb-limit-banner-text">
-        <strong>Maximum of {MAX_ASSESSMENT_HERO_DOCUMENTS} documents can be selected.</strong> Untick one to choose another.
+        {limitedByAllowance
+          ? <><strong>Only {remaining} {remaining === 1 ? 'draft' : 'drafts'} left for {first}.</strong> You can select up to {maxSelectable}. Untick one to choose another.</>
+          : <><strong>Maximum of {MAX_ASSESSMENT_HERO_DOCUMENTS} documents can be selected.</strong> Untick one to choose another.</>}
       </p>
     </div>
   )
@@ -1288,6 +1287,17 @@ function SelectionLimitBanner() {
 
 function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, onAddAssessment, onAddDocument, onContinue, onClose }) {
   const [selected, setSelected] = useState(new Set())
+  // The most that can be ticked: the per-recording cap of 12, or fewer if
+  // this customer's rolling-30-day allowance has fewer drafts left than that
+  // — ticking more than the allowance would just mean some of them silently
+  // don't get drafted.
+  const maxSelectable = allowance ? Math.max(0, Math.min(MAX_ASSESSMENT_HERO_DOCUMENTS, allowance.remaining)) : MAX_ASSESSMENT_HERO_DOCUMENTS
+  const limitedByAllowance = maxSelectable < MAX_ASSESSMENT_HERO_DOCUMENTS
+  // If the allowance shrinks while the picker is open (demo toggle), trim
+  // the selection back to what's allowed rather than leave it over.
+  useEffect(() => {
+    setSelected(prev => (prev.size > maxSelectable ? new Set([...prev].slice(0, maxSelectable)) : prev))
+  }, [maxSelectable])
 
   // Anything just added from a section's add row is ticked straight away —
   // the point of adding it here is to record against it. `justAdded` is a
@@ -1298,11 +1308,11 @@ function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, 
     if (!justAdded) return
     setSelected(prev => {
       const next = new Set(prev)
-      justAdded.keys.forEach(k => { if (next.size < MAX_ASSESSMENT_HERO_DOCUMENTS) next.add(k) })
+      justAdded.keys.forEach(k => { if (next.size < maxSelectable) next.add(k) })
       return next
     })
   }, [justAdded])
-  const atLimit = selected.size >= MAX_ASSESSMENT_HERO_DOCUMENTS
+  const atLimit = selected.size >= maxSelectable
   const eligibleAssessments = assessments.filter(a => a.carebridgeTemplateId)
   const eligibleDocuments = documents.filter(d => d.carebridgeTemplateId)
   const assessmentKeys = eligibleAssessments.map(item => `assessment:${item.id}`)
@@ -1313,7 +1323,7 @@ function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, 
   const toggle = (key) => setSelected(prev => {
     const next = new Set(prev)
     if (next.has(key)) next.delete(key)
-    else if (next.size < MAX_ASSESSMENT_HERO_DOCUMENTS) next.add(key)
+    else if (next.size < maxSelectable) next.add(key)
     return next
   })
 
@@ -1328,7 +1338,7 @@ function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, 
   // behaviour) — so there's always a way back down from the limit.
   const toggleAll = (keys) => {
     const inSection = keys.filter(k => selected.has(k))
-    const room = MAX_ASSESSMENT_HERO_DOCUMENTS - selected.size
+    const room = maxSelectable - selected.size
     if (inSection.length === keys.length || (inSection.length > 0 && room <= 0)) {
       setSelected(prev => {
         const next = new Set(prev)
@@ -1412,8 +1422,8 @@ function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, 
           <div style={{ width: 36 }} />
         </div>
         <p className="docs-cb-select-intro">Choose which documents this recording is for — Assessment Hero drafts each one from the conversation.</p>
-        {allowance && <DraftAllowanceNote allowance={allowance} customerName={CUSTOMER.name} selectedCount={selected.size} showCostHint className="docs-cb-allowance--bar" />}
-        {atLimit && <SelectionLimitBanner />}
+        {allowance && <DraftAllowanceNote allowance={allowance} customerName={CUSTOMER.name} showCostHint className="docs-cb-allowance--bar" />}
+        {atLimit && <SelectionLimitBanner maxSelectable={maxSelectable} limitedByAllowance={limitedByAllowance} customerName={CUSTOMER.name} remaining={allowance?.remaining ?? 0} />}
         <div className="docs-screen-body">
           {renderSectionHeader('Assessments', assessmentKeys, allAssessmentsSelected)}
           {SHOW_ADD_OPTIONAL_ASSESSMENT && renderAddRow('Add optional assessment', onAddAssessment)}
