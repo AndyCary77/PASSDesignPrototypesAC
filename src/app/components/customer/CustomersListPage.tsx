@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { Search, SlidersHorizontal, ArrowUpDown, Heart, Plus } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { Button } from '../buttons/Button';
 import { CUSTOMER_LIST, type CustomerProfile } from '../../data/customers';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
+import { CustomersListDummy } from './CustomersListDummy';
 
 function reviewBadgeStyle(daysLeft: number): React.CSSProperties {
   if (daysLeft <= 0) return { backgroundColor: '#fee2e2', color: '#991b1b' };
@@ -129,7 +131,42 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
   );
 }
 
+// New key (not the earlier 'customersListLayout'), so a "show the old list"
+// choice left over from when the new layout was the opt-in doesn't carry over
+// and hide the new default.
+const LAYOUT_KEY = 'customersListLayoutV2';
+
 export function CustomersListPage() {
+  // The new list layout (CustomersListDummy — static, with a longer made-up
+  // customer list) is the default. The faint button bottom-right only flips
+  // to the original list for comparison; that choice is remembered across
+  // reloads, with every read/write guarded since storage can be unavailable.
+  const [showOriginal, setShowOriginal] = useState(() => {
+    try { return localStorage.getItem(LAYOUT_KEY) === 'original'; } catch { return false; }
+  });
+  const toggleLayout = () => {
+    setShowOriginal(prev => {
+      try { localStorage.setItem(LAYOUT_KEY, prev ? 'new' : 'original'); } catch { /* ignore */ }
+      return !prev;
+    });
+  };
+
+  return (
+    <>
+      {showOriginal ? <CurrentCustomersList /> : <CustomersListDummy />}
+      <button
+        type="button"
+        onClick={toggleLayout}
+        aria-pressed={showOriginal}
+        className="fixed right-6 bottom-6 z-50 px-3.5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800 opacity-40 hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
+      >
+        {showOriginal ? 'Demo: back to new list' : 'Demo: view original list'}
+      </button>
+    </>
+  );
+}
+
+function CurrentCustomersList() {
   return (
     <div className="space-y-5">
 
