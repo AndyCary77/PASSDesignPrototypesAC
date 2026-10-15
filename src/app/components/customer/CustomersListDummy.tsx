@@ -359,7 +359,7 @@ function CustomerCard({ customer }: { customer: ListCustomer }) {
   }
   if (customer.allergies) {
     flags.push(
-      <span key="allergies" className={`${badge} bg-amber-100 text-amber-700 border-amber-300`}>
+      <span key="allergies" className={`${badge} bg-red-100 text-red-800 border-red-200`}>
         <TriangleAlert className="w-4 h-4" aria-hidden="true" />
         Allergies
       </span>,
