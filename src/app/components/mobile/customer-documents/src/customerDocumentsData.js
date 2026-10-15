@@ -145,11 +145,13 @@ export function nextFolderId() { return `f${_nextFolderId++}` }
 // ones later discarded — and each frees up again 30 days after it was
 // generated, so there's no single renewal date: `nextAvailableAt` is when the
 // oldest counted drafts age out. Only used by the demo toggle ("limit
-// reached" scenario); otherwise the customer has allowance left.
-export function getExhaustedAllowance() {
+// reached" / "10 of 12 used" / "6 of 12 used" scenarios); otherwise no
+// allowance UI shows.
+export function getDemoAllowance(kind) {
   // Relative to "now" so the demo never shows a date in the past.
   const next = new Date()
   next.setDate(next.getDate() + 4)
   next.setHours(14, 15, 0, 0)
-  return { used: 12, limit: 12, remaining: 0, nextAvailableAt: next, nextAvailableCount: 2 }
+  const used = { neutral: 6, low: 10, exhausted: 12 }[kind]
+  return { used, limit: 12, remaining: 12 - used, nextAvailableAt: next, nextAvailableCount: 2 }
 }
