@@ -49,6 +49,7 @@ export interface ListCustomer {
   highRisk?: boolean;
   dnacpr?: boolean;
   dols?: boolean;
+  allergies?: boolean;
   /** dd-mm-yyyy */
   reviewDate?: string;
   reviewOverdue?: boolean;
@@ -227,6 +228,10 @@ const LIST: ListCustomer[] = [
 
 // Extra tags (Language, Medical Conditions) so the tag filter has more than
 // territory/area groups to show — merged in here rather than repeated inline.
+// Allergies flag (the card badge and the "Alerts" filter) — a handful of
+// customers, including Arthur (who carries it on the mobile prototype too) and Edith.
+const ALLERGIES = new Set(['arthur-barrington', 'edith-caldwell', 'd-buxton', 'd-ellis', 'd-grant', 'd-quinn', 'd-taylor', 'd-mclean']);
+
 const EXTRA_TAGS: Record<string, ListChip[]> = {
   'd-gill': [attr('Language', 'Punjabi')],
   'd-kulkarni': [attr('Language', 'Gujarati')],
@@ -237,4 +242,4 @@ const EXTRA_TAGS: Record<string, ListChip[]> = {
   'd-taylor': [attr('Medical Conditions', 'COPD')],
 };
 
-export const CUSTOMERS_LIST_DUMMY: ListCustomer[] = LIST.map(c => ({ ...c, chips: [...c.chips, ...(EXTRA_TAGS[c.id] ?? [])] })).sort((a, b) => a.surname.localeCompare(b.surname));
+export const CUSTOMERS_LIST_DUMMY: ListCustomer[] = LIST.map(c => ({ ...c, allergies: ALLERGIES.has(c.id) || undefined, chips: [...c.chips, ...(EXTRA_TAGS[c.id] ?? [])] })).sort((a, b) => a.surname.localeCompare(b.surname));

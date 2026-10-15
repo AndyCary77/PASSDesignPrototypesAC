@@ -51,7 +51,7 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
           <span className="text-base font-semibold text-gray-900 truncate">{customer.fullName}</span>
           {customer.highRisk && (
             <span className="flex-shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide">
-              High Risk
+              HIGH RISK
             </span>
           )}
         </div>

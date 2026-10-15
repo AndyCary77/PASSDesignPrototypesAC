@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
 import { Link } from 'react-router';
-import { Plus, Search, SlidersHorizontal, ArrowDownAZ, ArrowDownZA, ChevronRight, HeartPulse, Lock, MapPin, X } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal, ArrowDownAZ, ArrowDownZA, ChevronRight, HeartPulse, Lock, MapPin, TriangleAlert, X } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
@@ -58,14 +58,25 @@ function sortCustomers(customers: ListCustomer[], by: SortBy, direction: SortDir
 // every group with something ticked has to match.
 type ReviewWindow = 'today' | '7days' | '4weeks';
 
+type AlertKey = 'highRisk' | 'dnacpr' | 'dols' | 'allergies';
+
 interface Filters {
   statuses: ListStatus[];
+  /** Safety / legal flags — a customer matches if they carry any of the ticked ones. */
+  alerts: AlertKey[];
   review: ReviewWindow | null;
   /** `${group}::${value}` */
   tags: string[];
 }
 
-const NO_FILTERS: Filters = { statuses: [], review: null, tags: [] };
+const NO_FILTERS: Filters = { statuses: [], alerts: [], review: null, tags: [] };
+
+const ALERT_OPTIONS: { key: AlertKey; label: string }[] = [
+  { key: 'highRisk', label: 'High risk' },
+  { key: 'dnacpr', label: 'DNACPR' },
+  { key: 'dols', label: 'DoLS' },
+  { key: 'allergies', label: 'Allergies' },
+];
 
 const STATUS_ORDER: ListStatus[] = ['assessment-booked', 'assessment-completed', 'active', 'inactive', 'finished'];
 const REVIEW_OPTIONS: { value: ReviewWindow; label: string }[] = [
@@ -94,6 +105,7 @@ function inReviewWindow(c: ListCustomer, window: ReviewWindow) {
 
 function matchesFilters(c: ListCustomer, f: Filters) {
   if (f.statuses.length > 0 && !f.statuses.includes(c.status)) return false;
+  if (f.alerts.length > 0 && !f.alerts.some(k => c[k])) return false;
   if (f.review && !inReviewWindow(c, f.review)) return false;
   if (f.tags.length > 0) {
     const mine = new Set(c.chips.map(chip => `${chipGroup(chip)}::${chipValue(chip)}`));
@@ -109,7 +121,7 @@ function matchesFilters(c: ListCustomer, f: Filters) {
   return true;
 }
 
-const activeFilterCount = (f: Filters) => f.statuses.length + (f.review ? 1 : 0) + f.tags.length;
+const activeFilterCount = (f: Filters) => f.statuses.length + f.alerts.length + (f.review ? 1 : 0) + f.tags.length;
 
 /**
  * Sections follow the production list: one per letter, except that neighbouring
@@ -181,6 +193,7 @@ function searchableText(c: ListCustomer) {
     c.highRisk ? 'high risk' : '',
     c.dnacpr ? 'dnacpr' : '',
     c.dols ? 'dols' : '',
+    c.allergies ? 'allergies' : '',
     c.reviewDate ? `review ${c.reviewDate}` : '',
     ...c.chips.map(chip => (chip.type === 'region' ? chip.label : `${chip.key} ${chip.value}`)),
   ]
@@ -324,7 +337,7 @@ function CustomerCard({ customer }: { customer: ListCustomer }) {
   if (customer.highRisk) {
     flags.push(
       <span key="hr" className={`${badge} bg-red-700 text-white border-red-700`}>
-        High risk
+        HIGH RISK
       </span>,
     );
   }
@@ -341,6 +354,14 @@ function CustomerCard({ customer }: { customer: ListCustomer }) {
       <span key="dols" className={`${badge} bg-red-100 text-red-800 border-red-200`}>
         <Lock className="w-4 h-4" aria-hidden="true" />
         DoLS
+      </span>,
+    );
+  }
+  if (customer.allergies) {
+    flags.push(
+      <span key="allergies" className={`${badge} bg-amber-100 text-amber-700 border-amber-300`}>
+        <TriangleAlert className="w-4 h-4" aria-hidden="true" />
+        Allergies
       </span>,
     );
   }
@@ -446,6 +467,8 @@ function FilterPanel({ filters, onChange, tagGroups, resultCount }: {
   });
   const toggleStatus = (s: ListStatus) =>
     onChange({ ...filters, statuses: filters.statuses.includes(s) ? filters.statuses.filter(x => x !== s) : [...filters.statuses, s] });
+  const toggleAlert = (k: AlertKey) =>
+    onChange({ ...filters, alerts: filters.alerts.includes(k) ? filters.alerts.filter(x => x !== k) : [...filters.alerts, k] });
   const toggleTag = (key: string) =>
     onChange({ ...filters, tags: filters.tags.includes(key) ? filters.tags.filter(x => x !== key) : [...filters.tags, key] });
   const count = activeFilterCount(filters);
@@ -453,7 +476,7 @@ function FilterPanel({ filters, onChange, tagGroups, resultCount }: {
   return (
     <div className="flex flex-col max-h-[min(80vh,720px)]">
       <div className="overflow-y-auto pr-1">
-        <div className="flex gap-10">
+        <div className="flex gap-8">
           <fieldset>
             <legend className="text-sm font-semibold text-gray-900 mb-1">Status</legend>
             <div className="space-y-0.5">
@@ -491,6 +514,18 @@ function FilterPanel({ filters, onChange, tagGroups, resultCount }: {
                   Any review date
                 </button>
               )}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="text-sm font-semibold text-gray-900 mb-1">Alerts</legend>
+            <div className="space-y-0.5">
+              {ALERT_OPTIONS.map(o => (
+                <label key={o.key} className="flex items-center gap-2.5 py-0.5 text-sm text-gray-900 cursor-pointer">
+                  <input type="checkbox" className={checkboxClass} checked={filters.alerts.includes(o.key)} onChange={() => toggleAlert(o.key)} />
+                  {o.label}
+                </label>
+              ))}
             </div>
           </fieldset>
         </div>
@@ -636,7 +671,7 @@ export function CustomersListDummy() {
               {filtersCount > 0 && <span aria-hidden="true" className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[rgb(154,38,214)] border-2 border-gray-50" />}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-[min(600px,calc(100vw-3rem))] p-4">
+          <PopoverContent align="start" className="w-[min(720px,calc(100vw-3rem))] p-4">
             <FilterPanel filters={filters} onChange={setFilters} tagGroups={tagGroups} resultCount={total} />
           </PopoverContent>
         </Popover>
