@@ -61,7 +61,7 @@ export interface ListCustomer {
   href?: string;
 }
 
-const REGION = {
+export const REGION = {
   teal: { bg: '#e0f1f4', fg: '#004753', border: '#a6d6de' },
   blue: { bg: '#e5ecfd', fg: '#13337a', border: '#b3c8f8' },
   pink: { bg: '#fbe4e9', fg: '#750f25', border: '#f5b0bf' },
@@ -70,10 +70,10 @@ const REGION = {
   violet: { bg: '#eee8fb', fg: '#3d2380', border: '#cbbdf0' },
 } as const;
 
-const region = (label: string, color: keyof typeof REGION): ListChip => ({ type: 'region', label, ...REGION[color] });
-const attr = (key: string, value: string): ListChip => ({ type: 'attr', key, value });
+export const region = (label: string, color: keyof typeof REGION): ListChip => ({ type: 'region', label, ...REGION[color] });
+export const attr = (key: string, value: string): ListChip => ({ type: 'attr', key, value });
 
-const AVATAR = ['#c9b4de', '#b7dda8', '#b1c8de', '#f0c9a8', '#a8d8d4', '#e8b4c4'];
+export const AVATAR = ['#c9b4de', '#b7dda8', '#b1c8de', '#f0c9a8', '#a8d8d4', '#e8b4c4'];
 
 function fromScenario(c: CustomerProfile, surname: string, extra: Partial<ListCustomer>): ListCustomer {
   return {
@@ -243,3 +243,10 @@ const EXTRA_TAGS: Record<string, ListChip[]> = {
 };
 
 export const CUSTOMERS_LIST_DUMMY: ListCustomer[] = LIST.map(c => ({ ...c, allergies: ALLERGIES.has(c.id) || undefined, chips: [...c.chips, ...(EXTRA_TAGS[c.id] ?? [])] })).sort((a, b) => a.surname.localeCompare(b.surname));
+
+/** dd-mm-yyyy review date -> a sortable timestamp; null for customers without one. */
+export const reviewTimeOf = (c: { reviewDate?: string }) => {
+  if (!c.reviewDate) return null;
+  const [d, m, y] = c.reviewDate.split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
+};

@@ -52,6 +52,7 @@ const SCREENS = [
   {
     title: 'Employee Profile',
     items: [
+      { label: 'Employees List', to: '/employees/list' },
       { label: 'Employee Profile — Roster Matching', to: '/employees' },
       { label: 'Employee Records', to: '/employees/records' },
     ],

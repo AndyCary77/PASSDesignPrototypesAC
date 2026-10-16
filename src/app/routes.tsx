@@ -23,6 +23,7 @@ import { SchedulePage } from './components/schedule/SchedulePage';
 import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
+import { EmployeesListPage } from './components/customer/EmployeesListPage';
 import { AboutMePage, AboutMeSubnav, AboutMeProvider } from './components/customer/AboutMePage';
 import { MedicalHistoryPage } from './components/customer/MedicalHistoryPage';
 import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './components/customer/CareBridgePage';
@@ -406,6 +407,10 @@ export const router = createBrowserRouter([
   {
     path: "/customers/:customerId/marchart",
     Component: MARChartLayout,
+  },
+  {
+    path: "/employees/list",
+    Component: () => <AppShell><EmployeesListPage /></AppShell>,
   },
   {
     path: "/employees",
