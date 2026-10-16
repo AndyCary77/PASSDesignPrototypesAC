@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
 import { Link } from 'react-router';
 import { Plus, Search, SlidersHorizontal, ArrowDownAZ, ArrowDownZA, ChevronRight, HeartPulse, Lock, MapPin, TriangleAlert, X } from 'lucide-react';
@@ -15,10 +15,11 @@ import { CUSTOMERS_LIST_DUMMY, STATUS_LABEL, type ListChip, type ListCustomer, t
 
 const COLUMNS = 3;
 
-// Area tags are currently shown in plain neutral grey (like the other tags,
-// keeping their map pin). Flip to true to bring back each area's own colour
-// (the bg/fg/border carried on every region chip in customersListDummy.ts).
-const COLOURED_AREA_TAGS = false;
+// Whether area tags carry each area's own colour (the bg/fg/border on every
+// region chip in customersListDummy.ts) or sit in plain neutral white. Owned
+// by the page's bottom-right demo toggle and handed down through context, so
+// the card chips and the "all tags" tooltip stay in step.
+const AreaColoursContext = createContext(true);
 const LETTERS = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '#'];
 
 const letterOf = (c: ListCustomer) => {
@@ -229,11 +230,12 @@ function StatusBadge({ customer }: { customer: ListCustomer }) {
 }
 
 function Chip({ chip }: { chip: ListChip }) {
+  const coloured = useContext(AreaColoursContext);
   if (chip.type === 'region') {
     return (
       <span
-        className={COLOURED_AREA_TAGS ? tagPill : `${tagPill} border-gray-200 bg-gray-100 text-gray-800`}
-        style={COLOURED_AREA_TAGS ? { backgroundColor: chip.bg, color: chip.fg, borderColor: chip.border } : undefined}
+        className={coloured ? tagPill : `${tagPill} border-gray-200 bg-white text-gray-800`}
+        style={coloured ? { backgroundColor: chip.bg, color: chip.fg, borderColor: chip.border } : undefined}
       >
         <MapPin className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
         {chip.label}
@@ -241,7 +243,7 @@ function Chip({ chip }: { chip: ListChip }) {
     );
   }
   return (
-    <span className={`${tagPill} border-gray-200 bg-gray-100 text-gray-800`}>
+    <span className={`${tagPill} border-gray-200 bg-white text-gray-800`}>
       <span className="font-semibold">{chip.key}:</span>
       {chip.value}
     </span>
@@ -254,14 +256,19 @@ function Chip({ chip }: { chip: ListChip }) {
 // Mixing them let tags push flags out of the row and made every card a
 // different shape. Only the first tag is shown (regions first, since area is
 // what coordinators scan by); the rest are one hover/focus away.
+// The tag row sits in a very light grey band running edge to edge along the
+// bottom of the card: negative margins cancel the card's own padding (p-4) on
+// the sides and bottom, and the bottom corners follow the card's radius.
+const TAGS_BAND = '-mx-4 -mb-4 px-4 py-3 bg-gray-50 border-t border-gray-100 rounded-b-[9px]';
+
 function TagsFooter({ chips }: { chips: ListChip[] }) {
   // Rendered even with no tags — it's the card's last grid row (see
   // CustomerCard), which has to exist for the rows to line up across a row.
-  if (chips.length === 0) return <div className="pt-3 border-t border-gray-100" aria-hidden="true" />;
+  if (chips.length === 0) return <div className={TAGS_BAND} aria-hidden="true" />;
   const ordered = [...chips].sort((a, b) => Number(b.type === 'region') - Number(a.type === 'region'));
   const [first, ...rest] = ordered;
   return (
-    <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
+    <div className={`${TAGS_BAND} flex items-center gap-1.5`}>
       <Chip chip={first} />
       {rest.length > 0 && (
         <Tooltip>
@@ -271,7 +278,7 @@ function TagsFooter({ chips }: { chips: ListChip[] }) {
             <button
               type="button"
               aria-label={`Show all ${chips.length} tags`}
-              className={`relative z-10 ${tagPill} border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50`}
+              className={`relative z-10 ${tagPill} border-gray-200 bg-white text-gray-700 hover:bg-gray-100 cursor-default outline-none focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50`}
             >
               +{rest.length} more
             </button>
@@ -600,7 +607,7 @@ function SortGroup({ legend, name, value, onChange, options }: {
   );
 }
 
-export function CustomersListDummy() {
+export function CustomersListDummy({ colouredAreaTags = true }: { colouredAreaTags?: boolean }) {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('surname');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -646,6 +653,7 @@ export function CustomersListDummy() {
   };
 
   return (
+    <AreaColoursContext.Provider value={colouredAreaTags}>
     <div className="space-y-4">
       {/* -mx-6/-mt-6 with matching padding: the pinned block reaches the full
           width of <main>'s gutters and tucks up into its top padding, so
@@ -803,5 +811,6 @@ export function CustomersListDummy() {
         ))}
       </div>
     </div>
+    </AreaColoursContext.Provider>
   );
 }

@@ -134,34 +134,58 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
 // New key (not the earlier 'customersListLayout'), so a "show the old list"
 // choice left over from when the new layout was the opt-in doesn't carry over
 // and hide the new default.
+// New key (not the earlier 'customersListLayout'), so a "show the old list"
+// choice left over from when the new layout was the opt-in doesn't carry over
+// and hide the new default.
 const LAYOUT_KEY = 'customersListLayoutV2';
+const AREA_COLOURS_KEY = 'customersListAreaColours';
+
+// Stored as 'on' | 'off'; reads and writes are guarded, since storage can be
+// unavailable (private windows, blocked site data).
+function readStored(key: string, fallback: string) {
+  try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+}
+function writeStored(key: string, value: string) {
+  try { localStorage.setItem(key, value); } catch { /* ignore */ }
+}
+
+const demoPill =
+  'px-3.5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800 cursor-pointer';
 
 export function CustomersListPage() {
   // The new list layout (CustomersListDummy — static, with a longer made-up
-  // customer list) is the default. The faint button bottom-right only flips
-  // to the original list for comparison; that choice is remembered across
-  // reloads, with every read/write guarded since storage can be unavailable.
-  const [showOriginal, setShowOriginal] = useState(() => {
-    try { return localStorage.getItem(LAYOUT_KEY) === 'original'; } catch { return false; }
-  });
+  // customer list) is the default. The faint buttons bottom-right are demo
+  // switches: one flips to the original list for comparison, the other turns
+  // the area tags' colours on and off. Both are remembered across reloads.
+  const [showOriginal, setShowOriginal] = useState(() => readStored(LAYOUT_KEY, 'new') === 'original');
+  const [areaColours, setAreaColours] = useState(() => readStored(AREA_COLOURS_KEY, 'on') === 'on');
   const toggleLayout = () => {
     setShowOriginal(prev => {
-      try { localStorage.setItem(LAYOUT_KEY, prev ? 'new' : 'original'); } catch { /* ignore */ }
+      writeStored(LAYOUT_KEY, prev ? 'new' : 'original');
+      return !prev;
+    });
+  };
+  const toggleAreaColours = () => {
+    setAreaColours(prev => {
+      writeStored(AREA_COLOURS_KEY, prev ? 'off' : 'on');
       return !prev;
     });
   };
 
   return (
     <>
-      {showOriginal ? <CurrentCustomersList /> : <CustomersListDummy />}
-      <button
-        type="button"
-        onClick={toggleLayout}
-        aria-pressed={showOriginal}
-        className="fixed right-6 bottom-6 z-50 px-3.5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-800 opacity-40 hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
-      >
-        {showOriginal ? 'Demo: back to new list' : 'Demo: view original list'}
-      </button>
+      {showOriginal ? <CurrentCustomersList /> : <CustomersListDummy colouredAreaTags={areaColours} />}
+      <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-2 opacity-40 hover:opacity-100 focus-within:opacity-100 transition-opacity">
+        {/* The area-colours switch only means something on the new list. */}
+        {!showOriginal && (
+          <button type="button" onClick={toggleAreaColours} aria-pressed={areaColours} className={demoPill}>
+            {areaColours ? 'Demo: area colours on' : 'Demo: area colours off'}
+          </button>
+        )}
+        <button type="button" onClick={toggleLayout} aria-pressed={showOriginal} className={demoPill}>
+          {showOriginal ? 'Demo: back to new list' : 'Demo: view original list'}
+        </button>
+      </div>
     </>
   );
 }
