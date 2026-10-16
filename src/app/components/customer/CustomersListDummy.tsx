@@ -387,7 +387,9 @@ function CustomerCard({ customer }: { customer: ListCustomer }) {
   // The whole card is clickable for the scenario customers, via a "stretched
   // link" on the name — rather than wrapping everything in an <a>, which
   // would put the tags button inside a link (invalid, and it would navigate).
-  const nameClass = 'flex-1 min-w-0 self-center text-base font-semibold text-gray-900 truncate';
+  // font-weight-fixed: the customer name keeps its normal weight when the Bolder
+  // toggle is on — the toggle is about body text, and a name is already a title.
+  const nameClass = 'font-weight-fixed flex-1 min-w-0 self-center text-base font-semibold text-gray-900 truncate';
   const stretched = 'after:absolute after:inset-0 after:content-[""] outline-none';
 
   return (
@@ -660,11 +662,16 @@ export function CustomersListDummy({ colouredAreaTags = true }: { colouredAreaTa
           scrolled content can't show around it, without moving it at rest. */}
       <div
         ref={toolbarRef}
-        className="sticky z-30 -mx-6 -mt-6 px-6 pt-6 pb-3 bg-gray-50 border-b border-gray-200 space-y-4"
+        className="sticky z-30 -mx-6 -mt-6 px-6 pt-3.5 pb-3 bg-gray-50 border-b border-gray-200 space-y-4"
         style={{ top: headerBottom }}
       >
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-gray-900">Customers</h1>
+      {/* items-start + leading-none: the title's top lines up with the top of the
+          Add customer button, rather than floating at the row's vertical centre. */}
+      {/* mb-3.5 (14px) replaces the 16px that space-y-4 would put beneath this
+          row, paying for the 2px added to the padding above it (12 -> 14px):
+          the two gaps now match. (It overrides, not adds to, space-y's margin.) */}
+      <div className="flex items-start justify-between gap-4 mb-3.5">
+        <h1 className="text-xl leading-none font-semibold text-gray-900">Customers</h1>
         <Button variant="primary" icon={<Plus className="w-4 h-4" />}>Add customer</Button>
       </div>
 

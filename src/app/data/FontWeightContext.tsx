@@ -1,8 +1,13 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useState, type ReactNode } from 'react';
 
 export type FontWeightMode = 'default' | 'bold';
 
-const STORAGE_KEY = 'pass-font-weight-mode';
+// Bolder is the default for this prototype. The key is versioned so a
+// "Default" choice saved back when that was the starting mode doesn't carry
+// over and override the new starting mode; anyone can still switch to Default
+// with the toggle (or ?weight=default) and that choice is remembered.
+const STORAGE_KEY = 'pass-font-weight-mode-v2';
+const DEFAULT_MODE: FontWeightMode = 'bold';
 // Same shareable-link convention as NavModeContext's `?nav=` — lets a
 // specific state be linked without depending on the recipient's own
 // localStorage, e.g. for showing someone the bolder pass without them
@@ -46,11 +51,15 @@ const FontWeightContext = createContext<FontWeightContextValue | null>(null);
  */
 export function FontWeightProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<FontWeightMode>(() => {
-    if (typeof window === 'undefined') return 'default';
-    return readModeFromQuery() ?? (window.localStorage.getItem(STORAGE_KEY) as FontWeightMode) ?? 'default';
+    if (typeof window === 'undefined') return DEFAULT_MODE;
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return readModeFromQuery() ?? (stored === 'default' || stored === 'bold' ? stored : DEFAULT_MODE);
   });
 
-  useEffect(() => {
+  // Layout effect, not a plain one: the attribute has to be on <html> before
+  // the first paint, or the page flashes in the lighter weights first now
+  // that Bolder is the starting mode.
+  useLayoutEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, mode);
     document.documentElement.dataset.fontWeight = mode;
   }, [mode]);
