@@ -39,8 +39,8 @@ export function Header() {
             <NavItem
               icon={<FontAwesomeIcon icon={faUserGroup} className="w-4 h-4" />}
               label="Employees"
-              to="/employees"
-              active={location.pathname === '/employees'}
+              to="/employees/list"
+              active={location.pathname.startsWith('/employees')}
             />
             <NavItem icon={<FontAwesomeIcon icon={faCalendarCheck} className="w-4 h-4" />} label="Bookings" to="/bookings" />
             <NavItem icon={<FontAwesomeIcon icon={faCalendarDays} className="w-4 h-4" />} label="Schedule" to="/schedule" active={location.pathname === '/schedule'} />

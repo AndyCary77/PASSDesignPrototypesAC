@@ -540,7 +540,7 @@ export function PeopleListLayout<T extends { id: string; surname: string }>(p: P
                 <button type="button" aria-label={p.filtersCount > 0 ? `Filter (${p.filtersCount} applied)` : 'Filter'} className="relative p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
                   <SlidersHorizontal className="w-5 h-5" />
                   {/* Purple dot while any filter is applied. */}
-                  {p.filtersCount > 0 && <span aria-hidden="true" className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[rgb(154,38,214)] border-2 border-gray-50" />}
+                  {p.filtersCount > 0 && <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-[rgb(154,38,214)] border-2 border-white" />}
                 </button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-[min(720px,calc(100vw-3rem))] p-4">
@@ -552,7 +552,7 @@ export function PeopleListLayout<T extends { id: string; surname: string }>(p: P
                 <button type="button" aria-label="Sort" className="relative p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
                   {p.sortDirection === 'asc' ? <ArrowDownAZ className="w-5 h-5" /> : <ArrowDownZA className="w-5 h-5" />}
                   {/* Small purple dot while the sort differs from the default (surname, A–Z). */}
-                  {!p.sortIsDefault && <span aria-hidden="true" className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[rgb(154,38,214)] border-2 border-gray-50" />}
+                  {!p.sortIsDefault && <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-[rgb(154,38,214)] border-2 border-white" />}
                 </button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-auto p-4">

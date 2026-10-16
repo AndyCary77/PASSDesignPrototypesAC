@@ -131,7 +131,7 @@ const NAV_ITEMS = [
 
 const NAV_LINKS = {
   customers: '/customers/list',
-  employees: '/employees',
+  employees: '/employees/list',
   schedule: '/schedule',
   office: '/office/tags',
   admin: '/admin',
