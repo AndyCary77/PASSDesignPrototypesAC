@@ -493,16 +493,9 @@
   cursor: pointer;
 }
 
-/* Recordings — a persistent, collapsible record of what's been captured
-   with CareBridge and whether it's reached PASS yet. Replaces the old
-   blocking "Uploading… / Sent to PASS" modal: finishing a recording lands
-   back here instead, with this section auto-expanded to show it queued.
-   Shell matches .docs-cb-banner just above it (same border/radius/card
-   language); the status pill reuses carebridge's own .cb-sec-badge
-   amber/green pairing (same --rag-amber-*/--rag-green-* tokens) so
-   "pending vs done" reads the same way in both mini-apps. */
+/* Recordings: a persistent, collapsible list of captured recordings and their upload status. Same card shell as the banner above. */
 .docs-recordings {
-  margin: 4px 16px 4px;
+  margin: 12px 16px 4px;
   border: 1px solid var(--ui-purple-4-lavendar);
   border-radius: 12px;
   overflow: hidden;
@@ -538,7 +531,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 .docs-recordings-chevron {
@@ -552,7 +545,7 @@
 .docs-recordings-empty {
   padding: 12px;
   font-family: Barlow, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--greyscale-6-grey-50);
 }
 .docs-recording-row {
@@ -574,7 +567,7 @@
   border: none;
   border-top: 1px solid var(--ui-purple-6-lavendar-grey);
   font-family: Barlow, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--greyscale-8-grey-65);
   text-align: center;
@@ -590,7 +583,7 @@
   flex: 1;
   min-width: 0;
   font-family: Barlow, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #000;
   overflow: hidden;
@@ -601,11 +594,11 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  height: 22px;
+  height: 26px;
   padding: 0 10px;
-  border-radius: 11px;
+  border-radius: 13px;
   font-family: Barlow, sans-serif;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
 }
 .docs-recording-badge--uploaded {
@@ -654,13 +647,13 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 22px;
+  height: 26px;
   padding: 0 10px;
-  border-radius: 11px;
+  border-radius: 13px;
   border: 1px solid var(--ui-purple-4-lavendar);
   background: #fff;
   font-family: Barlow, sans-serif;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--brand-purple-1-purple-0);
   cursor: pointer;

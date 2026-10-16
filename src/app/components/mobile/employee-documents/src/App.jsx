@@ -2,6 +2,7 @@ import { useState } from 'react'
 import StatusBar from '../../assets/StatusBar'
 import PhoneFrame from '../../assets/PhoneFrame'
 import { handleSystemBack } from '../../assets/backStack'
+import { useRecordings, resetRecordings, isDefaultRecordings, markUploaded } from '../../assets/recordings'
 import AssessmentHeroIcon from '../../assets/AssessmentHeroIcon'
 // Same photo as the Employees list's own David Buckowski.
 import davidImg from '../../assets/img/Employee=David Buckowski.jpg'
@@ -9,6 +10,19 @@ import davidImg from '../../assets/img/Employee=David Buckowski.jpg'
 const PlusIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+  </svg>
+)
+
+const ChevronRightIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+  </svg>
+)
+
+const RetryIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 )
 
@@ -67,6 +81,82 @@ const DOCUMENTS = [
   { id: 'supervision-q3', title: 'Supervision', sub: 'Q3 2026' },
 ]
 
+// Recordings made for this employee and whether each has reached PASS yet —
+// the same list customer-documents shows (see its RecordingsSection), backed by
+// the same localStorage data layer, here keyed by 'david'. A recording that
+// couldn't upload shows Failed with a Retry; ones that went through show
+// Uploaded; anything just finished would show Queued. Starts collapsed (count
+// badge in the header), or open when arriving with ?showRecordings=1.
+function RecordingsSection({ recordings, initialExpanded, employeeId }) {
+  const [expanded, setExpanded] = useState(initialExpanded)
+  // Ids currently mid-retry — transient only, never persisted.
+  const [retryingIds, setRetryingIds] = useState(() => new Set())
+  const handleRetry = (id) => {
+    setRetryingIds(prev => new Set(prev).add(id))
+    setTimeout(() => {
+      markUploaded(employeeId, id)
+      setRetryingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }, 1400)
+  }
+  // Demo-only reset, hidden until there's something to reset.
+  const isDefault = isDefaultRecordings(employeeId, recordings)
+  const handleReset = () => {
+    if (window.confirm('Reset recordings back to the demo starting point?')) resetRecordings(employeeId)
+  }
+  return (
+    <div className="docs-recordings">
+      <button type="button" className="docs-recordings-header" onClick={() => setExpanded(e => !e)} aria-expanded={expanded}>
+        <span className="docs-recordings-title">Recordings</span>
+        <span className="docs-recordings-count">{recordings.length}</span>
+        <span className={`docs-recordings-chevron${expanded ? ' docs-recordings-chevron--open' : ''}`}>
+          <ChevronRightIcon size={16} />
+        </span>
+      </button>
+      {expanded && (
+        <div className="docs-recordings-list">
+          {recordings.length === 0 ? (
+            <div className="docs-recordings-empty">No recordings yet.</div>
+          ) : recordings.map(rec => {
+            const retrying = retryingIds.has(rec.id)
+            return (
+              <div key={rec.id} className="docs-recording-row">
+                <span className="docs-recording-row-icon"><AssessmentHeroIcon size={16} /></span>
+                <span className="docs-recording-row-title">{rec.title}</span>
+                {retrying ? (
+                  <span className="docs-recording-badge docs-recording-badge--retrying">
+                    <span className="docs-recording-spinner" />
+                    Retrying
+                  </span>
+                ) : rec.status === 'failed' ? (
+                  <div className="docs-recording-status">
+                    <span className="docs-recording-badge docs-recording-badge--failed">Failed</span>
+                    <button type="button" className="docs-recording-retry" onClick={() => handleRetry(rec.id)}>
+                      <RetryIcon size={12} /> Retry
+                    </button>
+                  </div>
+                ) : (
+                  <span className={`docs-recording-badge docs-recording-badge--${rec.status}`}>
+                    {rec.status === 'uploaded' ? 'Uploaded' : 'Queued'}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+          {!isDefault && (
+            <button type="button" className="docs-recordings-reset" onClick={handleReset}>
+              Reset for demo
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AssessmentHeroBanner() {
   return (
     <div className="docs-cb-banner">
@@ -93,6 +183,10 @@ export default function App() {
     new URLSearchParams(window.location.search).get('transition') === '1'
   )
   const systemBack = () => handleSystemBack(() => { window.location.href = '../employees/?transition=back' })
+  const recordings = useRecordings('david')
+  const [showRecordings] = useState(() =>
+    new URLSearchParams(window.location.search).get('showRecordings') === '1'
+  )
 
   return (
     <>
@@ -122,6 +216,8 @@ export default function App() {
               </div>
 
               <AssessmentHeroBanner />
+
+              <RecordingsSection recordings={recordings} initialExpanded={showRecordings} employeeId="david" />
 
               <div className="empdoc-section-label">Documents</div>
               <div className="empdoc-doc-list">

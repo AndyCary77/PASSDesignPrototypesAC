@@ -23,6 +23,14 @@ const DEFAULT_RECORDINGS = {
     { id: 'seed-2', title: "Arthur's Review of Wellbeing – Mon 21 Sep 2026", status: 'failed' },
     { id: 'seed-1', title: "Arthur's Initial assessment – Mon 25 Aug 2026", status: 'uploaded' },
   ],
+  // David Buckowski (mobile/employee-documents) — same shape of demo: one
+  // recording that's still waiting to upload (queued) above two that have
+  // already gone through.
+  david: [
+    { id: 'david-seed-3', title: "David's Supervision – Mon 21 Sep 2026", status: 'queued' },
+    { id: 'david-seed-2', title: "David's Supervision – Mon 22 Jun 2026", status: 'uploaded' },
+    { id: 'david-seed-1', title: "David's Induction – Fri 14 Mar 2025", status: 'uploaded' },
+  ],
 }
 
 // A stable empty array — returned for any customer with no recordings, so
@@ -44,8 +52,16 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) stored = JSON.parse(raw)
   } catch {}
-  cache = stored || DEFAULT_RECORDINGS
-  if (!stored) persist()
+  // Seeds fill in for anyone missing from what's stored — so adding a new
+  // seeded person (David) shows up for someone whose localStorage already holds
+  // an older snapshot, without wiping what they've recorded since.
+  const merged = { ...DEFAULT_RECORDINGS, ...(stored || {}) }
+  // David's seed used to be 'failed'; move an untouched copy of it to 'queued'.
+  const davidSeed = merged.david?.find(r => r.id === 'david-seed-3')
+  const migrated = davidSeed?.status === 'failed'
+  if (migrated) merged.david = merged.david.map(r => r === davidSeed ? { ...r, status: 'queued' } : r)
+  cache = merged
+  if (!stored || migrated || Object.keys(merged).length !== Object.keys(stored).length) persist()
   return cache
 }
 

@@ -12,7 +12,9 @@
   overflow-y: auto;
   background: var(--ui-purple-7-lightest-lavendar);
   position: relative;
+  scrollbar-width: none;
 }
+.empdoc-body::-webkit-scrollbar { display: none; }
 
 /* ── Profile card ────────────────────────────────────────────── */
 .empdoc-profile-card {
@@ -185,3 +187,171 @@
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
+
+/* Recordings: same card as the customer-documents screen; text raised to 14px. */
+.docs-recordings {
+  margin: 4px 16px 4px;
+  border: 1px solid var(--ui-purple-4-lavendar);
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #fff;
+}
+.docs-recordings-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  font-family: Barlow, sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+.docs-recordings-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand-purple-1-purple-0);
+}
+.docs-recordings-count {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--brand-purple-8-purple-10);
+  color: var(--brand-purple-6-purple-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+.docs-recordings-chevron {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--greyscale-6-grey-50);
+  transition: transform 0.15s ease;
+}
+.docs-recordings-chevron--open { transform: rotate(90deg); }
+.docs-recordings-list { border-top: 1px solid var(--ui-purple-6-lavendar-grey); }
+.docs-recordings-empty {
+  padding: 12px;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  color: var(--greyscale-6-grey-50);
+}
+.docs-recording-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
+}
+.docs-recording-row:last-child { border-bottom: none; }
+/* Demo-only reset switch, not a real reviewer action — kept visually quiet
+   (small centred text, muted colour) so it doesn't compete with the actual
+   recordings above it. */
+.docs-recordings-reset {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--ui-purple-6-lavendar-grey);
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--greyscale-6-grey-50);
+  text-align: center;
+  cursor: pointer;
+}
+.docs-recordings-reset:active { color: var(--greyscale-6-grey-50); }
+.docs-recording-row-icon {
+  flex-shrink: 0;
+  color: var(--brand-purple-6-purple-4);
+  display: flex;
+}
+.docs-recording-row-title {
+  flex: 1;
+  min-width: 0;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.docs-recording-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.docs-recording-badge--uploaded {
+  background: var(--rag-green-green-lightest);
+  color: var(--rag-green-green-4);
+}
+.docs-recording-badge--queued {
+  background: var(--rag-amber-amber-lightest);
+  color: var(--rag-amber-amber-6);
+}
+.docs-recording-badge--failed {
+  background: var(--rag-red-action-med-pastel);
+  color: var(--rag-red-red-overdue-dark);
+}
+/* Reuses the count-pill's purple pairing rather than inventing a third
+   "in progress" colour — it's already this app's language for "neutral,
+   not done yet". */
+.docs-recording-badge--retrying {
+  background: var(--brand-purple-8-purple-10);
+  color: var(--brand-purple-6-purple-4);
+  gap: 5px;
+}
+.docs-recording-spinner {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: docsRecordingSpin 0.7s linear infinite;
+}
+@keyframes docsRecordingSpin {
+  to { transform: rotate(360deg); }
+}
+/* Groups the Failed badge with its Retry action so both sit flush right
+   together, same as the plain status badge does on its own. */
+.docs-recording-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Same box as .docs-recording-badge (height/padding/radius/type) so Retry
+   reads as the same size as the badge it sits beside, just actionable. */
+.docs-recording-retry {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  border: 1px solid var(--ui-purple-4-lavendar);
+  background: #fff;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand-purple-1-purple-0);
+  cursor: pointer;
+}
+.docs-recording-retry:active { background: var(--brand-purple-8-purple-10); }
+
