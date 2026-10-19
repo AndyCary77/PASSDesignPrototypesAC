@@ -414,8 +414,8 @@ export function EmployeeContractScreen() {
               <dl className="flex flex-wrap gap-x-8 gap-y-2">
                 {HOLIDAY_STATS.map((s) => (
                   <div key={s.label} className="flex items-center gap-2">
-                    <dt className="text-base text-gray-600">{s.label}</dt>
-                    <dd className="text-base font-semibold text-gray-900">{s.value}</dd>
+                    <dt className="text-body text-gray-600">{s.label}</dt>
+                    <dd className="text-body font-semibold text-gray-900">{s.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -429,7 +429,7 @@ export function EmployeeContractScreen() {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <span className="text-base font-medium text-gray-700">01/04/26 - 31/03/27</span>
+              <span className="text-body font-medium text-gray-700">01/04/26 - 31/03/27</span>
               <button
                 className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-full cursor-pointer"
                 aria-label="Next"
@@ -440,7 +440,7 @@ export function EmployeeContractScreen() {
 
             {/* Adjustments table */}
             <div className="border border-gray-200 rounded-[10px] overflow-hidden">
-              <table className="w-full text-base">
+              <table className="w-full text-body">
                 <thead>
                   <tr className="bg-gray-50 text-left text-gray-600">
                     <th className="px-4 py-3 font-medium">Adjustment +/-</th>
@@ -456,7 +456,7 @@ export function EmployeeContractScreen() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-base italic text-gray-600">
+                    <td colSpan={5} className="px-4 py-8 text-center text-body italic text-gray-600">
                       No adjustments recorded.
                     </td>
                   </tr>
@@ -473,8 +473,8 @@ export function EmployeeContractScreen() {
 function SummaryRow({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="flex gap-8">
-      <dt className="text-base text-gray-600 w-72 flex-shrink-0">{label}</dt>
-      <dd className="text-base text-gray-900">
+      <dt className="text-body text-gray-600 w-72 flex-shrink-0">{label}</dt>
+      <dd className="text-body text-gray-900">
         {value}
         {note && <div className="text-body text-gray-600">{note}</div>}
       </dd>
@@ -497,7 +497,7 @@ function ConstraintRow({
 }) {
   return (
     <div className="flex gap-8">
-      <dt className="text-base text-gray-600 w-72 flex-shrink-0">{label}</dt>
+      <dt className="text-body text-gray-600 w-72 flex-shrink-0">{label}</dt>
       <dd className="flex-1 min-w-0">
         {active ? (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-medium bg-amber-50 text-amber-800 border border-amber-200">
@@ -505,7 +505,7 @@ function ConstraintRow({
             {value}
           </span>
         ) : (
-          <span className="text-base text-gray-900">{value}</span>
+          <span className="text-body text-gray-900">{value}</span>
         )}
 
         {thresholds && thresholds.length > 0 && (
@@ -632,23 +632,23 @@ function ContractSummaryEdit({
               <input
                 type="number"
                 defaultValue={40}
-                className="w-20 px-3 py-2 border border-gray-300 rounded-md text-base"
+                className="w-20 px-3 py-2 border border-gray-300 rounded-md text-body"
               />
-              <span className="text-base text-gray-600">Hours</span>
+              <span className="text-body text-gray-600">Hours</span>
             </div>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 defaultValue={0}
-                className="w-20 px-3 py-2 border border-gray-300 rounded-md text-base"
+                className="w-20 px-3 py-2 border border-gray-300 rounded-md text-body"
               />
-              <span className="text-base text-gray-600">Mins</span>
+              <span className="text-body text-gray-600">Mins</span>
             </div>
           </div>
         </EditField>
 
         <fieldset>
-          <legend className="text-base font-medium text-gray-700 mb-2">
+          <legend className="text-body font-medium text-gray-700 mb-2">
             Have they opted out of the working time directive?
           </legend>
           <RadioPair name="wtd-opt-out" value={wtdOptOut} onChange={setWtdOptOut} />
@@ -669,7 +669,7 @@ function ContractSummaryEdit({
 
           {restriction === 'benefits' && (
             <div className="mt-3 border-l-2 border-amber-200 pl-4 max-w-md">
-              <label className="flex items-center gap-1 text-base font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-1 text-body font-medium text-gray-700 mb-2">
                 Weekly hours limit
                 <InfoIcon text={BENEFITS_INFO} />
               </label>
@@ -697,7 +697,7 @@ function ContractSummaryEdit({
         {/* Secondary job — overseas workers only */}
         {restriction === 'overseas-worker' && (
           <fieldset>
-            <legend className="text-base font-medium text-gray-700 mb-2">Secondary job</legend>
+            <legend className="text-body font-medium text-gray-700 mb-2">Secondary job</legend>
             <RadioPair name="secondary-job" value={secondaryJob} onChange={setSecondaryJob} />
 
             <div className="mt-4 border-l-2 border-amber-200 pl-4 max-w-md">
@@ -743,7 +743,7 @@ function ContractSummaryEdit({
           <input
             type="text"
             maxLength={50}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-base"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-body"
           />
         </EditField>
       </div>
@@ -768,7 +768,7 @@ function EditField({
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1 text-base font-medium text-gray-700 mb-2">
+      <label className="flex items-center gap-1 text-body font-medium text-gray-700 mb-2">
         {required && <span className="text-red-500">*</span>}
         {label}
       </label>
@@ -790,7 +790,7 @@ function DateInput({ value, disabled, clearable }: { value: string; disabled?: b
           defaultValue={value}
           placeholder="Select"
           disabled={disabled}
-          className="flex-1 min-w-0 outline-none bg-transparent text-base disabled:text-gray-600"
+          className="flex-1 min-w-0 outline-none bg-transparent text-body disabled:text-gray-600"
         />
         <Calendar className="w-4 h-4 text-gray-600 flex-shrink-0" />
       </div>
@@ -818,7 +818,7 @@ function SelectInput({
         value={onChange ? value : undefined}
         defaultValue={onChange ? undefined : value}
         onChange={(e) => onChange?.(e.target.value)}
-        className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-base bg-white pr-9"
+        className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-body bg-white pr-9"
       >
         {options.map((o) => (
           <option key={o}>{o}</option>
@@ -836,9 +836,9 @@ function HoursInput({ value, onChange }: { value: number; onChange: (value: numb
         type="number"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-20 px-3 py-2 border border-gray-300 rounded-md text-base"
+        className="w-20 px-3 py-2 border border-gray-300 rounded-md text-body"
       />
-      <span className="text-base text-gray-600">hrs/week</span>
+      <span className="text-body text-gray-600">hrs/week</span>
     </div>
   );
 }
@@ -854,7 +854,7 @@ function RadioPair({
 }) {
   return (
     <div className="flex gap-6">
-      <label className="flex items-center gap-2 text-base text-gray-900 cursor-pointer">
+      <label className="flex items-center gap-2 text-body text-gray-900 cursor-pointer">
         <input
           type="radio"
           name={name}
@@ -864,7 +864,7 @@ function RadioPair({
         />
         No
       </label>
-      <label className="flex items-center gap-2 text-base text-gray-900 cursor-pointer">
+      <label className="flex items-center gap-2 text-body text-gray-900 cursor-pointer">
         <input
           type="radio"
           name={name}

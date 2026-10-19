@@ -206,15 +206,15 @@ export const VisitDetailsPanel = ({
                     <div className="text-xs text-gray-500">
                       Customer
                     </div>
-                    <button className="text-[#5c1c85] hover:underline cursor-pointer text-base">
+                    <button className="text-[#5c1c85] hover:underline cursor-pointer text-body">
                       Anthony Dobson
                     </button>
                   </div>
 
-                  <div className="text-base">Morning Visit</div>
+                  <div className="text-body">Morning Visit</div>
 
                   <div className="flex items-center gap-2 text-body">
-                    <span className="text-base">
+                    <span className="text-body">
                       Tue 16th Dec
                     </span>
                     <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
@@ -223,10 +223,10 @@ export const VisitDetailsPanel = ({
                   </div>
 
                   <div className="flex items-center gap-2 text-body">
-                    <span className="text-base">
+                    <span className="text-body">
                       09:30 - 11:30
                     </span>
-                    <span className="text-gray-500 text-base">
+                    <span className="text-gray-500 text-body">
                       (2hr 00m)
                     </span>
                     <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
@@ -236,7 +236,7 @@ export const VisitDetailsPanel = ({
 
                   <div className="flex items-center gap-2 text-body">
                     <Calendar className="w-4 h-4 text-gray-500" />
-                    <span className="text-base">Daily</span>
+                    <span className="text-body">Daily</span>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </div>
 
@@ -367,7 +367,7 @@ export const VisitDetailsPanel = ({
                 />
 
                 <div>
-                  <div className="mb-3 text-gray-700 text-base">
+                  <div className="mb-3 text-gray-700 text-body">
                     Shadow employee assigned
                   </div>
                   <EmployeeCard
@@ -542,7 +542,7 @@ export const VisitDetailsPanel = ({
 
           {/* Footer Actions Bar */}
           <div className="p-8 border-t border-gray-200 flex items-center justify-between bg-white relative z-[111]">
-            <button className="text-gray-700 hover:text-gray-900 px-8 py-3 rounded-full bg-[#EDECF1] hover:bg-gray-200 transition-colors font-bold text-base cursor-pointer">
+            <button className="text-gray-700 hover:text-gray-900 px-8 py-3 rounded-full bg-[#EDECF1] hover:bg-gray-200 transition-colors font-bold text-body cursor-pointer">
               Cancel visit
             </button>
             
@@ -553,7 +553,7 @@ export const VisitDetailsPanel = ({
                   onClick={() => {
                     onClose();
                   }}
-                  className="text-gray-700 hover:text-gray-900 px-8 py-3 rounded-full bg-[#EDECF1] hover:bg-gray-200 transition-colors font-bold text-base cursor-pointer"
+                  className="text-gray-700 hover:text-gray-900 px-8 py-3 rounded-full bg-[#EDECF1] hover:bg-gray-200 transition-colors font-bold text-body cursor-pointer"
                 >
                   Close and discard changes
                 </button>
@@ -561,7 +561,7 @@ export const VisitDetailsPanel = ({
                   onClick={() => {
                     setShowFooterAlert(false);
                   }}
-                  className="bg-[#9a26d6] hover:bg-[#831eb8] text-white px-12 py-3 rounded-full transition-colors font-bold text-base cursor-pointer min-w-[160px]"
+                  className="bg-[#9a26d6] hover:bg-[#831eb8] text-white px-12 py-3 rounded-full transition-colors font-bold text-body cursor-pointer min-w-[160px]"
                 >
                   Continue editing
                 </button>
@@ -575,7 +575,7 @@ export const VisitDetailsPanel = ({
                     setShowFooterAlert(true);
                   }
                 }}
-                className="bg-[#9a26d6] hover:bg-[#831eb8] text-white px-12 py-3 rounded-full transition-colors font-bold text-base cursor-pointer min-w-[160px]"
+                className="bg-[#9a26d6] hover:bg-[#831eb8] text-white px-12 py-3 rounded-full transition-colors font-bold text-body cursor-pointer min-w-[160px]"
               >
                 {showFooterAlert && !hasBlockers
                   ? "Save anyway"

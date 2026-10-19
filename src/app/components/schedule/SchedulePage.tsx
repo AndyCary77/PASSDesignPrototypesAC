@@ -188,13 +188,13 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
             <div className="pb-10 px-10 flex items-center justify-between">
               <button
                 onClick={onClose}
-                className="h-[48px] px-10 rounded-full bg-[#9a26d6] text-white text-[16px] font-semibold hover:bg-[#831eb8] cursor-pointer transition-colors"
+                className="h-[48px] px-10 rounded-full bg-[#9a26d6] text-white text-[15px] font-semibold hover:bg-[#831eb8] cursor-pointer transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => setConfirming(true)}
-                className="h-[48px] px-10 rounded-full border border-gray-300 text-gray-700 text-[16px] font-semibold hover:bg-gray-50 cursor-pointer transition-colors"
+                className="h-[48px] px-10 rounded-full border border-gray-300 text-gray-700 text-[15px] font-semibold hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 Override and Assign
               </button>
@@ -245,13 +245,13 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
             <div className="pb-10 px-10 flex items-center justify-between">
               <button
                 onClick={() => setConfirming(false)}
-                className="h-[48px] px-10 rounded-full border border-gray-300 text-gray-700 text-[16px] font-semibold hover:bg-gray-50 cursor-pointer transition-colors"
+                className="h-[48px] px-10 rounded-full border border-gray-300 text-gray-700 text-[15px] font-semibold hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={onClose}
-                className="h-[48px] px-10 rounded-full bg-[#9a26d6] text-white text-[16px] font-semibold hover:bg-[#831eb8] cursor-pointer transition-colors"
+                className="h-[48px] px-10 rounded-full bg-[#9a26d6] text-white text-[15px] font-semibold hover:bg-[#831eb8] cursor-pointer transition-colors"
               >
                 Confirm Assignment
               </button>

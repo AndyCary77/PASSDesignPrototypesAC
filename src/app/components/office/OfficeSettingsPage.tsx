@@ -26,7 +26,7 @@ import {
 
 type CardKey = 'overdue' | 'allocation' | 'punctuality' | 'journal' | 'permissions' | 'voice';
 
-const INPUT_CLASS = 'w-28 px-3 py-3 border border-gray-300 rounded-md text-base bg-white';
+const INPUT_CLASS = 'w-28 px-3 py-3 border border-gray-300 rounded-md text-body bg-white';
 
 // ─── Read view ───────────────────────────────────────────────────────────────
 
@@ -103,7 +103,7 @@ function NumberField({
           aria-invalid={invalid}
           className={`${INPUT_CLASS} ${invalid ? 'border-red-500' : ''}`}
         />
-        <span className="text-base text-gray-800">{unit}</span>
+        <span className="text-body text-gray-800">{unit}</span>
       </div>
       {invalid && <p className="text-body text-red-700 mt-2">Enter a whole number from 0 to {max}.</p>}
     </div>
@@ -201,7 +201,7 @@ function AllocationSlideout({ onClose }: { onClose: () => void }) {
           <legend className="text-body text-gray-800 mb-4">Choose where a cell in the permanent allocation heatmap takes you.</legend>
           <div className="space-y-4">
             {HEATMAP_OPTIONS.map((o) => (
-              <label key={o.value} className="flex items-center gap-2.5 text-base text-gray-800 cursor-pointer w-fit">
+              <label key={o.value} className="flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
                 <input
                   type="radio"
                   name="heatmap-link"
@@ -293,7 +293,7 @@ function JournalSlideout({ onClose }: { onClose: () => void }) {
         <ul className="divide-y divide-gray-200">
           {JOURNAL_CATEGORIES.map((c) => (
             <li key={c} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-              <span className="text-base text-gray-900">{c}</span>
+              <span className="text-body text-gray-900">{c}</span>
               <div className="flex items-center gap-3">
                 <span className="text-body font-semibold text-gray-700 w-16 text-right">{draft[c] ? 'Enabled' : 'Disabled'}</span>
                 <SettingSwitch checked={draft[c]} onChange={(v) => setDraft((d) => ({ ...d, [c]: v }))} label={c} />
@@ -343,7 +343,7 @@ function EmployeePicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search employees"
             aria-label={`Search employees for ${groupKey}`}
-            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md text-base bg-white placeholder:text-gray-600"
+            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-md text-body bg-white placeholder:text-gray-600"
           />
         </div>
         <Button type="button" variant="tertiary" size="sm" onClick={selectVisible}>Select all</Button>
@@ -353,7 +353,7 @@ function EmployeePicker({
         {visible.length === 0 && <li className="px-4 py-3 text-body text-gray-700">No employees match “{query}”.</li>}
         {visible.map((e) => (
           <li key={e.id}>
-            <label className="flex items-center gap-3 px-4 py-2.5 text-base text-gray-900 cursor-pointer hover:bg-gray-50">
+            <label className="flex items-center gap-3 px-4 py-2.5 text-body text-gray-900 cursor-pointer hover:bg-gray-50">
               <input
                 type="checkbox"
                 checked={chosen.has(e.id)}

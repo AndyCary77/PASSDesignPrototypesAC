@@ -127,7 +127,7 @@ export function DocumentFilters({
           placeholder="Search documents..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-20 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5c1c85] focus:border-transparent text-sm placeholder:text-gray-400"
+          className="w-full pl-9 pr-20 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5c1c85] focus:border-transparent text-body placeholder:text-gray-400"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">

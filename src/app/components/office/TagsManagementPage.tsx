@@ -58,7 +58,7 @@ export function TagsManagementPage() {
                 value={queryInput}
                 onChange={e => setQueryInput(e.target.value)}
                 aria-label="Search"
-                className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(154,38,214)] focus:border-transparent text-sm placeholder:text-gray-400"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(154,38,214)] focus:border-transparent text-body placeholder:text-gray-400"
               />
             </div>
             <Button type="submit" size="sm">Search</Button>

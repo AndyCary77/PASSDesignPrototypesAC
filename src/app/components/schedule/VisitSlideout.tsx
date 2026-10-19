@@ -206,7 +206,7 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
               <div className="bg-red-50 border border-red-200 rounded-[8px] px-4 py-4">
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <span className="text-base font-bold text-red-900">Overriding the following conflicts</span>
+                  <span className="text-body font-bold text-red-900">Overriding the following conflicts</span>
                 </div>
                 <ul className="space-y-4">
                   {[...FOOTER_BLOCKING, ...FOOTER_CONFLICTS].map((conflict, i) => {
@@ -230,7 +230,7 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
               <div className="bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-4">
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <span className="text-base font-bold text-amber-900">Conflicts</span>
+                  <span className="text-body font-bold text-amber-900">Conflicts</span>
                 </div>
                 <ul className="space-y-4">
                   {[...FOOTER_BLOCKING, ...FOOTER_CONFLICTS].map((conflict, i) => {
@@ -306,7 +306,7 @@ function AssignedTodayContent() {
   return (
     <div className="space-y-4">
       <div>
-        <span className="font-semibold text-base">1/1 employee assigned</span>
+        <span className="font-semibold text-body">1/1 employee assigned</span>
         <span className="text-gray-500 text-sm ml-2">(Adrianna Janowski today only)</span>
       </div>
 
@@ -526,7 +526,7 @@ function TaskAccordion({ task }: { task: typeof CARE_TASKS[number] }) {
         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg}`}>
           <Icon className="w-5 h-5 text-white" />
         </div>
-        <span className="text-base font-semibold text-gray-900">{name}</span>
+        <span className="text-body font-semibold text-gray-900">{name}</span>
       </button>
 
       {open && (

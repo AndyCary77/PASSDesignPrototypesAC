@@ -359,14 +359,14 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
                   type="text"
                   placeholder="Username"
                   autoComplete="username"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
                 />
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Password"
                     autoComplete="current-password"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-body text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
                   />
                   <button
                     type="button"

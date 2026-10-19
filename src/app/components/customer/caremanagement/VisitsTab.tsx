@@ -389,7 +389,7 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
                   type="text"
                   disabled
                   placeholder="Start typing to select a care group"
-                  className="w-full text-sm text-gray-400 placeholder:text-gray-400 outline-none bg-transparent cursor-default"
+                  className="w-full text-body text-gray-400 placeholder:text-gray-400 outline-none bg-transparent cursor-default"
                 />
               </SummaryPanel>
             </div>

@@ -603,7 +603,7 @@ function AdvancedSettingsSlideout({ onClose }: { onClose: () => void }) {
                 id="rows-per-page"
                 value={tableDraft.rowsPerPage}
                 onChange={(e) => setTableDraft((t) => ({ ...t, rowsPerPage: Number(e.target.value) }))}
-                className="w-full appearance-none px-3 py-3 border border-gray-300 rounded-md text-base bg-white pr-9"
+                className="w-full appearance-none px-3 py-3 border border-gray-300 rounded-md text-body bg-white pr-9"
               >
                 {ROWS_PER_PAGE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -615,7 +615,7 @@ function AdvancedSettingsSlideout({ onClose }: { onClose: () => void }) {
             <legend className="text-body text-gray-700 mb-2">Table ordering</legend>
             <div className="flex items-center gap-6">
               {(['first-name', 'last-name'] as const).map((o) => (
-                <label key={o} className="flex items-center gap-2.5 text-base text-gray-800 cursor-pointer">
+                <label key={o} className="flex items-center gap-2.5 text-body text-gray-800 cursor-pointer">
                   <input
                     type="radio"
                     name="table-ordering"
@@ -634,7 +634,7 @@ function AdvancedSettingsSlideout({ onClose }: { onClose: () => void }) {
           <div key={t.key}>
             <h3 className="text-lg font-semibold text-gray-900">{t.title}</h3>
             <p className="text-body text-gray-800 mt-2">{t.helper}</p>
-            <label className="mt-5 flex items-center gap-2.5 text-base text-gray-800 cursor-pointer w-fit">
+            <label className="mt-5 flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
               <input
                 type="checkbox"
                 checked={draft[t.key]}
@@ -835,7 +835,7 @@ function VisitEventTypesSlideout({
           <div ref={availabilityPanelRef} className="rounded-[10px] border border-gray-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-gray-900">Availability by care type</h3>
             <InfoBanner className="mt-3">{CARE_TYPE_AVAILABILITY_HELPER}</InfoBanner>
-            <label className="mt-4 flex items-center gap-2.5 text-base text-gray-800 cursor-pointer w-fit">
+            <label className="mt-4 flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
               <input
                 ref={availabilityCheckboxRef}
                 type="checkbox"

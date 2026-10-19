@@ -208,7 +208,7 @@ function CurrentCustomersList() {
           <input
             type="text"
             placeholder="Search customers..."
-            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-body text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]"
           />
         </div>
         <span className="text-sm text-gray-500 whitespace-nowrap">{CUSTOMER_LIST.length} results</span>

@@ -96,7 +96,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
-                  style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}
+                  style={{ fontSize: 'var(--text-body)', fontWeight: 600 }}
                 >
                   Cancel
                 </button>
@@ -109,7 +109,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                     setDeletionInfo({ deletedBy: 'Andrew Cary', deletedAt: new Date() });
                   }}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors cursor-pointer"
-                  style={{ fontSize: 'var(--text-base)' }}
+                  style={{ fontSize: 'var(--text-body)' }}
                 >
                   Delete
                 </button>
@@ -156,12 +156,12 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
               <div className="flex-1 flex items-end gap-6 flex-wrap">
                 <div className="flex flex-col items-start gap-1">
                   <div className="text-xs text-gray-500 text-[14px]">Customer</div>
-                  <button className="text-[#5c1c85] hover:underline cursor-pointer" style={{ fontSize: 'var(--text-base)' }}>
+                  <button className="text-[#5c1c85] hover:underline cursor-pointer" style={{ fontSize: 'var(--text-body)' }}>
                     Anthony Dobson
                   </button>
                 </div>
 
-                <div style={{ fontSize: 'var(--text-base)' }}>Morning Visit</div>
+                <div style={{ fontSize: 'var(--text-body)' }}>Morning Visit</div>
                 
                 <div className="flex items-center gap-2 text-body">
                   <span>Tue 16th Dec</span>
@@ -171,8 +171,8 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                 </div>
 
                 <div className="flex items-center gap-2 text-body">
-                  <span style={{ fontSize: 'var(--text-base)' }}>09:30 - 11:30</span>
-                  <span className="text-gray-500" style={{ fontSize: 'var(--text-base)' }}>(2hr 00m)</span>
+                  <span style={{ fontSize: 'var(--text-body)' }}>09:30 - 11:30</span>
+                  <span className="text-gray-500" style={{ fontSize: 'var(--text-body)' }}>(2hr 00m)</span>
                   <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -180,7 +180,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
 
                 <div className="flex items-center gap-2 text-body">
                   <Calendar className="w-4 h-4 text-gray-500" />
-                  <span style={{ fontSize: 'var(--text-base)' }}>Daily</span>
+                  <span style={{ fontSize: 'var(--text-body)' }}>Daily</span>
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </div>
 
@@ -241,7 +241,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
                     <VisitNoteIcon className="w-5 h-5 text-gray-900" />
-                    <h4 className="font-semibold text-gray-900" style={{ fontSize: 'var(--text-base)' }}>Visit Note</h4>
+                    <h4 className="font-semibold text-gray-900" style={{ fontSize: 'var(--text-body)' }}>Visit Note</h4>
                   </div>
 
                   <div className="space-y-3 mt-[0px] mr-[0px] mb-[4px] ml-[0px]">
@@ -259,7 +259,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                     <button
                       onClick={() => setShowVisitNotePanel(false)}
                       className="text-gray-600 hover:text-gray-800 px-6 py-2 rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
-                      style={{ fontSize: 'var(--text-base)', fontWeight: 600, backgroundColor: '#EDECF1' }}
+                      style={{ fontSize: 'var(--text-body)', fontWeight: 600, backgroundColor: '#EDECF1' }}
                     >
                       Cancel
                     </button>
@@ -272,7 +272,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                         }
                       }}
                       className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-6 py-2 rounded-full transition-colors cursor-pointer"
-                      style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}
+                      style={{ fontSize: 'var(--text-body)', fontWeight: 600 }}
                     >
                       Save Note
                     </button>
@@ -283,7 +283,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex items-start gap-3 flex-1 mt-[0px] mr-[0px] mb-[0px] ml-[8px] m-[0px]">
                       <VisitNoteIcon className="w-6 h-6 text-blue-800" />
-                      <div className="text-base text-blue-800 flex-1">
+                      <div className="text-body text-blue-800 flex-1">
                         <span className="font-semibold text-blue-900 mr-2 text-base">Visit Note</span>
                         <span className="whitespace-pre-wrap">{savedVisitNote}</span>
                       </div>
@@ -375,7 +375,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
 
               {/* Shadow Employee Section */}
               <div>
-                <div className="mb-3 text-gray-700" style={{ fontSize: 'var(--text-base)' }}>Shadow employee assigned</div>
+                <div className="mb-3 text-gray-700" style={{ fontSize: 'var(--text-body)' }}>Shadow employee assigned</div>
                 <EmployeeCard employee={shadowEmployee} isShadow />
               </div>
             </div>
@@ -384,10 +384,10 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 flex items-center justify-between bg-white p-[32px]">
-          <button className="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-full cursor-pointer" style={{ fontSize: 'var(--text-base)', fontWeight: 600, backgroundColor: '#EDECF1' }}>
+          <button className="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-full cursor-pointer" style={{ fontSize: 'var(--text-body)', fontWeight: 600, backgroundColor: '#EDECF1' }}>
             Cancel visit
           </button>
-          <button className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2 rounded-full transition-colors cursor-pointer" style={{ fontSize: 'var(--text-base)', fontWeight: 600 }}>
+          <button className="bg-[rgb(154,38,214)] hover:bg-[rgb(134,28,194)] text-white px-8 py-2 rounded-full transition-colors cursor-pointer" style={{ fontSize: 'var(--text-body)', fontWeight: 600 }}>
             Save
           </button>
         </div>
@@ -419,7 +419,7 @@ function TabButton({
         }
       `}
       style={{ 
-        fontSize: 'var(--text-base)', 
+        fontSize: 'var(--text-body)', 
         fontWeight: 500,
         borderBottomColor: active ? 'rgb(154, 38, 214)' : 'transparent'
       }}
@@ -458,7 +458,7 @@ function EmployeeCard({ employee, isShadow }: { employee: Employee; isShadow?: b
                 </div>
                 <div className="flex flex-col">
                   <div className="text-gray-500" style={{ fontSize: 'var(--text-body)' }}>Type</div>
-                  <div style={{ fontSize: 'var(--text-base)' }}>{employee.type}</div>
+                  <div style={{ fontSize: 'var(--text-body)' }}>{employee.type}</div>
                 </div>
               </div>
             </div>

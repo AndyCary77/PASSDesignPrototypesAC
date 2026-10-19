@@ -133,7 +133,7 @@ function AvailabilityForm({
       </DialogDescription>
 
       <div className="mt-6">
-        <div className="text-base text-gray-700">Effective days</div>
+        <div className="text-body text-gray-700">Effective days</div>
         <ul className="mt-2 space-y-1">
           {lines.map((l) => (
             <li key={l.week} className="text-lg font-medium text-gray-900">
@@ -209,7 +209,7 @@ function HoursCard({
   return (
     <div className="rounded-[10px] border-2 border-gray-200 p-6 flex flex-col">
       <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-      {description && <p className="mt-4 text-base text-gray-900">{description}</p>}
+      {description && <p className="mt-4 text-body text-gray-900">{description}</p>}
 
       <div className="pt-6">
         {slots.length > 0 ? (
@@ -322,12 +322,12 @@ function CareTypeField({
         Care type
       </label>
       <Select value={value} onValueChange={(v) => onChange(v as CareTypeId)}>
-        <SelectTrigger id={id} className="h-10 w-full text-base border-gray-300 bg-white">
+        <SelectTrigger id={id} className="h-10 w-full text-body border-gray-300 bg-white">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="z-[60]">
           {CARE_TYPES.filter((c) => c.id === value || enabledIds.has(c.id)).map((c) => (
-            <SelectItem key={c.id} value={c.id} className="text-base">
+            <SelectItem key={c.id} value={c.id} className="text-body">
               <CareTypeDot colour={c.colour} />
               {c.label}
             </SelectItem>
@@ -359,7 +359,7 @@ function TimeField({
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-md text-base bg-white focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]"
+        className="px-3 py-2 border border-gray-300 rounded-md text-body bg-white focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]"
       />
     </div>
   );

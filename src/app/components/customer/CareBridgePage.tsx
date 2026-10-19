@@ -1326,7 +1326,7 @@ function EditableFormField({
 }) {
   const captured = isFieldCaptured(field);
   const pending = captured && field.reviewed === false;
-  const inputClass = `w-full ${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 placeholder:italic focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors`;
+  const inputClass = `w-full ${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2 text-body text-gray-900 placeholder:text-gray-500 placeholder:italic focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors`;
 
   const labelEl = field.type === 'text' || field.type === 'select'
     ? <label htmlFor={field.id} className="text-body font-medium text-gray-700">{field.label}</label>
@@ -2834,7 +2834,7 @@ function ChatPanel({ chat, onClose }: { chat: ChatMessage[]; onClose: () => void
           <input
             type="text"
             placeholder="Ask Assessment Hero to refine a section…"
-            className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+            className="flex-1 bg-transparent text-body text-gray-900 placeholder:text-gray-400 focus:outline-none"
           />
           <button className="w-8 h-8 rounded-full bg-[rgb(154,38,214)] text-white flex items-center justify-center hover:bg-[rgb(130,28,190)] transition-colors cursor-pointer flex-shrink-0">
             <Send className="w-4 h-4" />

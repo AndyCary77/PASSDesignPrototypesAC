@@ -39,8 +39,8 @@ function WeekBadge({ label, sub }: { label: string; sub?: string }) {
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start py-2.5 border-b border-gray-100 last:border-b-0">
-      <span className="w-[180px] flex-shrink-0 text-base text-gray-900">{label}</span>
-      <div className="flex-1 text-base font-medium text-gray-900">{children}</div>
+      <span className="w-[180px] flex-shrink-0 text-body text-gray-900">{label}</span>
+      <div className="flex-1 text-body font-medium text-gray-900">{children}</div>
     </div>
   );
 }
@@ -66,7 +66,7 @@ function VisitCareSection({
     <div className="py-4 border-b border-gray-100 last:border-b-0">
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-1">
-          <p className="text-base font-medium text-gray-900">{title}</p>
+          <p className="text-body font-medium text-gray-900">{title}</p>
           <Tooltip>
             <TooltipTrigger asChild>
               <button className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" aria-label={`About ${title}`}>

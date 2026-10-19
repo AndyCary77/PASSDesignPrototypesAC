@@ -5,7 +5,7 @@ export type InfoBannerSize = 'sm' | 'md';
 
 const SIZE: Record<InfoBannerSize, { box: string; icon: string; text: string }> = {
   sm: { box: 'gap-2 px-3 py-2 rounded-lg items-center', icon: 'w-4 h-4', text: 'text-body' },
-  md: { box: 'gap-3 px-5 py-3.5 rounded-md items-start', icon: 'w-6 h-6', text: 'text-base' },
+  md: { box: 'gap-3 px-5 py-3.5 rounded-md items-start', icon: 'w-6 h-6', text: 'text-body' },
 };
 
 /**

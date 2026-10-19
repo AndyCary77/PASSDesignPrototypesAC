@@ -568,7 +568,7 @@ export function PeopleListLayout<T extends { id: string; surname: string }>(p: P
                 onKeyDown={e => { if (e.key === 'Escape') p.onQueryChange(''); }}
                 placeholder={p.searchPlaceholder}
                 aria-label={p.searchPlaceholder.replace(/\.+$/, '')}
-                className="w-full pl-9 pr-40 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]"
+                className="w-full pl-9 pr-40 py-2 bg-white border border-gray-200 rounded-lg text-body text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
                 {p.query && (
