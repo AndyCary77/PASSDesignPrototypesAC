@@ -35,8 +35,8 @@ export function SegmentedToggle({
 }) {
   const track = variant === 'track';
   const base = track
-    ? `rounded-md px-5 py-1.5 text-sm font-semibold transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`
-    : `px-4 py-1.5 text-sm font-medium transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`;
+    ? `rounded-md px-5 py-1.5 text-body font-semibold transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`
+    : `px-4 py-1.5 text-body font-medium transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`;
   const unselected = track ? 'text-gray-600 hover:text-gray-900' : 'text-gray-500 hover:bg-gray-50';
   // rgb(28, 135, 28): white text on it clears 4.5:1 contrast.
   const selectedOn = track ? 'bg-[rgb(28,135,28)] text-white' : `${onColor} text-white`;

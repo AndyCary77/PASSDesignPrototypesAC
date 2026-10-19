@@ -45,7 +45,7 @@ export function RecordingDocumentPage() {
           </span>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{recording.label}</h2>
-            <p className="text-sm text-gray-500">{recording.recordingMeta}</p>
+            <p className="text-body text-gray-500">{recording.recordingMeta}</p>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ export function RecordingDocumentPage() {
                   : `/customers/${customer.id}/carebridge?recording=${recording.id}&view=summary`
             )
           }
-          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
+          className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
         >
           Linked to: {recording.focusDocumentName}
           <ChevronRight className="w-3.5 h-3.5" />

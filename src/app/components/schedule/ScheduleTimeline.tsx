@@ -208,7 +208,7 @@ export function ScheduleTimeline({ onClose }: { onClose: () => void }) {
           <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600" aria-label="Previous day">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button className="h-9 px-4 flex items-center gap-2 rounded-md hover:bg-gray-100 text-sm font-medium text-gray-800">
+          <button className="h-9 px-4 flex items-center gap-2 rounded-md hover:bg-gray-100 text-body font-medium text-gray-800">
             <Calendar className="w-4 h-4" />
             Monday, June 22, 2026
           </button>
@@ -382,7 +382,7 @@ function CarerRow({ carer }: { carer: Carer }) {
             style={{ left: pct(carer.holiday.start), width: pct(carer.holiday.end - carer.holiday.start) }}
           >
             <Plane className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">Holiday</span>
+            <span className="text-body font-medium text-blue-600">Holiday</span>
           </div>
         )}
 
@@ -481,7 +481,7 @@ function Tooltip({ text, children }: { text: string; children: React.ReactNode }
       {children}
       <span
         role="tooltip"
-        className="pointer-events-none absolute left-0 top-full mt-1.5 z-50 w-64 rounded-md bg-white border border-gray-200 text-gray-700 text-sm leading-snug px-3 py-2 shadow-lg opacity-0 invisible transition-opacity duration-75 group-hover/tip:opacity-100 group-hover/tip:visible"
+        className="pointer-events-none absolute left-0 top-full mt-1.5 z-50 w-64 rounded-md bg-white border border-gray-200 text-gray-700 text-body leading-snug px-3 py-2 shadow-lg opacity-0 invisible transition-opacity duration-75 group-hover/tip:opacity-100 group-hover/tip:visible"
       >
         {text}
       </span>
@@ -492,7 +492,7 @@ function Tooltip({ text, children }: { text: string; children: React.ReactNode }
 function TabItem({ icon, label, active }: { icon: React.ReactNode; label: string; active?: boolean }) {
   return (
     <button
-      className={`flex items-center gap-1.5 py-5 text-sm font-medium border-b-2 ${
+      className={`flex items-center gap-1.5 py-5 text-body font-medium border-b-2 ${
         active
           ? 'text-gray-900 border-[rgb(154,38,214)]'
           : 'text-gray-500 border-transparent hover:text-gray-800'
@@ -506,7 +506,7 @@ function TabItem({ icon, label, active }: { icon: React.ReactNode; label: string
 
 function FilterPill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className="h-9 px-4 flex items-center gap-2 rounded-md border border-gray-300 bg-white text-sm text-gray-700">
+    <div className="h-9 px-4 flex items-center gap-2 rounded-md border border-gray-300 bg-white text-body text-gray-700">
       {icon}
       <span className="truncate">{label}</span>
       <ChevronDown className="w-4 h-4 opacity-50" />

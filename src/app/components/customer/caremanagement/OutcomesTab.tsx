@@ -38,22 +38,22 @@ function OutcomeCard({ outcome, onSelect }: { outcome: Outcome; onSelect: () => 
 
       <div className="px-5 py-4 space-y-3">
         <div>
-          <p className="text-sm font-semibold text-gray-900 mb-1">What I can do</p>
-          <p className="text-sm text-gray-700 leading-relaxed">{preview}</p>
+          <p className="text-body font-semibold text-gray-900 mb-1">What I can do</p>
+          <p className="text-body text-gray-700 leading-relaxed">{preview}</p>
         </div>
 
         {outcome.aims && (
           <div>
-            <p className="text-sm font-semibold text-gray-900 mb-1">Aims</p>
-            <p className="text-sm text-gray-700">{outcome.aims}</p>
+            <p className="text-body font-semibold text-gray-900 mb-1">Aims</p>
+            <p className="text-body text-gray-700">{outcome.aims}</p>
           </div>
         )}
         {!outcome.aims && (
-          <p className="text-sm font-semibold text-gray-900">Aims</p>
+          <p className="text-body font-semibold text-gray-900">Aims</p>
         )}
 
         <div>
-          <p className="text-sm font-semibold text-gray-900 mb-2">Tasks</p>
+          <p className="text-body font-semibold text-gray-900 mb-2">Tasks</p>
           {tasks.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {tasks.map(t => <TaskBadge key={t.id} title={t.title} category={t.category} />)}
@@ -64,7 +64,7 @@ function OutcomeCard({ outcome, onSelect }: { outcome: Outcome; onSelect: () => 
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-gray-900 mb-2">Visits</p>
+          <p className="text-body font-semibold text-gray-900 mb-2">Visits</p>
           {visits.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {visits.map(v => <VisitBadge key={v.id} title={v.title} />)}
@@ -187,7 +187,7 @@ function OutcomeEditForm({ outcome, onDiscarded }: { outcome: Outcome; onDiscard
 
           {/* Task selector */}
           <div>
-            <p className="text-sm text-gray-500 mb-3">Select the tasks that form this outcome (greyed out tasks are not part of this outcome):</p>
+            <p className="text-body text-gray-500 mb-3">Select the tasks that form this outcome (greyed out tasks are not part of this outcome):</p>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <div className="grid grid-cols-3 divide-x divide-gray-200">
                 {TASK_CATEGORIES.map(cat => {
@@ -195,7 +195,7 @@ function OutcomeEditForm({ outcome, onDiscarded }: { outcome: Outcome; onDiscard
                   const { Icon } = CATEGORY_CONFIG[cat];
                   return (
                     <div key={cat} className="p-4">
-                      <p className="text-sm font-semibold text-gray-900 mb-3">{cat}</p>
+                      <p className="text-body font-semibold text-gray-900 mb-3">{cat}</p>
                       <div className="space-y-2">
                         {catTasks.length === 0 && (
                           <p className="text-xs text-gray-300 italic">None</p>
@@ -211,7 +211,7 @@ function OutcomeEditForm({ outcome, onDiscarded }: { outcome: Outcome; onDiscard
                                 className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer"
                               />
                               <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                              <span className="text-sm text-gray-700 group-hover:text-gray-900">{task.title}</span>
+                              <span className="text-body text-gray-700 group-hover:text-gray-900">{task.title}</span>
                             </label>
                           );
                         })}

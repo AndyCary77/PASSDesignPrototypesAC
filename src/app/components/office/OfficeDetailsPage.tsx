@@ -13,9 +13,9 @@ import { SegmentedToggle } from '../buttons/SegmentedToggle';
 // the app (see CustomerDetailsPage.tsx) — not the shadcn ui/ primitives,
 // which no other page actually uses and which render with different
 // height/padding/focus styling than everywhere else.
-const INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md text-sm';
-const SELECT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white';
-const LABEL_CLASS = 'block text-sm font-medium text-gray-700 mb-2';
+const INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md text-body';
+const SELECT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md text-body bg-white';
+const LABEL_CLASS = 'block text-body font-medium text-gray-700 mb-2';
 
 function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -50,7 +50,7 @@ function Field({
 
 function CheckboxField({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label htmlFor={id} className="flex items-center gap-2 text-sm text-gray-700">
+    <label htmlFor={id} className="flex items-center gap-2 text-body text-gray-700">
       <input id={id} type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="rounded border-gray-300" />
       <span>{label}</span>
     </label>
@@ -105,13 +105,13 @@ function PpeStockCard({ items, lastUpdatedAt, onChange }: { items: PpeStockItem[
         <h4 className="font-semibold text-gray-900">PPE stock</h4>
         <span className="text-xs text-gray-500 whitespace-nowrap">Last updated at {lastUpdatedAt}</span>
       </div>
-      <p className="text-sm text-gray-600 mt-3">
+      <p className="text-body text-gray-600 mt-3">
         Days remaining is an approximation based on your PPE stock history and the current PPE stock. It is
         important to update your office PPE stock levels regularly in order for PASS to calculate this more
         accurately.
       </p>
-      <p className="text-sm text-gray-600 mt-2">Please ensure the units recorded are consistent across your organisation.</p>
-      <p className="text-sm text-gray-500 italic mt-1">E.g. if you choose to record in packs of 10, everyone should record in packs of 10.</p>
+      <p className="text-body text-gray-600 mt-2">Please ensure the units recorded are consistent across your organisation.</p>
+      <p className="text-body text-gray-500 italic mt-1">E.g. if you choose to record in packs of 10, everyone should record in packs of 10.</p>
 
       <div className="mt-4 overflow-x-auto">
         {/* Same plain-table convention as CustomerDetailsPage's "Integration details" card. */}
@@ -126,7 +126,7 @@ function PpeStockCard({ items, lastUpdatedAt, onChange }: { items: PpeStockItem[
           <tbody>
             {items.map((item, i) => (
               <tr key={item.label} className="border-b border-gray-200 last:border-b-0">
-                <td className="px-4 py-2 text-sm text-gray-900">{item.label}</td>
+                <td className="px-4 py-2 text-body text-gray-900">{item.label}</td>
                 <td className="px-4 py-2">
                   <div className="inline-flex items-center gap-1.5">
                     <button
@@ -142,7 +142,7 @@ function PpeStockCard({ items, lastUpdatedAt, onChange }: { items: PpeStockItem[
                       min={0}
                       value={item.count}
                       onChange={e => setCount(i, Number(e.target.value))}
-                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-md text-sm text-center"
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-md text-body text-center"
                     />
                     <button
                       type="button"
@@ -154,7 +154,7 @@ function PpeStockCard({ items, lastUpdatedAt, onChange }: { items: PpeStockItem[
                   </div>
                 </td>
                 <td className="px-4 py-2">
-                  <span className="inline-flex items-center gap-1.5 text-sm text-gray-700">
+                  <span className="inline-flex items-center gap-1.5 text-body text-gray-700">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${ragColor(item.daysRemaining)}`} />
                     {ragLabel(item.daysRemaining)}
                   </span>
@@ -288,7 +288,7 @@ export function OfficeDetailsPage() {
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-1.5 text-body font-medium text-gray-700 mb-2">
                 Test PASS office
                 <span title="Test offices are demo, test, documents or training offices" className="cursor-help">
                   <Info className="w-3.5 h-3.5 text-gray-400" />
@@ -364,7 +364,7 @@ export function OfficeDetailsPage() {
                     className={`${INPUT_CLASS} sm:w-40`}
                   />
                   {office.bookingTimeout === null && (
-                    <p className="text-sm text-red-500 mt-1">Timeout value is required if timeouts are enabled</p>
+                    <p className="text-body text-red-500 mt-1">Timeout value is required if timeouts are enabled</p>
                   )}
                 </Field>
                 <Field label="Email booking missed alerts to" htmlFor="bookingTimeoutEmail">
@@ -431,7 +431,7 @@ export function OfficeDetailsPage() {
 
       {/* Save now lives as a pinned top CTA in OfficeSubnav, matching Care
           Management/Care Plan document — just the audit line stays here. */}
-      <p className="text-sm text-gray-500 pt-2">
+      <p className="text-body text-gray-500 pt-2">
         Modified: {office.modifiedAt} by {office.modifiedBy} | Created: {office.createdAt} by {office.createdBy}
       </p>
     </div>

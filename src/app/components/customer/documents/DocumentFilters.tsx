@@ -152,7 +152,7 @@ export function DocumentFilters({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as any)}
-          className="w-44 pl-8 pr-8 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5c1c85] appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
+          className="w-44 pl-8 pr-8 py-2 border border-gray-300 rounded-md text-body text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5c1c85] appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
         >
           <option value="all">All Documents</option>
           <option value="success">Complete ({getStatusCount('success')})</option>
@@ -173,7 +173,7 @@ export function DocumentFilters({
         <select
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="w-44 pl-8 pr-8 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5c1c85] appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
+          className="w-44 pl-8 pr-8 py-2 border border-gray-300 rounded-md text-body text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5c1c85] appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
         >
           <option value="all">All time</option>
           <option value="7days">Last 7 days ({getDateCount('7days')})</option>
@@ -196,7 +196,7 @@ export function DocumentFilters({
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-44 pl-8 pr-8 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5c1c85] appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
+            className="w-44 pl-8 pr-8 py-2 border border-gray-300 rounded-md text-body text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5c1c85] appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
           >
             <option value="all">All Categories</option>
             <option value="Accident">Accident ({getCategoryCount('Accident')})</option>

@@ -32,7 +32,7 @@ export function OfficeSubnav() {
             the "Saved" confirmation here. */}
         <div className="flex items-center gap-3 min-w-[120px] justify-end">
           {(activeTab === 'details' || activeTab === 'settings') && justSaved && (
-            <span className="flex items-center gap-1.5 text-sm text-green-700 whitespace-nowrap">
+            <span className="flex items-center gap-1.5 text-body text-green-700 whitespace-nowrap">
               <Check className="w-4 h-4" /> Saved
             </span>
           )}

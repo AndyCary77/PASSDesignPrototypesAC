@@ -1,10 +1,18 @@
 @custom-variant dark (&:is(.dark *));
 
+/* Semantic body size for the desktop app (`text-body`). Body copy, values and
+   form text use this instead of text-sm; text-sm (14px) is for secondary
+   text — badges, tags, captions, table headers, menus. Nothing goes below 14px. */
+@theme {
+  --text-body: 0.9375rem; /* 15px */
+  --text-body--line-height: 1.5;
+}
+
 :root {
   --font-size: 16px;
   --text-xs: 0.75rem;    /* 12px */
   --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px */
+  --text-base: 1rem;     /* 16px — Tailwind's text-base; kept at 16px for sub-headings (h4 etc.). Body text is --text-body (15px). */
   --text-lg: 1.125rem;   /* 18px */
   --text-xl: 1.25rem;    /* 20px */
   --text-2xl: 1.5rem;    /* 24px */
@@ -238,11 +246,24 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Barlow', sans-serif;
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/**
+ * Headings keep their pre-15px-body size. Many headings carry no text-* class
+ * and used to inherit the old 16px body size; with body now 15px they would
+ * shrink to body size and lose hierarchy. Placed before the rule below so that
+ * rule's h1-h3 sizes still win where it applies, and any text-* utility wins
+ * over both.
+ */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-size: var(--text-base);
   }
 }
 
@@ -276,36 +297,36 @@
     }
 
     p, div, span {
-      font-size: var(--text-base);
+      font-size: var(--text-body);
       line-height: 1.5;
     }
 
     label {
-      font-size: var(--text-base);
+      font-size: var(--text-body);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
     }
 
     button {
-      font-size: var(--text-base);
+      font-size: var(--text-body);
       font-weight: var(--font-weight-medium);
       line-height: 1.5;
     }
 
     input {
-      font-size: var(--text-base);
+      font-size: var(--text-body);
       font-weight: var(--font-weight-normal);
       line-height: 1.5;
     }
 
     textarea {
-      font-size: var(--text-base);
+      font-size: var(--text-body);
       font-weight: var(--font-weight-normal);
       line-height: 1.5;
     }
 
     select {
-      font-size: var(--text-base);
+      font-size: var(--text-body);
       font-weight: var(--font-weight-normal);
       line-height: 1.5;
     }

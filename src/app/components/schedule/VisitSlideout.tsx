@@ -82,20 +82,20 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
                   <button className="text-[#5c1c85] hover:underline cursor-pointer">Arthur Barrington</button>
                 </div>
                 <div>Morning Visit</div>
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-body">
                   <span>Tue 16th Dec</span>
                   <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
                     <PencilSolidIcon className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-body">
                   <span>09:30 – 11:30</span>
                   <span className="text-gray-500">(2hr 00m)</span>
                   <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
                     <PencilSolidIcon className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-body">
                   <Calendar className="w-4 h-4 text-gray-500" aria-hidden="true" />
                   <span>Daily</span>
                   <ChevronDown className="w-4 h-4 text-gray-500" aria-hidden="true" />
@@ -150,7 +150,7 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
         {footerWarning && (
           <div className="border-t border-amber-200 bg-amber-50 px-8 py-3 flex items-center gap-3">
             <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-            <p className="text-sm text-amber-800">{footerWarning}</p>
+            <p className="text-body text-amber-800">{footerWarning}</p>
           </div>
         )}
 
@@ -182,12 +182,12 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
               {confirming ? (
                 <>
                   <h3 className="text-lg font-bold text-gray-900">Are you sure?</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">You are about to assign <strong className="text-gray-700">David Bukowski</strong> to <strong className="text-gray-700">Arthur Barrington</strong> despite the conflicts listed below. This action will be recorded.</p>
+                  <p className="text-body text-gray-500 mt-0.5">You are about to assign <strong className="text-gray-700">David Bukowski</strong> to <strong className="text-gray-700">Arthur Barrington</strong> despite the conflicts listed below. This action will be recorded.</p>
                 </>
               ) : (
                 <>
                   <h3 className="text-lg font-bold text-gray-900">This change can't be saved</h3>
-                  <p className="text-sm text-gray-500 mt-0.5"><strong className="text-gray-700">David Bukowski</strong> cannot be assigned to this visit due to the following issues.</p>
+                  <p className="text-body text-gray-500 mt-0.5"><strong className="text-gray-700">David Bukowski</strong> cannot be assigned to this visit due to the following issues.</p>
                 </>
               )}
             </div>
@@ -218,7 +218,7 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
                         <div className="flex flex-wrap gap-2">
                           {conflict.tags.map((tag, j) => <FooterTag key={j}>{tag}</FooterTag>)}
                         </div>
-                        <span className="text-sm text-gray-700 leading-relaxed">
+                        <span className="text-body text-gray-700 leading-relaxed">
                           <span className="font-semibold">{conflict.category}</span>: {reason}
                         </span>
                       </li>
@@ -242,7 +242,7 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
                         <div className="flex flex-wrap gap-2">
                           {conflict.tags.map((tag, j) => <FooterTag key={j}>{tag}</FooterTag>)}
                         </div>
-                        <span className="text-sm text-gray-700 leading-relaxed">
+                        <span className="text-body text-gray-700 leading-relaxed">
                           <span className="font-semibold">{conflict.category}</span>: {reason}
                         </span>
                       </li>
@@ -312,7 +312,7 @@ function AssignedTodayContent() {
 
       <EmployeeCard title="Mrs" name="Adrianna Janowski" type="Fixed hours" photo="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" />
 
-      <p className="text-sm text-gray-600">Shadow employee assigned</p>
+      <p className="text-body text-gray-600">Shadow employee assigned</p>
 
       <EmployeeCard title="Mr" name="David Bukowski" type="Fixed hours" photo={davidPhoto} />
     </div>
@@ -546,14 +546,14 @@ function TaskAccordion({ task }: { task: typeof CARE_TASKS[number] }) {
               </div>
               {/* Description */}
               <div className="border-t border-gray-200 pt-4 mt-4 flex gap-8">
-                <span className="text-sm font-semibold text-gray-700 w-40 flex-shrink-0">Description</span>
-                <p className="text-sm text-gray-700 leading-relaxed">{description}</p>
+                <span className="text-body font-semibold text-gray-700 w-40 flex-shrink-0">Description</span>
+                <p className="text-body text-gray-700 leading-relaxed">{description}</p>
               </div>
             </div>
           ) : (
             <div className="p-6 flex gap-8">
-              <span className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">Description</span>
-              <p className="text-sm text-gray-700 leading-relaxed">{description}</p>
+              <span className="text-body font-semibold text-gray-700 w-28 flex-shrink-0">Description</span>
+              <p className="text-body text-gray-700 leading-relaxed">{description}</p>
             </div>
           )}
         </div>
@@ -565,8 +565,8 @@ function TaskAccordion({ task }: { task: typeof CARE_TASKS[number] }) {
 function MedRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
     <div className={`flex gap-8 py-2 ${!last ? 'border-b border-gray-100' : ''}`}>
-      <span className="text-sm font-semibold text-gray-700 w-40 flex-shrink-0">{label}</span>
-      <span className="text-sm text-gray-700">{value}</span>
+      <span className="text-body font-semibold text-gray-700 w-40 flex-shrink-0">{label}</span>
+      <span className="text-body text-gray-700">{value}</span>
     </div>
   );
 }

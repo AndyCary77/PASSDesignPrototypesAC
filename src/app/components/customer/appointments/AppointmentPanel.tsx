@@ -89,7 +89,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="p-6">
               <h3 className="font-semibold mb-2">Delete Visit Note?</h3>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-body text-gray-600 mb-6">
                 Are you sure you want to delete this visit note? This action cannot be undone.
               </p>
               <div className="flex gap-3 justify-end">
@@ -163,14 +163,14 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
 
                 <div style={{ fontSize: 'var(--text-base)' }}>Morning Visit</div>
                 
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-body">
                   <span>Tue 16th Dec</span>
                   <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
                     <Edit2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-body">
                   <span style={{ fontSize: 'var(--text-base)' }}>09:30 - 11:30</span>
                   <span className="text-gray-500" style={{ fontSize: 'var(--text-base)' }}>(2hr 00m)</span>
                   <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
@@ -178,7 +178,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-body">
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span style={{ fontSize: 'var(--text-base)' }}>Daily</span>
                   <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -188,7 +188,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                   <button
                     className="flex items-center gap-1.5 text-gray-600 hover:bg-gray-100 border border-gray-400 px-2.5 py-1 rounded-[6px] transition-colors cursor-pointer font-medium"
                     onClick={() => setShowVisitNotePanel(!showVisitNotePanel)}
-                    style={{ fontSize: 'var(--text-sm)' }}
+                    style={{ fontSize: 'var(--text-body)' }}
                   >
                     <VisitNoteIcon className="w-4 h-4" />
                     Visit Note
@@ -251,7 +251,7 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
                       value={visitNote}
                       onChange={(e) => setVisitNote(e.target.value)}
                       rows={3}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5c1c85] focus:border-transparent"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-[#5c1c85] focus:border-transparent"
                     />
                   </div>
 
@@ -365,9 +365,9 @@ export function AppointmentPanel({ onClose }: AppointmentPanelProps) {
           {activeTab === 'assigned' && (
             <div className="space-y-6">
               {/* Assignment Summary */}
-              <div className="text-sm">
-                <span className="font-medium text-[16px]">1/1 employee assigned</span>
-                <span className="text-gray-600" style={{ fontSize: 'var(--text-sm)', marginLeft: '8px' }}> (Adrianna Janowski today only)</span>
+              <div className="text-body">
+                <span className="font-medium text-[15px]">1/1 employee assigned</span>
+                <span className="text-gray-600" style={{ fontSize: 'var(--text-body)', marginLeft: '8px' }}> (Adrianna Janowski today only)</span>
               </div>
 
               {/* Assigned Employee */}
@@ -453,11 +453,11 @@ function EmployeeCard({ employee, isShadow }: { employee: Employee; isShadow?: b
             <div>
               <div className="flex items-end gap-4">
                 <div className="w-[180px]">
-                  <div className="text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>{employee.title}</div>
+                  <div className="text-gray-500" style={{ fontSize: 'var(--text-body)' }}>{employee.title}</div>
                   <div className="font-medium">{employee.name}</div>
                 </div>
                 <div className="flex flex-col">
-                  <div className="text-gray-500" style={{ fontSize: 'var(--text-sm)' }}>Type</div>
+                  <div className="text-gray-500" style={{ fontSize: 'var(--text-body)' }}>Type</div>
                   <div style={{ fontSize: 'var(--text-base)' }}>{employee.type}</div>
                 </div>
               </div>
@@ -478,7 +478,7 @@ function VisitCard({ name, status }: { name: string; status: string }) {
   return (
     <div className="inline-block bg-white rounded-2xl border-2 border-gray-300 px-4 py-2 h-[52px] flex items-center justify-center">
       <div className="text-left">
-        <div className="font-medium text-[16px] leading-tight">{name}</div>
+        <div className="font-medium text-[15px] leading-tight">{name}</div>
         <div className="text-gray-400 text-[14px] leading-tight">{status}</div>
       </div>
     </div>

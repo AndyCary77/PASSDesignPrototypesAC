@@ -57,14 +57,14 @@ function TaskCard({ task, onSelect }: { task: CareTask; onSelect: () => void }) 
       <div className="px-5 py-4 grid grid-cols-[1fr_auto_1fr_1fr] gap-6 items-start">
         {/* Description */}
         <div>
-          <p className="text-sm text-gray-700 leading-relaxed">
+          <p className="text-body text-gray-700 leading-relaxed">
             {task.description.length > 120 ? task.description.slice(0, 120) + '...' : task.description}
           </p>
           {task.medicationDetails && <MedicationChips details={task.medicationDetails} />}
         </div>
 
         {/* Dates */}
-        <div className="text-sm text-gray-600 space-y-1 min-w-[120px]">
+        <div className="text-body text-gray-600 space-y-1 min-w-[120px]">
           <div className="flex items-center gap-1.5">
             <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
             <span>{task.startDate}</span>
@@ -153,7 +153,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
                 <Icon className={`w-4 h-4 ${text}`} />
               </div>
               <div className="relative flex-1">
-                <select defaultValue={task.category} className={`w-full bg-transparent text-sm font-medium ${text} focus:outline-none appearance-none cursor-pointer pr-6`}>
+                <select defaultValue={task.category} className={`w-full bg-transparent text-body font-medium ${text} focus:outline-none appearance-none cursor-pointer pr-6`}>
                   <option>General</option>
                   <option>Nutrition</option>
                   <option>Medications</option>
@@ -189,14 +189,14 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer mt-5">
+                <label className="flex items-center gap-2 text-body text-gray-600 cursor-pointer mt-5">
                   <input type="checkbox" className="rounded border-gray-300 accent-[rgb(154,38,214)]" />
                   End?
                 </label>
               </div>
               <div className="flex flex-col gap-1 pt-1">
-                <button type="button" className="text-sm text-[rgb(154,38,214)] hover:underline text-left cursor-pointer w-fit">+ Add cadence</button>
-                <button type="button" className="text-sm text-[rgb(154,38,214)] hover:underline text-left cursor-pointer w-fit">+ Add schedule times</button>
+                <button type="button" className="text-body text-[rgb(154,38,214)] hover:underline text-left cursor-pointer w-fit">+ Add cadence</button>
+                <button type="button" className="text-body text-[rgb(154,38,214)] hover:underline text-left cursor-pointer w-fit">+ Add schedule times</button>
               </div>
             </div>
           </div>
@@ -264,7 +264,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
                               defaultChecked={med.supportRequired === opt}
                               className="accent-[rgb(154,38,214)] cursor-pointer"
                             />
-                            <span className="text-sm text-gray-700">{opt}</span>
+                            <span className="text-body text-gray-700">{opt}</span>
                           </label>
                         ))}
                       </div>
@@ -273,7 +273,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
                       <p className="text-xs text-gray-500 mb-2">Schedule</p>
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <input type="checkbox" defaultChecked={med.prn} className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer" />
-                        <span className="text-sm text-gray-700">PRN</span>
+                        <span className="text-body text-gray-700">PRN</span>
                       </label>
                     </div>
                   </div>
@@ -306,7 +306,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
               {['Allow Retry', 'Require Witness'].map(opt => (
                 <label key={opt} className="flex items-center gap-2.5 cursor-pointer">
                   <input type="checkbox" className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer" />
-                  <span className="text-sm text-gray-700">{opt}</span>
+                  <span className="text-body text-gray-700">{opt}</span>
                 </label>
               ))}
             </div>
@@ -333,7 +333,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
                       onChange={() => toggleVisit(v.id)}
                       className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer"
                     />
-                    <span className="text-sm text-gray-700">{v.title}</span>
+                    <span className="text-body text-gray-700">{v.title}</span>
                     <span className="text-xs text-gray-400">({v.startTime} – {v.endTime}, {v.cadence === 'Alternate week' ? 'Biweekly' : v.cadence})</span>
                   </label>
                 );
@@ -355,7 +355,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
                       onChange={() => toggleOutcome(o.id)}
                       className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer"
                     />
-                    <span className="text-sm text-gray-700">{o.title}</span>
+                    <span className="text-body text-gray-700">{o.title}</span>
                   </label>
                 );
               })}
@@ -370,7 +370,7 @@ function TaskEditForm({ task, onDiscarded }: { task: CareTask; onDiscarded: () =
               {['Missed', 'Not done (no reason given)', 'Incomplete (with reason given)'].map(label => (
                 <label key={label} className="flex items-center gap-2.5 cursor-pointer">
                   <input type="checkbox" defaultChecked={label === 'Missed'} className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer" />
-                  <span className="text-sm text-gray-700">{label}</span>
+                  <span className="text-body text-gray-700">{label}</span>
                 </label>
               ))}
             </div>

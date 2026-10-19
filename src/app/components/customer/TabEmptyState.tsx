@@ -11,7 +11,7 @@ export function TabEmptyState({ label }: { label: string }) {
         <Inbox className="w-7 h-7 text-gray-400" />
       </div>
       <h2 className="text-lg font-semibold text-gray-900 mb-2">No {label} yet</h2>
-      <p className="text-sm text-gray-600 leading-relaxed">Nothing has been added for {firstName} yet.</p>
+      <p className="text-body text-gray-600 leading-relaxed">Nothing has been added for {firstName} yet.</p>
     </div>
   );
 }

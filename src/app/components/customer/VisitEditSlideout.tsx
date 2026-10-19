@@ -28,7 +28,7 @@ function addTime(startTime: string, hours: number, mins: number): string {
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]';
+  'w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-body text-gray-900 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ function FormLabel({
   children: React.ReactNode;
 }) {
   return (
-    <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700 mb-1.5">
+    <label htmlFor={htmlFor} className="block text-body font-medium text-gray-700 mb-1.5">
       {required && <span className="text-[rgb(154,38,214)] mr-0.5">*</span>}
       {children}
     </label>
@@ -295,7 +295,7 @@ export function VisitEditSlideout({
                     />
                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <label className="flex items-center gap-2 text-body text-gray-700 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={ongoing}
@@ -321,7 +321,7 @@ export function VisitEditSlideout({
                   {/* Row 1 left — Start time */}
                   <div>
                     <div className="h-6 flex items-center mb-1.5">
-                      <label htmlFor="ve-start-time" className="text-sm font-medium text-gray-700">
+                      <label htmlFor="ve-start-time" className="text-body font-medium text-gray-700">
                         <span className="text-[rgb(154,38,214)] mr-0.5">*</span>Start time
                       </label>
                     </div>
@@ -331,7 +331,7 @@ export function VisitEditSlideout({
                   {/* Row 1 right — Duration */}
                   <div>
                     <div className="h-6 flex items-center mb-1.5">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-body font-medium text-gray-700">
                         <span className="text-[rgb(154,38,214)] mr-0.5">*</span>Duration
                       </label>
                     </div>
@@ -343,9 +343,9 @@ export function VisitEditSlideout({
                           max={23}
                           value={durationHours}
                           onChange={(e) => setDurationHours(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-sm text-center focus:outline-none focus:border-[rgb(154,38,214)]"
+                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-body text-center focus:outline-none focus:border-[rgb(154,38,214)]"
                         />
-                        <span className="text-sm text-gray-600">Hours</span>
+                        <span className="text-body text-gray-600">Hours</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input
@@ -355,20 +355,20 @@ export function VisitEditSlideout({
                           step={5}
                           value={durationMins}
                           onChange={(e) => setDurationMins(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-sm text-center focus:outline-none focus:border-[rgb(154,38,214)]"
+                          className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-body text-center focus:outline-none focus:border-[rgb(154,38,214)]"
                         />
-                        <span className="text-sm text-gray-600">Mins</span>
+                        <span className="text-body text-gray-600">Mins</span>
                       </div>
-                      <span className="text-sm text-gray-900">Until: {untilTime}</span>
+                      <span className="text-body text-gray-900">Until: {untilTime}</span>
                     </div>
                   </div>
 
                   {/* Row 2 — full-width info banner */}
-                  <div className="col-span-2 flex items-start gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2.5 text-sm text-gray-800">
+                  <div className="col-span-2 flex items-start gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2.5 text-body text-gray-800">
                     <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-blue-400" />
                     <div>
                       <div>Use the field below to enter the visit start time leeway if this has been agreed with the customer.</div>
-                      <div className="text-sm text-gray-600">This leeway is used by our automated scheduling features</div>
+                      <div className="text-body text-gray-600">This leeway is used by our automated scheduling features</div>
                     </div>
                   </div>
 
@@ -387,16 +387,16 @@ export function VisitEditSlideout({
                         step={5}
                         value={leewayMins as any}
                         onChange={(e) => setLeewayMins(Math.max(0, parseInt(e.target.value || '0', 10) || 0))}
-                        className="w-24 bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[rgb(154,38,214)]"
+                        className="w-24 bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-body text-gray-900 focus:outline-none focus:border-[rgb(154,38,214)]"
                       />
-                      <span className="text-sm text-gray-600">mins</span>
+                      <span className="text-body text-gray-600">mins</span>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">The amount of time in minutes the visit can be moved on the schedule.</p>
+                    <p className="text-body text-gray-500 mt-1">The amount of time in minutes the visit can be moved on the schedule.</p>
                   </div>
 
                 </div>
 
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-body text-gray-700 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={timeCritical}
@@ -432,7 +432,7 @@ export function VisitEditSlideout({
                       min={1}
                       value={careworkers}
                       onChange={(e) => setCareworkers(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-sm text-center focus:outline-none focus:border-[rgb(154,38,214)]"
+                      className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-body text-center focus:outline-none focus:border-[rgb(154,38,214)]"
                     />
                     <button
                       type="button"
@@ -450,7 +450,7 @@ export function VisitEditSlideout({
                   <FormLabel required>Cadence</FormLabel>
                   <div className="flex gap-5 flex-wrap">
                     {(['Daily', 'Weekly', 'BiWeekly', 'Custom'] as const).map((c) => (
-                      <label key={c} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer select-none">
+                      <label key={c} className="flex items-center gap-1.5 text-body text-gray-700 cursor-pointer select-none">
                         <input
                           type="radio"
                           name="ve-cadence"
@@ -472,7 +472,7 @@ export function VisitEditSlideout({
                     {weeks.map((week, wi) => (
                       <div key={wi}>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-semibold text-gray-700">Week {wi + 1}</span>
+                          <span className="text-body font-semibold text-gray-700">Week {wi + 1}</span>
                           {week.currentWeek && (
                             <span className="text-sm text-gray-500">(Current week)</span>
                           )}
@@ -502,7 +502,7 @@ export function VisitEditSlideout({
 
                 <div>
                   <FormLabel required>Funder</FormLabel>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <label className="flex items-center gap-2 text-body text-gray-700 cursor-pointer select-none">
                     <input
                       type="radio"
                       name="ve-funder"
@@ -525,7 +525,7 @@ export function VisitEditSlideout({
 
                 <div>
                   <FormLabel>Deposit</FormLabel>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                  <label className="flex items-center gap-2 text-body text-gray-700 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={depositPaid}
@@ -552,7 +552,7 @@ export function VisitEditSlideout({
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </StyledSelect>
-                  <p className="text-sm text-gray-500 mt-1.5">
+                  <p className="text-body text-gray-500 mt-1.5">
                     This will override the rate sheet set on the employee.
                   </p>
                 </div>

@@ -18,10 +18,10 @@ const DAYS_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 function SummaryField({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-sm font-semibold text-gray-900">
+      <div className="text-body font-semibold text-gray-900">
         {label} {sublabel && <span className="font-normal text-gray-400">{sublabel}</span>}
       </div>
-      <div className="text-sm text-gray-700 mt-1">{children}</div>
+      <div className="text-body text-gray-700 mt-1">{children}</div>
     </div>
   );
 }
@@ -153,7 +153,7 @@ function VisitCard({ visit, onSelect }: { visit: CareVisit; onSelect: () => void
 
       <div className="px-5 py-4 grid grid-cols-[200px_1fr_1fr] gap-6">
         {/* Left: schedule details */}
-        <div className="space-y-1 text-sm text-gray-600">
+        <div className="space-y-1 text-body text-gray-600">
           <div className="flex items-center gap-1.5">
             <CalendarClock className="w-3.5 h-3.5 text-[#2D5F1E] flex-shrink-0" />
             <span>{visit.startDate}</span>
@@ -241,7 +241,7 @@ function TaskOrderCard({
           {...listeners}
           className="w-4 h-4 text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
         />
-        <span className={`text-sm font-semibold ${text}`}>{task.title}</span>
+        <span className={`text-body font-semibold ${text}`}>{task.title}</span>
         <ActiveBadge status="active" />
         <div className="ml-auto flex gap-1">
           <button
@@ -271,7 +271,7 @@ function TaskOrderCard({
           {idx + 1}
         </div>
       </div>
-      <p className="px-4 py-2 text-sm text-gray-600 rounded-b-lg">{task.description}</p>
+      <p className="px-4 py-2 text-body text-gray-600 rounded-b-lg">{task.description}</p>
     </div>
   );
 }
@@ -379,7 +379,7 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
               </div>
 
               <SummaryPanel title="Scheduled Times">
-                <p className="text-sm text-gray-500">
+                <p className="text-body text-gray-500">
                   at {visit.startTime} for {visit.duration} until {visit.endTime}
                 </p>
               </SummaryPanel>
@@ -398,9 +398,9 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
           {/* Task selector */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-gray-700">Tasks</label>
+              <label className="text-body font-medium text-gray-700">Tasks</label>
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-1.5 text-body text-gray-600 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={hideInactiveTasks}
@@ -432,7 +432,7 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
                   const { Icon, bg, text, border, bgFaded, borderFaded } = CATEGORY_CONFIG[cat];
                   return (
                     <div key={cat} className="p-4">
-                      <p className="text-sm font-semibold text-gray-900 mb-3">{cat}</p>
+                      <p className="text-body font-semibold text-gray-900 mb-3">{cat}</p>
                       <div className="space-y-2">
                         {catTasks.length === 0 && <p className="text-xs text-gray-300 italic">None</p>}
                         {catTasks.map(task => {
@@ -452,7 +452,7 @@ function VisitEditForm({ visit }: { visit: CareVisit }) {
                                 className="rounded border-gray-300 accent-[rgb(154,38,214)] w-4 h-4 cursor-pointer flex-shrink-0"
                               />
                               <Icon className={`w-4 h-4 flex-shrink-0 ${checked ? text : 'text-gray-400'}`} />
-                              <span className={`text-sm flex-1 ${checked ? text : 'text-gray-700'} group-hover:text-gray-900`}>
+                              <span className={`text-body flex-1 ${checked ? text : 'text-gray-700'} group-hover:text-gray-900`}>
                                 {task.title}
                               </span>
                               {/* Distinct from the plain "not assigned to

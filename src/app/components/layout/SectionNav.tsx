@@ -49,7 +49,7 @@ export function SectionNav({
                   onSelect?.(id);
                 }}
                 aria-current={isActive ? 'true' : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-body font-medium transition-colors ${
                   isActive ? 'bg-purple-100 text-[rgb(154,38,214)]' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >

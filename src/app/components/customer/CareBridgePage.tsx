@@ -1182,7 +1182,7 @@ function EditableBlock({ text, pending, onChange }: { text: string; pending?: bo
         resize();
         onChange?.();
       }}
-      className={`block w-full resize-none overflow-hidden text-sm text-gray-900 leading-relaxed rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors ${
+      className={`block w-full resize-none overflow-hidden text-body text-gray-900 leading-relaxed rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors ${
         pending ? 'border-2 border-amber-300 bg-amber-50/40' : 'border border-gray-200 bg-white'
       }`}
     />
@@ -1329,8 +1329,8 @@ function EditableFormField({
   const inputClass = `w-full ${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 placeholder:italic focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors`;
 
   const labelEl = field.type === 'text' || field.type === 'select'
-    ? <label htmlFor={field.id} className="text-sm font-medium text-gray-700">{field.label}</label>
-    : <span className="text-sm font-medium text-gray-700">{field.label}</span>;
+    ? <label htmlFor={field.id} className="text-body font-medium text-gray-700">{field.label}</label>
+    : <span className="text-body font-medium text-gray-700">{field.label}</span>;
 
   // Stamps who/when on top of whatever patch the caller wanted — used for
   // both the explicit "Accept" button and every direct edit (typing,
@@ -1350,7 +1350,7 @@ function EditableFormField({
               <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines} audioUrl={audioUrl}>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
                 >
                   <Search className="w-3.5 h-3.5" /> Check transcript
                 </button>
@@ -1359,7 +1359,7 @@ function EditableFormField({
             <button
               type="button"
               onClick={() => markReviewed()}
-              className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" /> Accept
             </button>
@@ -1393,7 +1393,7 @@ function EditableFormField({
           {field.options!.map(opt => {
             const checked = field.values?.includes(opt) ?? false;
             return (
-              <label key={opt} className="flex items-center gap-2 text-sm text-gray-900 cursor-pointer">
+              <label key={opt} className="flex items-center gap-2 text-body text-gray-900 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={checked}
@@ -1431,7 +1431,7 @@ function EditableFormField({
         <fieldset className={`${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2 flex items-center gap-5`}>
           <legend className="sr-only">{field.label}</legend>
           {['Yes', 'No'].map(opt => (
-            <label key={opt} className="inline-flex items-center gap-1.5 text-sm text-gray-900 cursor-pointer">
+            <label key={opt} className="inline-flex items-center gap-1.5 text-body text-gray-900 cursor-pointer">
               <input
                 type="radio"
                 name={field.id}
@@ -1458,11 +1458,11 @@ function EditableFormField({
         </div>
       )}
 
-      {field.helpText && <p className="text-sm text-gray-500 mt-1.5">{field.helpText}</p>}
+      {field.helpText && <p className="text-body text-gray-500 mt-1.5">{field.helpText}</p>}
 
       {field.promptingQuestions && (
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-sm font-semibold text-gray-500 mb-1.5">Prompting questions</p>
+          <p className="text-body font-semibold text-gray-500 mb-1.5">Prompting questions</p>
           <ul className="space-y-1">
             {field.promptingQuestions.map((q, i) => (
               <li key={i} className="text-sm text-gray-500">{q}</li>
@@ -1504,7 +1504,7 @@ function EditableTableField({
     <div className={`${fieldBoxClass(captured, pending)} rounded-lg overflow-hidden`}>
       {rows.length > 0 && (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 {field.columns!.map(col => (
@@ -1524,7 +1524,7 @@ function EditableTableField({
                         value={cell}
                         onChange={e => updateCell(i, j, e.target.value)}
                         aria-label={`${field.columns![j]}, row ${i + 1}`}
-                        className="w-full rounded px-2 py-1 text-sm text-gray-900 bg-transparent focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:bg-white transition-colors"
+                        className="w-full rounded px-2 py-1 text-body text-gray-900 bg-transparent focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:bg-white transition-colors"
                       />
                     </td>
                   ))}
@@ -1548,7 +1548,7 @@ function EditableTableField({
       <button
         type="button"
         onClick={addRow}
-        className="w-full text-left px-3 py-2 text-sm font-medium text-[rgb(154,38,214)] hover:bg-purple-50 border-t border-gray-200 transition-colors cursor-pointer"
+        className="w-full text-left px-3 py-2 text-body font-medium text-[rgb(154,38,214)] hover:bg-purple-50 border-t border-gray-200 transition-colors cursor-pointer"
       >
         + Add row
       </button>
@@ -1673,8 +1673,8 @@ export function TranscriptCheckPopover({
       >
         {audioUrl && <audio ref={audioRef} src={audioUrl} preload="none" />}
         <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
-          <p className="text-sm font-semibold text-gray-900">Check transcript</p>
-          <p className="text-sm text-gray-500">Where "{fieldLabel}" was drafted from.</p>
+          <p className="text-body font-semibold text-gray-900">Check transcript</p>
+          <p className="text-body text-gray-500">Where "{fieldLabel}" was drafted from.</p>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {transcript.map((line, i) => {
@@ -1692,7 +1692,7 @@ export function TranscriptCheckPopover({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`text-sm font-semibold ${roleStyle[line.role]}`}>{line.speaker}</span>
+                    <span className={`text-body font-semibold ${roleStyle[line.role]}`}>{line.speaker}</span>
                     <span className="text-sm text-gray-500 tabular-nums">{line.time}</span>
                     {ref && canPlaySnippet && (
                       <button
@@ -1707,7 +1707,7 @@ export function TranscriptCheckPopover({
                       </button>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700 leading-relaxed">
+                  <p className="text-body text-gray-700 leading-relaxed">
                     <HighlightedTranscriptText text={line.text} highlight={ref?.highlight} />
                   </p>
                 </div>
@@ -1752,7 +1752,7 @@ export function RecordingsLink({
       <button
         type="button"
         onClick={() => navigate(`/customers/${customerId}/documents/recording/${r.id}`)}
-        className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+        className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
       >
         View recording
         <ChevronRight className="w-3.5 h-3.5" />
@@ -1766,7 +1766,7 @@ export function RecordingsLink({
         <button
           type="button"
           title={recordings.map(r => r.label).join(', ')}
-          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+          className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
         >
           View recordings ({recordings.length})
           <ChevronDown className="w-3.5 h-3.5" />
@@ -1881,7 +1881,7 @@ export function ChangeRecordingsButton({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+          className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Change recording{multiSelect ? '(s)' : ''}
@@ -1919,8 +1919,8 @@ export function ChangeRecordingsButton({
                     )}
                     <Mic className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">{r.label}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-body font-medium text-gray-900 truncate">{r.label}</p>
+                      <p className="text-body text-gray-500">
                         {r.recordingMeta.split(' · ')[0]} · {r.recordedBy}
                       </p>
                     </div>
@@ -1949,8 +1949,8 @@ export function ChangeRecordingsButton({
               >
                 <RadioGroupItem value="merge" className="mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Merge with existing content</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-body font-medium text-gray-900">Merge with existing content</p>
+                  <p className="text-body text-gray-500">
                     Add the newly selected recording(s) alongside what's already linked here.
                   </p>
                 </div>
@@ -1960,8 +1960,8 @@ export function ChangeRecordingsButton({
               >
                 <RadioGroupItem value="replace" className="mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Replace existing content</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-body font-medium text-gray-900">Replace existing content</p>
+                  <p className="text-body text-gray-500">
                     Only use the newly selected recording(s) — anything drafted solely from a recording you've
                     removed goes back to needing manual review.
                   </p>
@@ -2042,7 +2042,7 @@ export function PublishedConfirmationBanner({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-lg font-semibold text-[rgb(12,77,12)]">{title}</p>
-            <p className="text-sm text-[rgb(16,100,16)] mt-0.5">{description}</p>
+            <p className="text-body text-[rgb(16,100,16)] mt-0.5">{description}</p>
           </div>
           {onDismissed && (
             <button
@@ -2094,7 +2094,7 @@ export function AssessmentHeroReuseBanner({
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
         <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
-        <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
+        <p className="text-body text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
         <RecordingsLink customerId={customerId} recordings={linkedRecordings} navigate={navigate} />
@@ -2176,7 +2176,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
         </div>
         {CARE_PLAN_GROUPS.map(group => (
           <div key={group}>
-            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-sm font-bold text-gray-600">{group}</div>
+            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-body font-bold text-gray-600">{group}</div>
             {CARE_PLAN_STRUCTURE.filter(item => item.group === group).map(item => {
               const isActive = item.id === selectedId;
               const completion = sectionCompletion(formSections, recording, item.id);
@@ -2225,7 +2225,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
       {/* Selected section content */}
       <div className="flex-1 min-w-0">
         <div className="h-11 flex items-center justify-center px-5 border-b border-gray-200 bg-gray-50">
-          <span className="text-sm font-semibold text-gray-900">{selectedItem.label}</span>
+          <span className="text-body font-semibold text-gray-900">{selectedItem.label}</span>
         </div>
         <div className="p-5">
           {SECTION_INTROS[selectedId] && (
@@ -2246,7 +2246,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                     <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={recording.transcript} references={selectedContent.sourceLines} audioUrl={recording.audioUrl}>
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
                       >
                         <Search className="w-3.5 h-3.5" /> Check transcript
                       </button>
@@ -2256,7 +2256,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                     <button
                       type="button"
                       onClick={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
                     >
                       <Check className="w-3.5 h-3.5" /> Accept
                     </button>
@@ -2277,7 +2277,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
               />
               {selectedContent.promptingQuestions && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-sm font-semibold text-gray-500 mb-1.5">Prompting questions</p>
+                  <p className="text-body font-semibold text-gray-500 mb-1.5">Prompting questions</p>
                   <ul className="space-y-1">
                     {selectedContent.promptingQuestions.map((q, i) => (
                       <li key={i} className="text-sm text-gray-500">{q}</li>
@@ -2288,7 +2288,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
             </>
           ) : (
             <div className="bg-white rounded-lg border border-dashed border-gray-300 py-16 text-center">
-              <p className="text-sm text-gray-500">Not yet captured</p>
+              <p className="text-body text-gray-500">Not yet captured</p>
               <p className="text-sm text-gray-400 mt-1">This section hasn't been covered in a recording yet.</p>
             </div>
           )}
@@ -2393,7 +2393,7 @@ function CarePlanView({ carePlan, hasCarePlan }: { carePlan: ReturnType<typeof b
     <div className="space-y-8">
       <div className="flex items-start gap-2.5 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
         <Info className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-purple-900">{bannerText}</p>
+        <p className="text-body text-purple-900">{bannerText}</p>
       </div>
 
       <AccordionSection Icon={Target} title="Suggested Outcomes" count={carePlan.outcomes.length} accent="bg-amber-100 text-amber-700">
@@ -2458,7 +2458,7 @@ function NoCareBridgeContent({ context }: { context: 'careplan' | 'recording' })
             <p className="text-lg font-semibold text-purple-900">
               {context === 'careplan' ? 'No Assessment Hero draft care plan' : 'No recordings yet'}
             </p>
-            <p className="text-sm text-purple-800 mt-0.5">
+            <p className="text-body text-purple-800 mt-0.5">
               {context === 'careplan' ? (
                 <>
                   Nothing has been recorded for {firstName}, so Assessment Hero has no assessment to draft a care plan
@@ -2510,7 +2510,7 @@ function EmptyDraftPanel({ Icon, title, accent }: { Icon: React.ComponentType<{ 
         <Icon className="w-5 h-5" />
       </div>
       <p className="text-base font-semibold text-gray-900">{title}</p>
-      <p className="text-sm text-gray-500 mt-1">
+      <p className="text-body text-gray-500 mt-1">
         None suggested yet — Assessment Hero fills these in from a recorded assessment.
       </p>
     </div>
@@ -2695,7 +2695,7 @@ function RecordingPlayer({ recordingMeta, audioUrl }: { recordingMeta: string; a
       </div>
 
       <div className="flex items-center justify-between mt-2 pl-[60px]">
-        <span className="text-sm font-semibold text-gray-900 tabular-nums">{formatClock(elapsed)}</span>
+        <span className="text-body font-semibold text-gray-900 tabular-nums">{formatClock(elapsed)}</span>
         <span className="text-sm text-gray-400 tabular-nums">{formatClock(total)}</span>
       </div>
 
@@ -2708,12 +2708,12 @@ function RecordingPlayer({ recordingMeta, audioUrl }: { recordingMeta: string; a
           <a
             href={audioUrl}
             download
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0"
+            className="inline-flex items-center gap-1.5 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0"
           >
             <Download className="w-3.5 h-3.5" /> Download recording
           </a>
         ) : (
-          <button type="button" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0">
+          <button type="button" className="inline-flex items-center gap-1.5 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer flex-shrink-0">
             <Download className="w-3.5 h-3.5" /> Download recording
           </button>
         )}
@@ -2731,7 +2731,7 @@ function TranscriptView({ recording, customer }: { recording: Recording; custome
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50 rounded-t-[10px]">
           <div className="flex items-center gap-2">
             <Mic className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-semibold text-gray-900">{recording.label} recording</span>
+            <span className="text-body font-semibold text-gray-900">{recording.label} recording</span>
           </div>
           <span className="text-sm text-gray-500">{recording.recordingMeta}</span>
         </div>
@@ -2743,8 +2743,8 @@ function TranscriptView({ recording, customer }: { recording: Recording; custome
                 {speakerInitials(line, customer)}
               </div>
               <div className="min-w-0">
-                <p className={`text-sm font-semibold mb-0.5 ${roleStyle[line.role]}`}>{line.speaker}</p>
-                <p className="text-sm text-gray-700 leading-relaxed">{line.text}</p>
+                <p className={`text-body font-semibold mb-0.5 ${roleStyle[line.role]}`}>{line.speaker}</p>
+                <p className="text-body text-gray-700 leading-relaxed">{line.text}</p>
               </div>
             </div>
           ))}
@@ -2782,8 +2782,8 @@ function ChatPanel({ chat, onClose }: { chat: ChatMessage[]; onClose: () => void
           <Sparkles className="w-4 h-4 text-[rgb(154,38,214)]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 leading-tight">Assessment Hero Assistant</p>
-          <p className="text-sm text-gray-500 leading-tight">Refine any section or ask for detail</p>
+          <p className="text-body font-semibold text-gray-900 leading-tight">Assessment Hero Assistant</p>
+          <p className="text-body text-gray-500 leading-tight">Refine any section or ask for detail</p>
         </div>
         <button
           type="button"
@@ -2800,7 +2800,7 @@ function ChatPanel({ chat, onClose }: { chat: ChatMessage[]; onClose: () => void
         {chat.map((m, i) =>
           m.from === 'user' ? (
             <div key={i} className="flex justify-end">
-              <div className="relative max-w-[85%] text-sm leading-relaxed rounded-2xl rounded-br-none bg-[rgb(154,38,214)] text-white px-3.5 py-2.5">
+              <div className="relative max-w-[85%] text-body leading-relaxed rounded-2xl rounded-br-none bg-[rgb(154,38,214)] text-white px-3.5 py-2.5">
                 {m.text}
                 {/* Tail flick — triangle out the side, flat bottom on the base */}
                 <span
@@ -2810,7 +2810,7 @@ function ChatPanel({ chat, onClose }: { chat: ChatMessage[]; onClose: () => void
               </div>
             </div>
           ) : (
-            <div key={i} className="text-sm text-gray-800 leading-relaxed">
+            <div key={i} className="text-body text-gray-800 leading-relaxed">
               <p>{m.text}</p>
               <div className="flex items-center gap-0.5 mt-1.5 text-gray-400">
                 <button className="p-1 rounded hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer" aria-label="Good response">
@@ -2855,7 +2855,7 @@ function RecordingPicker({ recordings, recordingId, onChange }: { recordings: Re
     <DropdownMenu>
       <div className="relative inline-flex">
         {/* Invisible sizer — reserves width for the longest possible document name so the trigger doesn't resize as the selection changes or clip a long name. */}
-        <span aria-hidden="true" className="invisible flex items-center gap-2 h-9 pl-3 pr-2.5 text-sm font-medium whitespace-nowrap">
+        <span aria-hidden="true" className="invisible flex items-center gap-2 h-9 pl-3 pr-2.5 text-body font-medium whitespace-nowrap">
           <Mic className="w-4 h-4 flex-shrink-0" />
           {LONGEST_FOCUS_DOCUMENT_NAME}
           <ChevronDown className="w-4 h-4 flex-shrink-0" />
@@ -2863,7 +2863,7 @@ function RecordingPicker({ recordings, recordingId, onChange }: { recordings: Re
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="absolute inset-0 h-9 inline-flex items-center gap-2 rounded-lg border border-[rgb(154,38,214)] bg-white pl-3 pr-2.5 text-sm font-medium text-gray-700 hover:border-[rgb(130,28,190)] transition-colors cursor-pointer"
+            className="absolute inset-0 h-9 inline-flex items-center gap-2 rounded-lg border border-[rgb(154,38,214)] bg-white pl-3 pr-2.5 text-body font-medium text-gray-700 hover:border-[rgb(130,28,190)] transition-colors cursor-pointer"
           >
             <Mic className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <span className="whitespace-nowrap">{selected?.focusDocumentName}</span>

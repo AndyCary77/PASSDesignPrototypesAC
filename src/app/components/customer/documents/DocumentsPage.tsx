@@ -75,7 +75,7 @@ export function DocumentsPage() {
           </div>
           <div>
             <p className="text-lg font-semibold text-purple-900">Assessment Hero — a new home for assessment and customer recordings</p>
-            <p className="text-sm text-purple-800 mt-0.5">
+            <p className="text-body text-purple-800 mt-0.5">
               Every recording and transcript captured on the app for the customer lives here, giving a record of
               what was actually said — so it can be checked against the text Assessment Hero drafted into the forms.
             </p>

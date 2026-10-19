@@ -36,7 +36,7 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
     >
       <div className="flex items-center gap-2.5 min-w-0">
         <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="" />
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-body font-medium text-gray-900">
           Assessment Hero limit reached for {first}
           {allowance.nextAvailableAt && <> — available again from <strong>{formatWhen(allowance.nextAvailableAt)}</strong></>}
         </p>
@@ -54,13 +54,13 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
         </PopoverTrigger>
         <PopoverContent align="end" className="w-96 p-5">
           <p className="text-base font-semibold text-gray-900">Assessment Hero drafting limit</p>
-          <p className="text-sm text-gray-800 mt-1.5">
+          <p className="text-body text-gray-800 mt-1.5">
             {first} has reached the limit of {allowance.limit} Assessment Hero drafts in the last 30 days, so no new
             documents can be drafted for {first} right now.
           </p>
 
           <div className="mt-3">
-            <p id={meterId} className="text-sm font-semibold text-gray-900">
+            <p id={meterId} className="text-body font-semibold text-gray-900">
               {allowance.used} of {allowance.limit} drafts used · rolling 30 days
             </p>
             <div
@@ -76,13 +76,13 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
           </div>
 
           {allowance.nextAvailableAt && (
-            <p className="text-sm text-gray-800 mt-3">
+            <p className="text-body text-gray-800 mt-3">
               Next available: <strong>{formatWhen(allowance.nextAvailableAt)}</strong>
               {allowance.nextAvailableCount > 0 && <> ({allowance.nextAvailableCount === 1 ? '1 draft' : `${allowance.nextAvailableCount} drafts`})</>}
             </p>
           )}
 
-          <ul className="mt-3 list-disc pl-5 space-y-1 text-sm text-gray-700">
+          <ul className="mt-3 list-disc pl-5 space-y-1 text-body text-gray-700">
             <li>The limit is per customer and shared across everyone in your office.</li>
             <li>Every document Assessment Hero drafts counts, including drafts that are later discarded.</li>
             <li>Each draft frees up again 30 days after it was generated.</li>

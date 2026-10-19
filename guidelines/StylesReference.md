@@ -28,7 +28,8 @@ Full dark mode token system available in `/styles/globals.css`
 ### Font Sizes (CSS Variables)
 - `--text-xs`: 0.75rem (12px)
 - `--text-sm`: 0.875rem (14px)
-- `--text-base`: 1rem (16px)
+- `--text-base`: 0.9375rem (15px) — desktop default body size
+- `--text-body`: 0.9375rem (15px) — `text-body` utility; use for body copy, values and form text
 - `--text-lg`: 1.125rem (18px)
 - `--text-xl`: 1.25rem (20px)
 - `--text-2xl`: 1.5rem (24px)
@@ -42,7 +43,7 @@ Full dark mode token system available in `/styles/globals.css`
 - Bold: 700
 
 ### Base Typography Rules
-- Body: 16px (1rem), line-height 1.5
+- Body: 15px (`text-body`), line-height 1.5. `text-sm` (14px) is for secondary text only: badges, tags, captions, table headers, menus, buttons. Nothing below 14px.
 - H1: 24px, medium weight
 - H2: 20px, medium weight
 - H3: 18px, medium weight

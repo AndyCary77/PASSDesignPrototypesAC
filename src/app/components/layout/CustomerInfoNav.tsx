@@ -8,10 +8,10 @@ import { useCustomer } from '../../data/CustomerContext';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
 
 const inactiveTabClass =
-  'px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
+  'px-4 py-3 text-body font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
 
 const activeTabClass =
-  'px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 bg-purple-50 text-[rgb(154,38,214)] border-[rgb(154,38,214)]';
+  'px-4 py-3 text-body font-medium whitespace-nowrap border-b-2 bg-purple-50 text-[rgb(154,38,214)] border-[rgb(154,38,214)]';
 
 function tabClass(pathname: string, path: string) {
   // Match sub-routes too (e.g. Documents' click-throughs at /documents/care-plan
@@ -186,7 +186,7 @@ function MoreMenuItem({ item, pathname, navigate }: { item: NavItem; pathname: s
     <DropdownMenuPrimitive.Item
       onSelect={() => item.type === 'link' && navigate(item.to)}
       disabled={item.type === 'inert'}
-      className={`flex items-center px-3 py-2 text-sm font-medium rounded mx-1 outline-none select-none transition-colors ${stateClass}`}
+      className={`flex items-center px-3 py-2 text-body font-medium rounded mx-1 outline-none select-none transition-colors ${stateClass}`}
     >
       {item.label}
     </DropdownMenuPrimitive.Item>
@@ -329,7 +329,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
 
             {/* Full details — shown when not scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0 opacity-0 mt-0' : 'max-h-32 opacity-100 mt-1'}`}>
-              <div className="text-sm font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+              <div className="text-body font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
                 {contactBits.map((bit, i) => (
                   <span key={bit.label} className="flex items-center gap-3">
                     {i > 0 && <span className="text-gray-300">•</span>}
@@ -337,14 +337,14 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
                   </span>
                 ))}
               </div>
-              <div className="text-gray-700 text-[16px] font-medium">
+              <div className="text-gray-700 text-[15px] font-medium">
                 {customer.addressOneLine}
               </div>
             </div>
 
             {/* Condensed single line — shown when scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-10 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'}`}>
-              <p className="text-sm font-medium text-gray-600 truncate">{condensed}</p>
+              <p className="text-body font-medium text-gray-600 truncate">{condensed}</p>
             </div>
           </div>
         </div>

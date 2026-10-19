@@ -249,17 +249,17 @@ function HoursCard({
             ))}
 
             {error === 'invalid' && (
-              <p role="alert" className="text-sm font-medium text-red-700">
+              <p role="alert" className="text-body font-medium text-red-700">
                 Each slot's end time must be after its start time.
               </p>
             )}
             {error === 'overlap' && (
-              <p role="alert" className="text-sm font-medium text-red-700">
+              <p role="alert" className="text-body font-medium text-red-700">
                 Slots can't overlap.
               </p>
             )}
             {!error && (
-              <p className="text-sm text-gray-600">{formatDuration(slotsMinutes(slots))} per day</p>
+              <p className="text-body text-gray-600">{formatDuration(slotsMinutes(slots))} per day</p>
             )}
 
             <Button
@@ -280,12 +280,12 @@ function HoursCard({
               Add hours
             </Button>
             {mixed && !value.touched && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-body text-gray-600">
                 The selected days have different hours. Adding hours replaces them.
               </p>
             )}
             {value.touched && (
-              <p className="mt-2 text-sm text-gray-600">Hours will be cleared for the selected days.</p>
+              <p className="mt-2 text-body text-gray-600">Hours will be cleared for the selected days.</p>
             )}
           </>
         )}
@@ -318,7 +318,7 @@ function CareTypeField({
   const enabledIds = new Set(useVisitTypes().filter((v) => v.enabled).map((v) => v.id));
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={id} className="block text-body font-medium text-gray-700 mb-1">
         Care type
       </label>
       <Select value={value} onValueChange={(v) => onChange(v as CareTypeId)}>
@@ -351,7 +351,7 @@ function TimeField({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={id} className="block text-body font-medium text-gray-700 mb-1">
         {label}
       </label>
       <input

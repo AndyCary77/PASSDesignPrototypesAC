@@ -61,14 +61,14 @@ function SettingsCard({
 function ValueRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-1.5">
-      <dt className="text-sm font-semibold text-gray-900">{label}</dt>
-      <dd className="text-sm font-semibold text-gray-900 whitespace-nowrap">{value}</dd>
+      <dt className="text-body font-semibold text-gray-900">{label}</dt>
+      <dd className="text-body font-semibold text-gray-900 whitespace-nowrap">{value}</dd>
     </div>
   );
 }
 
 const Helper = ({ children }: { children: ReactNode }) => (
-  <p className="text-sm text-gray-700 leading-relaxed my-2">{children}</p>
+  <p className="text-body text-gray-700 leading-relaxed my-2">{children}</p>
 );
 
 const atLeast = (n: number, unit: string) => `≥ ${n}${unit}`;
@@ -91,7 +91,7 @@ function NumberField({
   return (
     <div>
       <label htmlFor={id} className="block text-base font-semibold text-gray-900">{label}</label>
-      {helper && <p className="text-sm text-gray-800 mt-1">{helper}</p>}
+      {helper && <p className="text-body text-gray-800 mt-1">{helper}</p>}
       <div className="mt-3 flex items-center gap-2.5">
         <span className="text-base font-semibold text-gray-800" aria-hidden="true">≥</span>
         <input
@@ -105,7 +105,7 @@ function NumberField({
         />
         <span className="text-base text-gray-800">{unit}</span>
       </div>
-      {invalid && <p className="text-sm text-red-700 mt-2">Enter a whole number from 0 to {max}.</p>}
+      {invalid && <p className="text-body text-red-700 mt-2">Enter a whole number from 0 to {max}.</p>}
     </div>
   );
 }
@@ -198,7 +198,7 @@ function AllocationSlideout({ onClose }: { onClose: () => void }) {
     >
       <SlideoutSection title="Heatmap link options">
         <fieldset>
-          <legend className="text-sm text-gray-800 mb-4">Choose where a cell in the permanent allocation heatmap takes you.</legend>
+          <legend className="text-body text-gray-800 mb-4">Choose where a cell in the permanent allocation heatmap takes you.</legend>
           <div className="space-y-4">
             {HEATMAP_OPTIONS.map((o) => (
               <label key={o.value} className="flex items-center gap-2.5 text-base text-gray-800 cursor-pointer w-fit">
@@ -289,13 +289,13 @@ function JournalSlideout({ onClose }: { onClose: () => void }) {
       }}
     >
       <SlideoutSection title="Journal categories">
-        <p className="text-sm text-gray-800 -mt-2">Disabled categories can no longer be chosen when adding a journal entry.</p>
+        <p className="text-body text-gray-800 -mt-2">Disabled categories can no longer be chosen when adding a journal entry.</p>
         <ul className="divide-y divide-gray-200">
           {JOURNAL_CATEGORIES.map((c) => (
             <li key={c} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
               <span className="text-base text-gray-900">{c}</span>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-700 w-16 text-right">{draft[c] ? 'Enabled' : 'Disabled'}</span>
+                <span className="text-body font-semibold text-gray-700 w-16 text-right">{draft[c] ? 'Enabled' : 'Disabled'}</span>
                 <SettingSwitch checked={draft[c]} onChange={(v) => setDraft((d) => ({ ...d, [c]: v }))} label={c} />
               </div>
             </li>
@@ -350,7 +350,7 @@ function EmployeePicker({
         <Button type="button" variant="tertiary" size="sm" onClick={clearVisible}>Clear</Button>
       </div>
       <ul className="mt-3 max-h-64 overflow-y-auto border border-gray-200 rounded-md divide-y divide-gray-200 bg-white">
-        {visible.length === 0 && <li className="px-4 py-3 text-sm text-gray-700">No employees match “{query}”.</li>}
+        {visible.length === 0 && <li className="px-4 py-3 text-body text-gray-700">No employees match “{query}”.</li>}
         {visible.map((e) => (
           <li key={e.id}>
             <label className="flex items-center gap-3 px-4 py-2.5 text-base text-gray-900 cursor-pointer hover:bg-gray-50">
@@ -392,7 +392,7 @@ function PermissionsSlideout({ onClose }: { onClose: () => void }) {
       <div className="space-y-6">
         {PERMISSION_GROUPS.map((g) => (
           <SlideoutSection key={g.key} title={`${g.title} · ${employeesLabel(draft[g.key].length)}`}>
-            <p className="text-sm text-gray-800 -mt-2">{g.helper}</p>
+            <p className="text-body text-gray-800 -mt-2">{g.helper}</p>
             <EmployeePicker groupKey={g.title} selected={draft[g.key]} onChange={(ids) => setDraft((d) => ({ ...d, [g.key]: ids }))} />
           </SlideoutSection>
         ))}
@@ -469,7 +469,7 @@ function VoiceSlideout({ onClose }: { onClose: () => void }) {
 
         {VOICE_OUTPUTS.map((o) => (
           <SlideoutSection key={o.key} title={o.title}>
-            <p className="text-sm text-gray-800 -mt-2">{o.audience}</p>
+            <p className="text-body text-gray-800 -mt-2">{o.audience}</p>
             <fieldset>
               <legend className="sr-only">{o.title} voice</legend>
               <div className="space-y-3">
@@ -491,7 +491,7 @@ function VoiceSlideout({ onClose }: { onClose: () => void }) {
                       />
                       <span>
                         <span className="block text-base font-semibold text-gray-900">{VOICE_LABEL[v]}</span>
-                        <span className="block text-sm text-gray-800 mt-1">
+                        <span className="block text-body text-gray-800 mt-1">
                           <span className="font-semibold">Example: </span>“{o.examples[v]}”
                         </span>
                       </span>
@@ -539,8 +539,8 @@ export function OfficeSettingsPage() {
 
         <SettingsCard title="Permanent allocation" Icon={UserCheck} onEdit={() => setEditing('allocation')}>
           <Helper>Options for the permanent allocation Heatmap</Helper>
-          <p className="text-sm font-semibold text-gray-900 mt-5">Heatmap link options</p>
-          <p className="text-sm text-gray-700 mt-2">
+          <p className="text-body font-semibold text-gray-900 mt-5">Heatmap link options</p>
+          <p className="text-body text-gray-700 mt-2">
             Heatmap links to {s.heatmapLink === 'customer' ? 'customer' : 'employee'} schedule
           </p>
         </SettingsCard>

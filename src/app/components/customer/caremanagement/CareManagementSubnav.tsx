@@ -96,7 +96,7 @@ export function CareManagementSubnav() {
             onChange={id => setActiveTab(id as Tab)}
             className="flex justify-center items-center gap-8"
           />
-          <label className="flex items-center justify-end gap-2 text-sm text-gray-600 cursor-pointer select-none whitespace-nowrap">
+          <label className="flex items-center justify-end gap-2 text-body text-gray-600 cursor-pointer select-none whitespace-nowrap">
             <input type="checkbox" defaultChecked className="rounded border-gray-300 accent-[rgb(154,38,214)]" />
             Hide inactive
           </label>

@@ -22,7 +22,7 @@ export function EmployeeRecordsPage() {
               <li key={id}>
                 <button
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-5 py-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                  className={`flex items-center gap-2 px-5 py-4 text-body font-medium border-b-2 transition-colors cursor-pointer ${
                     isActive
                       ? 'text-[rgb(154,38,214)] border-[rgb(154,38,214)]'
                       : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'

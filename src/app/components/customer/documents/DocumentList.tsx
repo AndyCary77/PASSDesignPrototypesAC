@@ -26,7 +26,7 @@ export function DocumentList({ documents }: DocumentListProps) {
           <AlertCircle className="w-8 h-8 text-gray-400" />
         </div>
         <p className="text-lg font-medium">No documents found</p>
-        <p className="text-sm">Try adjusting your search or filters.</p>
+        <p className="text-body">Try adjusting your search or filters.</p>
       </div>
     );
   }

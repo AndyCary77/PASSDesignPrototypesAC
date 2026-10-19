@@ -12,7 +12,7 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{label}</div>
-      <div className="text-sm text-gray-900">{value}</div>
+      <div className="text-body text-gray-900">{value}</div>
     </div>
   );
 }

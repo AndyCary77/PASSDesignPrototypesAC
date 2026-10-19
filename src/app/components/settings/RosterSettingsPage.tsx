@@ -505,13 +505,13 @@ function TableIntro({ title, description }: { title: string; description: string
   return (
     <div className="mb-3">
       <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-700 mt-0.5">{description}</p>
+      <p className="text-body text-gray-700 mt-0.5">{description}</p>
     </div>
   );
 }
 
-const TH = 'px-4 py-3 text-left text-sm font-semibold text-gray-900 bg-gray-50 border-b border-gray-200';
-const TD = 'px-4 py-4 text-sm text-gray-800 align-top border-b border-gray-200';
+const TH = 'px-4 py-3 text-left text-body font-semibold text-gray-900 bg-gray-50 border-b border-gray-200';
+const TD = 'px-4 py-4 text-body text-gray-800 align-top border-b border-gray-200';
 
 function DataTable({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -541,7 +541,7 @@ function SettingBlocks({ blocks }: { blocks: Block[] }) {
             <div>
               <h3 className="text-base font-semibold text-gray-900">{b.title}</h3>
               {b.helper?.map((h) => (
-                <p key={h} className="text-sm text-gray-700 mt-0.5">{h}</p>
+                <p key={h} className="text-body text-gray-700 mt-0.5">{h}</p>
               ))}
             </div>
             {b.editable && <BlockEditButton title={b.title} />}
@@ -550,11 +550,11 @@ function SettingBlocks({ blocks }: { blocks: Block[] }) {
           <dl className="mt-4 space-y-4">
             {b.fields.map((f) => (
               <div key={f.label} className="grid gap-x-8 gap-y-1 sm:grid-cols-[minmax(0,26rem)_1fr]">
-                <dt className="text-sm font-semibold text-gray-700">
+                <dt className="text-body font-semibold text-gray-700">
                   {f.required && <span className="text-red-600 mr-1" aria-hidden="true">*</span>}
                   {f.label}
                 </dt>
-                <dd className="text-sm text-gray-900">{f.value}</dd>
+                <dd className="text-body text-gray-900">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -592,10 +592,10 @@ function AdvancedSettingsSlideout({ onClose }: { onClose: () => void }) {
       <div className="space-y-10">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Table settings</h3>
-          <p className="text-sm text-gray-800 mt-2">Applied to tables on the timesheet and finance views.</p>
+          <p className="text-body text-gray-800 mt-2">Applied to tables on the timesheet and finance views.</p>
 
           <div className="mt-6">
-            <label htmlFor="rows-per-page" className="block text-sm text-gray-700 mb-2">
+            <label htmlFor="rows-per-page" className="block text-body text-gray-700 mb-2">
               <span className="text-red-600 mr-1" aria-hidden="true">*</span>Rows per page
             </label>
             <div className="relative w-36">
@@ -612,7 +612,7 @@ function AdvancedSettingsSlideout({ onClose }: { onClose: () => void }) {
           </div>
 
           <fieldset className="mt-6">
-            <legend className="text-sm text-gray-700 mb-2">Table ordering</legend>
+            <legend className="text-body text-gray-700 mb-2">Table ordering</legend>
             <div className="flex items-center gap-6">
               {(['first-name', 'last-name'] as const).map((o) => (
                 <label key={o} className="flex items-center gap-2.5 text-base text-gray-800 cursor-pointer">
@@ -633,7 +633,7 @@ function AdvancedSettingsSlideout({ onClose }: { onClose: () => void }) {
         {ADVANCED_TOGGLES.map((t) => (
           <div key={t.key}>
             <h3 className="text-lg font-semibold text-gray-900">{t.title}</h3>
-            <p className="text-sm text-gray-800 mt-2">{t.helper}</p>
+            <p className="text-body text-gray-800 mt-2">{t.helper}</p>
             <label className="mt-5 flex items-center gap-2.5 text-base text-gray-800 cursor-pointer w-fit">
               <input
                 type="checkbox"
@@ -685,8 +685,8 @@ const TableHeader = ({ title, description, count, total, show, onShow, id }: {
   <div className="mb-3">
     <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
     <div className="mt-0.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-      <p className="text-sm text-gray-800">{description}</p>
-      <div className="flex items-center gap-4 text-sm text-gray-700">
+      <p className="text-body text-gray-800">{description}</p>
+      <div className="flex items-center gap-4 text-body text-gray-700">
         <label htmlFor={id} className="flex items-center gap-2 cursor-pointer">
           <input
             id={id}
@@ -848,13 +848,13 @@ function VisitEventTypesSlideout({
             {/* What saving will do, shown only once the checkbox has changed. */}
             <div aria-live="polite">
               {careTypeAvailability && !advanced.availabilityByCareType && (
-                <p className="mt-3 text-sm text-gray-800">
+                <p className="mt-3 text-body text-gray-800">
                   Existing availability will be treated as <strong>Personal care</strong> when you save. You can review
                   it on each employee's contract afterwards.
                 </p>
               )}
               {!careTypeAvailability && advanced.availabilityByCareType && (
-                <p className="mt-3 text-sm text-gray-800">
+                <p className="mt-3 text-body text-gray-800">
                   Care types will be hidden on contracts and ignored by the optimiser. They're kept, and come back if
                   you turn this on again.
                 </p>
@@ -938,7 +938,7 @@ function PublicHolidays() {
   return (
     <div>
       <h3 className="text-base font-semibold text-gray-900">Public holidays and multipliers</h3>
-      <p className="text-sm text-gray-700 mt-0.5">These dates will be used for charging and paying specific rates for public holidays.</p>
+      <p className="text-body text-gray-700 mt-0.5">These dates will be used for charging and paying specific rates for public holidays.</p>
       <div className="flex items-center justify-center gap-4 my-4">
         <Button variant="tertiary" size="sm" iconOnly aria-label="Previous year" onClick={() => setYear((y) => y - 1)}>
           <ChevronLeft className="w-5 h-5" />
@@ -1096,8 +1096,8 @@ export function RosterSettingsPage() {
                 <InfoBanner className="mt-3">{CARE_TYPE_AVAILABILITY_HELPER}</InfoBanner>
                 <dl className="mt-4">
                   <div className="grid gap-x-8 gap-y-1 sm:grid-cols-[minmax(0,26rem)_1fr]">
-                    <dt className="text-sm font-semibold text-gray-700">Availability by care type</dt>
-                    <dd className="text-sm text-gray-900">{advanced.availabilityByCareType ? 'Enabled' : 'Disabled'}</dd>
+                    <dt className="text-body font-semibold text-gray-700">Availability by care type</dt>
+                    <dd className="text-body text-gray-900">{advanced.availabilityByCareType ? 'Enabled' : 'Disabled'}</dd>
                   </div>
                 </dl>
 
@@ -1106,7 +1106,7 @@ export function RosterSettingsPage() {
                 {advanced.availabilityByCareType && (
                   <div className="mt-4 border-t border-gray-200 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900">Review existing availability</h4>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-body text-gray-700 mt-1">
                       Employees' existing availability is treated as <strong>Personal care</strong>. Review it on each
                       employee's contract and set a different care type wherever they work something else, such as
                       Live-in. Until you do, the optimiser will only match Personal care visits to that availability.
@@ -1184,7 +1184,7 @@ export function RosterSettingsPage() {
                         <p>{c.description}</p>
                         <dl className="mt-3 space-y-1">
                           {c.details.map(([label, value]) => (
-                            <div key={label} className="flex gap-1.5 text-sm">
+                            <div key={label} className="flex gap-1.5 text-body">
                               <dt className="text-gray-700">{label}:</dt>
                               <dd className="font-medium text-gray-900">{value}</dd>
                             </div>

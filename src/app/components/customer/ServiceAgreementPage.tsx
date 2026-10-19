@@ -146,7 +146,7 @@ function VisitCard({ visitNumber, data, onEdit }: { visitNumber: number; data: V
     <div>
       {/* Visit header row */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-gray-900">Visit {visitNumber}</span>
+        <span className="text-body font-semibold text-gray-900">Visit {visitNumber}</span>
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Visit status</label>
           <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
@@ -267,7 +267,7 @@ function VisitCard({ visitNumber, data, onEdit }: { visitNumber: number; data: V
               <PencilSolidIcon className="w-4 h-4" />
             </Button>
           </div>
-          <p className="text-sm text-gray-500 mb-1 leading-snug">
+          <p className="text-body text-gray-500 mb-1 leading-snug">
             Inherited from customer defaults — <br></br>
             adjust per visit as needed.
           </p>
@@ -458,8 +458,8 @@ export function ServiceAgreementPage() {
 
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-5">
-        <span className="text-sm text-gray-600">Displaying {visits.length}/{visits.length} visits</span>
-        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+        <span className="text-body text-gray-600">Displaying {visits.length}/{visits.length} visits</span>
+        <label className="flex items-center gap-2 text-body cursor-pointer select-none">
           <input type="checkbox" className="rounded border-gray-300" defaultChecked />
           <span>Hide inactive</span>
         </label>

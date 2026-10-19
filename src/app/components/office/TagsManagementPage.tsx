@@ -71,7 +71,7 @@ export function TagsManagementPage() {
             </span>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Tag Types &amp; Tags</h3>
-              <p className="text-sm text-gray-500 max-w-3xl">
+              <p className="text-body text-gray-500 max-w-3xl">
                 Tags can be used to assign custom attributes to your customers and employees. Tag types group your
                 tags — once configured, tags will be available within filters throughout PASS to help you target
                 and match your customers and employees in ways that suit your delivery of care.

@@ -391,8 +391,8 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
                 room above the support/sign-up line, not a stray gap. */}
             <div className="mt-auto pt-5">
               <div className="border-t border-gray-200 mb-5" />
-              <p className="text-sm text-gray-500 text-center">Customer Support 0330 094 0122</p>
-              <p className="text-sm text-gray-500 text-center mt-1">
+              <p className="text-body text-gray-500 text-center">Customer Support 0330 094 0122</p>
+              <p className="text-body text-gray-500 text-center mt-1">
                 Not a customer yet?{' '}
                 <a href="#" className="text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
                   Book a free tour
@@ -401,7 +401,7 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
             </div>
           </form>
 
-          {/* `text-sm` repeated directly on each <p> here (not just relied
+          {/* `text-body` repeated directly on each <p> here (not just relied
               on from this wrapping div) — globals.css has a base-layer
               `p, div, span { font-size: var(--text-base) }` reset that's
               meant to back off once an element has an ancestor with its
@@ -414,8 +414,8 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
               same as "Customer Support"/"Not a customer yet?" above
               already do, sidesteps it reliably. */}
           <div className="text-center mt-6 text-sm text-gray-400 space-y-0.5">
-            <p className="text-sm">Copyright © 2026 everyLIFE Technologies Ltd.</p>
-            <p className="text-sm">All rights reserved.</p>
+            <p className="text-body">Copyright © 2026 everyLIFE Technologies Ltd.</p>
+            <p className="text-body">All rights reserved.</p>
             <a href="#" className="text-[rgb(109,27,152)] hover:underline">Terms and Conditions</a>
           </div>
         </div>
@@ -432,8 +432,8 @@ function CardLayout({ showPassword, setShowPassword, onSubmit }: FormLayoutProps
               height — that's what keeps the two flex-1 panels above
               genuinely equal height, not just visually close. */}
           <div className="text-center mt-6 text-sm text-gray-400 space-y-0.5">
-            <p className="text-sm">Discover more product news and updates.</p>
-            <p className="text-sm">New features roll out regularly.</p>
+            <p className="text-body">Discover more product news and updates.</p>
+            <p className="text-body">New features roll out regularly.</p>
             <a href="#" className="text-[rgb(109,27,152)] hover:underline">Visit the Help Centre</a>
           </div>
         </div>
@@ -487,12 +487,12 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit, promoSource 
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="full-username" className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                <label htmlFor="full-username" className="block text-body font-medium text-gray-700 mb-1.5">Username</label>
                 <input
                   id="full-username"
                   type="text"
                   autoComplete="username"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
                 />
               </div>
 
@@ -501,8 +501,8 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit, promoSource 
                     breathehr's own row — deliberately not the second button
                     CardLayout uses, so this reads as its own treatment. */}
                 <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="full-password" className="block text-sm font-medium text-gray-700">Password</label>
-                  <a href="#" className="text-sm font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
+                  <label htmlFor="full-password" className="block text-body font-medium text-gray-700">Password</label>
+                  <a href="#" className="text-body font-medium text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
                     Forgot password?
                   </a>
                 </div>
@@ -511,7 +511,7 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit, promoSource 
                     id="full-password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-body text-gray-900 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors"
                   />
                   <button
                     type="button"
@@ -527,13 +527,13 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit, promoSource 
 
             <Button type="submit" className="w-full mt-6">Log in</Button>
 
-            <p className="text-sm text-gray-500 text-center mt-4">
+            <p className="text-body text-gray-500 text-center mt-4">
               Not a customer yet?{' '}
               <a href="#" className="text-[rgb(109,27,152)] hover:text-[rgb(154,38,214)] hover:underline">
                 Book a free tour
               </a>
             </p>
-            <p className="text-sm text-gray-500 text-center mt-1">Customer Support 0330 094 0122</p>
+            <p className="text-body text-gray-500 text-center mt-1">Customer Support 0330 094 0122</p>
           </form>
         </div>
 
@@ -543,8 +543,8 @@ function FullBleedLayout({ showPassword, setShowPassword, onSubmit, promoSource 
             reads once combined: the copyright/rights sentence, then Terms
             and Conditions. */}
         <div className="text-center text-sm text-gray-400 space-y-0.5">
-          <p className="text-sm">Copyright © 2026 everyLIFE Technologies Ltd. All rights reserved.</p>
-          <a href="#" className="text-sm text-[rgb(109,27,152)] hover:underline">Terms and Conditions</a>
+          <p className="text-body">Copyright © 2026 everyLIFE Technologies Ltd. All rights reserved.</p>
+          <a href="#" className="text-body text-[rgb(109,27,152)] hover:underline">Terms and Conditions</a>
         </div>
       </div>
 

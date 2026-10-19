@@ -199,7 +199,7 @@ function RelinkDropdown() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+          className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
         >
           {linkedSource ? 'Replace recording' : 'Link a recording'}
           <ChevronDown className="w-3.5 h-3.5" />
@@ -282,14 +282,14 @@ export function CarePlanDocumentContent() {
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
               <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
-              <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
+              <p className="text-body text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               {linkedRecording && (
                 <button
                   type="button"
                   onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
                 >
                   View recording
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -324,7 +324,7 @@ export function CarePlanDocumentContent() {
               </p>
 
               {linkedRecording ? (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
                   <strong>
                     {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
@@ -333,12 +333,12 @@ export function CarePlanDocumentContent() {
                   by <strong>{linkedRecording.recordedBy}</strong> — please review before accepting.
                 </p>
               ) : linkedSource?.type === 'upload' ? (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from the uploaded recording <strong>{linkedSource.fileName}</strong> — please review
                   before accepting.
                 </p>
               ) : (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   No recording is linked to this draft — the fields below reflect whatever was last accepted. Link an
                   existing recording or upload one to bring in new content.
                 </p>
@@ -355,7 +355,7 @@ export function CarePlanDocumentContent() {
                 <button
                   type="button"
                   onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
                 >
                   View recording
                   <ChevronRight className="w-3.5 h-3.5" />

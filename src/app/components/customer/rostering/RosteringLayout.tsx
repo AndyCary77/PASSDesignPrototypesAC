@@ -32,7 +32,7 @@ export function RosteringLayout() {
     <div className="flex flex-col">
       {/* Breadcrumb */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-body">
           <span className="text-gray-900 font-semibold">Rostering</span>
           <span className="text-gray-400">/</span>
           <span className="text-gray-600">{sectionLabels[activeSection]}</span>
@@ -116,7 +116,7 @@ function NavItem({
       style={active ? { backgroundColor: 'rgba(220, 217, 228, 0.5)' } : undefined}
     >
       {icon}
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-body font-medium">{label}</span>
     </li>
   );
 }

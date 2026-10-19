@@ -191,7 +191,7 @@ export function DetailValue({ text }: { text: string }) {
   return (
     <Tooltip open={open && truncated} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
-        <dd ref={ref} className={`text-sm text-gray-900 truncate min-w-0 ${truncated ? 'relative z-10' : ''}`}>{text}</dd>
+        <dd ref={ref} className={`text-body text-gray-900 truncate min-w-0 ${truncated ? 'relative z-10' : ''}`}>{text}</dd>
       </TooltipTrigger>
       <TooltipContent
         side="top"
@@ -243,7 +243,7 @@ export function PersonCard({ name, href, photo, initials, avatarColor, status, s
   // button inside a link (invalid, and it would navigate).
   // font-weight-fixed: the name keeps its normal weight when the Bolder toggle
   // is on — the toggle is about body text, and a name is already a title.
-  const nameClass = 'font-weight-fixed min-w-0 max-w-full text-base font-semibold text-gray-900 truncate';
+  const nameClass = 'font-weight-fixed min-w-0 max-w-full text-lg font-semibold text-gray-900 truncate';
   const stretched = 'after:absolute after:inset-0 after:content-[""] outline-none';
   // Static class strings (Tailwind can't see a built-up `row-span-${n}`).
   // Rows: header / [flags] / details / [extra] / tags.
@@ -292,15 +292,15 @@ export function PersonCard({ name, href, photo, initials, avatarColor, status, s
             line up with the neighbouring cards' details. */}
         {flags !== undefined && <div className="flex flex-wrap content-start gap-1.5 pt-3">{flags}</div>}
 
-        {/* text-sm goes on each dt/dd, not the <dl>: a bare dt/dd with no text
-            class of its own renders at 16px under the globals.css reset even
-            inside a text-sm parent. */}
+        {/* text-body goes on each dt/dd, not the <dl>: a bare dt/dd with no text
+            class of its own can fall back to the base size under the globals.css
+            reset even inside a sized parent. */}
         {/* With no flags row to give the header some breathing room, the details
             start further down (20px, not 12px) so they don't crowd the name. */}
         <dl className={`space-y-1 ${flags !== undefined ? 'pt-3' : 'pt-5'} ${extraRow ? 'pb-2' : 'pb-3'}`}>
           {details.map(d => (
             <div key={d.label} className="flex gap-2">
-              <dt className="text-sm text-gray-500 flex-shrink-0">{d.label}:</dt>
+              <dt className="text-body text-gray-500 flex-shrink-0">{d.label}:</dt>
               <DetailValue text={d.value} />
             </div>
           ))}

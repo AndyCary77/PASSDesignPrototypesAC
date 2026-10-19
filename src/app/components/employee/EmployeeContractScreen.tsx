@@ -199,7 +199,7 @@ export function EmployeeContractScreen() {
   return (
     <div>
       {/* Breadcrumb */}
-      <ul className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+      <ul className="flex items-center gap-2 text-body text-gray-600 mb-4">
         <li>
           <button className="text-[rgb(154,38,214)] hover:underline cursor-pointer">Employees</button>
         </li>
@@ -237,7 +237,7 @@ export function EmployeeContractScreen() {
         {/* Content blocks */}
         <div className="flex-1 min-w-0 space-y-6">
           {/* Version selector — above the contract content */}
-          <button className="flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+          <button className="flex items-center gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-[10px] text-body text-gray-700 hover:bg-gray-50 cursor-pointer">
             <span>v1 09/01/2024, 09:42 (active)</span>
             <ChevronDown className="w-4 h-4 text-gray-600" />
           </button>
@@ -323,19 +323,19 @@ export function EmployeeContractScreen() {
           >
             <div className="mb-5">
               <h4 className="text-lg font-semibold text-gray-900">Availability</h4>
-              <p className="text-sm text-gray-600 mt-0.5">
+              <p className="text-body text-gray-600 mt-0.5">
                 Select days and times employee is expected to be available
               </p>
             </div>
 
             {/* Cadence */}
             <div className="mb-6 max-w-xs">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cadence</label>
+              <label className="block text-body font-medium text-gray-700 mb-2">Cadence</label>
               <div className="relative">
                 <select
                   value={cadenceWeeks}
                   onChange={(e) => setCadenceWeeks(Number(e.target.value))}
-                  className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-sm bg-white pr-9"
+                  className="w-full appearance-none px-3 py-2 border border-gray-300 rounded-md text-body bg-white pr-9"
                 >
                   {CADENCE_OPTIONS.map((o) => (
                     <option key={o.weeks} value={o.weeks}>{o.label}</option>
@@ -380,7 +380,7 @@ export function EmployeeContractScreen() {
                 was made in. */}
             {activeSelection.length > 0 && (
               <div className="sticky bottom-4 z-20 mb-4 flex items-center justify-between gap-4 rounded-[10px] border-2 border-[rgb(154,38,214)] bg-white px-4 py-3 shadow-md">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-body font-semibold text-gray-900">
                   {activeSelection.length} {activeSelection.length === 1 ? 'day' : 'days'} selected
                 </span>
                 <div className="flex items-center gap-3">
@@ -476,7 +476,7 @@ function SummaryRow({ label, value, note }: { label: string; value: string; note
       <dt className="text-base text-gray-600 w-72 flex-shrink-0">{label}</dt>
       <dd className="text-base text-gray-900">
         {value}
-        {note && <div className="text-sm text-gray-600">{note}</div>}
+        {note && <div className="text-body text-gray-600">{note}</div>}
       </dd>
     </div>
   );
@@ -511,7 +511,7 @@ function ConstraintRow({
         {thresholds && thresholds.length > 0 && (
           <ul className="mt-2.5 space-y-1.5 border-l-2 border-amber-200 pl-3 max-w-sm">
             {thresholds.map((t) => (
-              <li key={t.label} className="flex items-center justify-between gap-4 text-sm">
+              <li key={t.label} className="flex items-center justify-between gap-4 text-body">
                 <span className="flex items-center gap-1 text-gray-600">
                   {t.label}
                   {info && <InfoIcon text={info} />}
@@ -595,7 +595,7 @@ function ContractSummaryEdit({
       {/* Active-version warning */}
       <div className="flex gap-3 items-start bg-amber-50 border border-amber-200 rounded-[10px] p-4 mb-6">
         <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-amber-800 leading-relaxed">
+        <p className="text-body text-amber-800 leading-relaxed">
           Warning, editing an active version of this employee&rsquo;s contract could impact their
           holiday entitlement and pay. Please add a new version to manage changes in contract type,
           contracted hours per week or holiday entitlement.
@@ -722,7 +722,7 @@ function ContractSummaryEdit({
       <div className="max-w-md">
         <EditField label="Holiday scheme" required>
           <SelectInput options={['flexible (Default)', 'fixed', 'accrued']} />
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-body text-gray-600 mt-2">
             (Default) indicates a scheme that is linked to the selected contract type
           </p>
         </EditField>
@@ -795,7 +795,7 @@ function DateInput({ value, disabled, clearable }: { value: string; disabled?: b
         <Calendar className="w-4 h-4 text-gray-600 flex-shrink-0" />
       </div>
       {clearable && (
-        <button type="button" className="text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer">
+        <button type="button" className="text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer">
           Clear
         </button>
       )}
@@ -929,11 +929,11 @@ function WeekBlock({
             }`}
           >
             {title}
-            {current && <span className="ml-2 text-sm font-normal text-gray-800">(current week)</span>}
+            {current && <span className="ml-2 text-body font-normal text-gray-800">(current week)</span>}
           </div>
           {/* Care types worked this week — makes a 2-weeks-one-type / 2-weeks-another pattern scannable */}
           {showCareTypes && weekCareTypes.map((c) => (
-            <span key={c.id} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            <span key={c.id} className="inline-flex items-center gap-1.5 text-body font-medium text-gray-700">
               <span aria-hidden="true" className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: c.colour }} />
               {c.label}
             </span>
@@ -942,7 +942,7 @@ function WeekBlock({
             {weekAllSelected ? 'Deselect week' : 'Select week'}
           </Button>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-600">
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-body text-gray-600">
           <span><b className="font-semibold">Total available:</b> {formatDuration(regularMinutes + optionalMinutes)}</span>
           <span><b className="font-semibold">Optional hrs:</b> {optionalMinutes ? formatDuration(optionalMinutes) : 0}</span>
           <span><b className="font-semibold">Contracted hrs:</b> 40 hours</span>
@@ -1003,7 +1003,7 @@ function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) 
         borderColor: optional ? care.colour : undefined,
       }}
     >
-      <span className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
+      <span className="flex items-center gap-1.5 text-body font-medium text-gray-800">
         <span
           aria-hidden="true"
           className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
@@ -1011,7 +1011,7 @@ function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) 
         />
         {care.label}
       </span>
-      <span className="text-sm font-semibold">{formatRange(slot)}</span>
+      <span className="text-body font-semibold">{formatRange(slot)}</span>
     </div>
   );
 }
@@ -1069,7 +1069,7 @@ function DayCard({
         <div className="w-full space-y-1.5">
           {regularSlots.length > 0 && (
             <div>
-              <div className="text-sm text-gray-900 mb-0.5">Regular hours</div>
+              <div className="text-body text-gray-900 mb-0.5">Regular hours</div>
               <div className="space-y-1.5">
                 {regularSlots.map((r, i) => (
                   <SlotBlock key={i} slot={r} />
@@ -1079,7 +1079,7 @@ function DayCard({
           )}
           {optionalSlots.length > 0 && (
             <div>
-              <div className="text-sm text-gray-900 mb-0.5">Optional overtime</div>
+              <div className="text-body text-gray-900 mb-0.5">Optional overtime</div>
               <div className="space-y-1.5">
                 {optionalSlots.map((r, i) => (
                   <SlotBlock key={i} slot={r} optional />

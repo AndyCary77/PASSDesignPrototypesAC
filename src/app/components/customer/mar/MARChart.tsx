@@ -297,9 +297,9 @@ export function MARChart() {
               ['GP Name', PATIENT.gpName],
               ['Allergies', PATIENT.allergies],
             ].map(([label, val]) => (
-              <div key={label} className="flex items-baseline gap-2 text-sm">
+              <div key={label} className="flex items-baseline gap-2 text-body">
                 <span className="text-xs text-gray-400 uppercase tracking-wide w-16 shrink-0">{label}</span>
-                <span className="text-gray-900 font-medium text-sm">{val}</span>
+                <span className="text-gray-900 font-medium text-body">{val}</span>
               </div>
             ))}
           </div>
@@ -313,7 +313,7 @@ export function MARChart() {
               ['Medications', PATIENT.medicationCount],
               ['Controlled Drugs', PATIENT.controlledDrugsCount],
             ].map(([label, val]) => (
-              <div key={String(label)} className="flex items-baseline gap-2 text-sm">
+              <div key={String(label)} className="flex items-baseline gap-2 text-body">
                 <span className="text-xs text-gray-400 uppercase tracking-wide shrink-0">{label}</span>
                 <span className="text-gray-900 font-bold">{val}</span>
               </div>

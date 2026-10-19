@@ -213,7 +213,7 @@ export const VisitDetailsPanel = ({
 
                   <div className="text-base">Morning Visit</div>
 
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-body">
                     <span className="text-base">
                       Tue 16th Dec
                     </span>
@@ -222,7 +222,7 @@ export const VisitDetailsPanel = ({
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-body">
                     <span className="text-base">
                       09:30 - 11:30
                     </span>
@@ -234,7 +234,7 @@ export const VisitDetailsPanel = ({
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-body">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     <span className="text-base">Daily</span>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -280,7 +280,7 @@ export const VisitDetailsPanel = ({
                       setVisitNote(e.target.value)
                     }
                     rows={3}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5c1c85]"
+                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-[#5c1c85]"
                   />
                   <div className="flex gap-3 justify-end">
                     <button
@@ -351,8 +351,8 @@ export const VisitDetailsPanel = ({
 
               {/* Assignment Summary */}
               <div className="space-y-6">
-                <div className="text-sm">
-                  <span className="font-medium text-[16px]">
+                <div className="text-body">
+                  <span className="font-medium text-[15px]">
                     1/1 employee assigned
                   </span>
                   <span className="text-gray-600 ml-2">
@@ -419,12 +419,12 @@ export const VisitDetailsPanel = ({
                         <div className="bg-red-50 px-4 py-4 border border-red-200 rounded-[8px]">
                           <div className="flex items-center gap-3 mb-4">
                             <BlockingIcon className="w-5 h-5 text-[#e31a1a]" />
-                            <span className="text-[16px] font-bold text-red-900">
+                            <span className="text-[15px] font-bold text-red-900">
                               Blocking issues
                             </span>
                           </div>
                           <div className="pl-2">
-                            <ul className="space-y-3 text-[16px] text-gray-900 leading-relaxed list-disc pl-5">
+                            <ul className="space-y-3 text-[15px] text-gray-900 leading-relaxed list-disc pl-5">
                               <li>
                                 <span>
                                   <span className="font-bold">
@@ -470,12 +470,12 @@ export const VisitDetailsPanel = ({
                         <div className="bg-amber-50 px-4 py-4 border border-amber-200 rounded-[8px]">
                           <div className="flex items-center gap-3 mb-4">
                             <CustomAlertIcon className="w-5 h-5 text-amber-500" />
-                            <span className="text-[16px] font-bold text-amber-900">
+                            <span className="text-[15px] font-bold text-amber-900">
                               Conflicts
                             </span>
                           </div>
                           <div className="pl-2">
-                            <ul className="space-y-4 text-[16px] text-gray-900 leading-relaxed list-disc pl-5">
+                            <ul className="space-y-4 text-[15px] text-gray-900 leading-relaxed list-disc pl-5">
                               <li>
                                 <div>
                                   <span className="font-bold">
@@ -522,10 +522,10 @@ export const VisitDetailsPanel = ({
                         <div className="bg-blue-50 px-4 py-4 border border-blue-200 rounded-[8px]">
                           <div className="flex items-center gap-3 mb-4">
                             <Info className="w-5 h-5 text-blue-600" />
-                            <span className="text-[16px] font-bold text-blue-900">Check before saving</span>
+                            <span className="text-[15px] font-bold text-blue-900">Check before saving</span>
                           </div>
                           <div className="pl-2">
-                            <p className="text-[16px] text-gray-900 leading-relaxed">
+                            <p className="text-[15px] text-gray-900 leading-relaxed">
                               <span className="font-bold">Morning Visit</span> will be changed in the past.
                             </p>
                           </div>

@@ -3,9 +3,9 @@ import davidPhoto from '../../imports/david_b.jpg';
 import { useScrolled } from '../../hooks/useScrolled';
 
 const activeTabClass =
-  'px-4 py-3 text-sm font-medium bg-purple-50 text-[rgb(154,38,214)] hover:bg-purple-100 whitespace-nowrap border-b-2 border-[rgb(154,38,214)] transition-colors';
+  'px-4 py-3 text-body font-medium bg-purple-50 text-[rgb(154,38,214)] hover:bg-purple-100 whitespace-nowrap border-b-2 border-[rgb(154,38,214)] transition-colors';
 const inactiveTabClass =
-  'px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
+  'px-4 py-3 text-body font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
 
 export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: boolean }) {
   const { pathname } = useLocation();
@@ -40,19 +40,19 @@ export function EmployeeInfo({ withSlideOffset = false }: { withSlideOffset?: bo
 
             {/* Full details — shown when not scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0 opacity-0 mt-0' : 'max-h-32 opacity-100 mt-1'}`}>
-              <div className="text-sm font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+              <div className="text-body font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
                 <span><span className="text-gray-500">Mob:</span> <span className="text-gray-700">07355943508</span></span>
                 <span className="text-gray-300">•</span>
                 <span><span className="text-gray-500">Username:</span> <span className="text-gray-700">davidbuckowski</span></span>
               </div>
-              <div className="text-gray-700 text-[16px] font-medium">
+              <div className="text-gray-700 text-[15px] font-medium">
                 11 Matlock Close, Walsall, WS3 3QE
               </div>
             </div>
 
             {/* Condensed single line — shown when scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-10 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'}`}>
-              <p className="text-sm font-medium text-gray-600 truncate">
+              <p className="text-body font-medium text-gray-600 truncate">
                 07355943508 &nbsp;·&nbsp; davidbuckowski &nbsp;·&nbsp; 11 Matlock Close, Walsall, WS3 3QE
               </p>
             </div>

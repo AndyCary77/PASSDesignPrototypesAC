@@ -23,7 +23,7 @@ export function SchedulePage() {
       <div className={`space-y-6 ${slideoutOpen || modalOpen ? 'invisible' : ''}`}>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Morning Visit — Arthur Barrington</h2>
-          <p className="text-sm text-gray-500">Select a scenario to preview</p>
+          <p className="text-body text-gray-500">Select a scenario to preview</p>
         </div>
 
         <div className="grid grid-cols-3 gap-6">
@@ -97,8 +97,8 @@ function ScenarioTile({
         {icon}
       </div>
       <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
-      <div className="mt-4 text-sm font-semibold text-[rgb(154,38,214)] group-hover:underline">Open →</div>
+      <p className="text-body text-gray-500 leading-relaxed">{description}</p>
+      <div className="mt-4 text-body font-semibold text-[rgb(154,38,214)] group-hover:underline">Open →</div>
     </button>
   );
 }
@@ -150,7 +150,7 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
               <h2 className="text-[21px] font-semibold text-gray-900 leading-tight mb-2">
                 Unsuitable Assignment
               </h2>
-              <p className="text-[16px] text-gray-600">
+              <p className="text-[15px] text-gray-600">
                 <strong>David Bukowski</strong> has one or more conflicts that make them unsuitable for assignment to <strong>Arthur Barrington</strong>.
               </p>
             </div>
@@ -160,7 +160,7 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
               <div className="bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-4">
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <span className="text-[16px] font-bold text-amber-900">Conflicts</span>
+                  <span className="text-[15px] font-bold text-amber-900">Conflicts</span>
                 </div>
                 <ul className="space-y-4">
                   {CONFLICTS.map((conflict, i) => {
@@ -174,7 +174,7 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
                             <InlineTag key={j}>{tag}</InlineTag>
                           ))}
                         </div>
-                        <span className="text-sm text-gray-700 leading-relaxed">
+                        <span className="text-body text-gray-700 leading-relaxed">
                           <span className="font-semibold">{conflict.category}</span>: {reason}
                         </span>
                       </li>
@@ -207,7 +207,7 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
               <h2 className="text-[21px] font-semibold text-gray-900 leading-tight mb-2">
                 Are you sure?
               </h2>
-              <p className="text-[16px] text-gray-600">
+              <p className="text-[15px] text-gray-600">
                 You are about to assign <strong>David Bukowski</strong> to <strong>Arthur Barrington</strong> despite the conflicts listed below. This action will be recorded.
               </p>
             </div>
@@ -217,7 +217,7 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
               <div className="bg-red-50 border border-red-200 rounded-[8px] px-4 py-4">
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <span className="text-[16px] font-bold text-red-900">Overriding the following conflicts</span>
+                  <span className="text-[15px] font-bold text-red-900">Overriding the following conflicts</span>
                 </div>
                 <ul className="space-y-4">
                   {CONFLICTS.map((conflict, i) => {
@@ -231,7 +231,7 @@ function AssignmentWarningModal({ onClose }: { onClose: () => void }) {
                             <InlineTag key={j}>{tag}</InlineTag>
                           ))}
                         </div>
-                        <span className="text-sm text-gray-700 leading-relaxed">
+                        <span className="text-body text-gray-700 leading-relaxed">
                           <span className="font-semibold">{conflict.category}</span>: {reason}
                         </span>
                       </li>

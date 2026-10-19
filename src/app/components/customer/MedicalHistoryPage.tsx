@@ -179,7 +179,7 @@ function DiagnosisCard({
           <div className="flex items-center justify-end gap-3 mb-2">
             {!!d.sourceLines?.length && (
               <TranscriptCheckPopover fieldLabel={d.name} transcript={recording?.transcript ?? []} references={d.sourceLines} audioUrl={recording?.audioUrl}>
-                <button type="button" className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+                <button type="button" className="inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
                   <Search className="w-3.5 h-3.5" /> Check transcript
                 </button>
               </TranscriptCheckPopover>
@@ -198,18 +198,18 @@ function DiagnosisCard({
                 gets signed off as a whole. Confirming this one commits it
                 to the customer's medical history immediately; it isn't
                 held back by whatever's still pending on the others. */}
-            <button type="button" onClick={onPublish} className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer">
+            <button type="button" onClick={onPublish} className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer">
               <Check className="w-3.5 h-3.5" /> Publish
             </button>
           </div>
         )}
-        <p className={`text-sm text-gray-700 leading-relaxed whitespace-pre-line ${pending ? 'border-2 border-amber-300 bg-amber-50/40 rounded-lg p-3' : ''}`}>
+        <p className={`text-body text-gray-700 leading-relaxed whitespace-pre-line ${pending ? 'border-2 border-amber-300 bg-amber-50/40 rounded-lg p-3' : ''}`}>
           {d.notes}
         </p>
         {d.reviewed === true && (
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[rgb(232,247,232)] border border-[rgb(178,224,178)] px-2.5 py-1">
             <Check className="w-3 h-3 text-[rgb(33,166,33)] flex-shrink-0" />
-            <span className="text-sm text-[rgb(16,100,16)]">Published</span>
+            <span className="text-body text-[rgb(16,100,16)]">Published</span>
           </div>
         )}
       </div>
@@ -307,7 +307,7 @@ export function MedicalHistoryPage() {
                   and pushes those specifics into the link below instead,
                   which names each one. */}
               {linkedRecordings.length === 1 && (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from <strong>{linkedRecordings[0].label}</strong>, recorded{' '}
                   <strong>
                     {linkedRecordings[0].recordingMeta.split(' · ')[0]} at{' '}
@@ -318,7 +318,7 @@ export function MedicalHistoryPage() {
                 </p>
               )}
               {linkedRecordings.length > 1 && (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from <strong>{linkedRecordings.length} recordings</strong> — not every entry is a
                   direct quote, so please review before accepting.
                 </p>

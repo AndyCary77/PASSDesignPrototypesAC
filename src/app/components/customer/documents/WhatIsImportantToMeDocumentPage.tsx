@@ -287,7 +287,7 @@ function RelinkDropdown() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+          className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
         >
           Replace recording
           <ChevronDown className="w-3.5 h-3.5" />
@@ -367,14 +367,14 @@ export function WiitmDocumentContent() {
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
               <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
-              <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
+              <p className="text-body text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               {linkedRecording && (
                 <button
                   type="button"
                   onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
                 >
                   View recording
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -399,14 +399,14 @@ export function WiitmDocumentContent() {
               away cancels it. */}
           <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 mb-2">
             <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-            <p className="text-sm text-blue-800">
+            <p className="text-body text-blue-800">
               You can leave this page while the upload is being processed — you won't lose anything.
             </p>
           </div>
           <div className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 shadow">
           <div className="flex items-center gap-2.5 mb-4">
             <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
-            <p className="text-sm font-semibold text-purple-900">Generating this draft from the recording…</p>
+            <p className="text-body font-semibold text-purple-900">Generating this draft from the recording…</p>
           </div>
           <div className="flex items-start px-1">
             {PROCESSING_STEPS.map((step, i) => {
@@ -469,7 +469,7 @@ export function WiitmDocumentContent() {
               </p>
 
               {linkedRecording ? (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from <strong>{linkedRecording.label}</strong>, recorded{' '}
                   <strong>
                     {linkedRecording.recordingMeta.split(' · ')[0]} at{' '}
@@ -478,7 +478,7 @@ export function WiitmDocumentContent() {
                   by <strong>{linkedRecording.recordedBy}</strong> — please review before accepting.
                 </p>
               ) : (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from the uploaded recording <strong>{linkedSource.fileName}</strong> — please review
                   before accepting.
                 </p>
@@ -492,7 +492,7 @@ export function WiitmDocumentContent() {
                 <button
                   type="button"
                   onClick={() => navigate(`/customers/${customer.id}/documents/recording/${linkedRecording.id}`)}
-                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
                 >
                   View recording
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -524,14 +524,14 @@ export function WiitmDocumentContent() {
         <div className="flex items-center justify-between gap-3 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2.5 shadow">
           <div className="flex items-center gap-2.5 min-w-0">
             <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
-            <p className="text-sm font-medium text-purple-900 truncate">Assessment Hero - AI-powered document drafts from audio recordings</p>
+            <p className="text-body font-medium text-purple-900 truncate">Assessment Hero - AI-powered document drafts from audio recordings</p>
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
+                className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
               >
                 Add a recording
                 <ChevronDown className="w-3.5 h-3.5" />

@@ -24,7 +24,7 @@ export function Banner({ variant, children, onDismiss }: BannerProps) {
   return (
     <div className={`flex items-start gap-2.5 rounded-lg border ${v.box} px-4 py-3`}>
       <Icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${v.icon}`} />
-      <div className={`text-sm flex-1 space-y-2 ${v.title}`}>{children}</div>
+      <div className={`text-body flex-1 space-y-2 ${v.title}`}>{children}</div>
       {onDismiss && (
         <button onClick={onDismiss} className={`flex-shrink-0 ${v.icon} hover:opacity-70`} aria-label="Dismiss">
           <X className="w-4 h-4" />

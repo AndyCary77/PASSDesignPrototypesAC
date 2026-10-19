@@ -36,15 +36,15 @@ const VARIANT: Record<ButtonVariant, string> = {
 };
 
 const SIZE_LABEL: Record<ButtonSize, string> = {
-  sm: 'h-8 px-4 text-sm',
-  md: 'h-9 px-5 text-sm',
-  lg: 'h-10 px-6 text-sm',
+  sm: 'h-8 px-4 text-body',
+  md: 'h-9 px-5 text-body',
+  lg: 'h-10 px-6 text-body',
 };
 
 const SIZE_ICON: Record<ButtonSize, string> = {
-  sm: 'h-8 w-8 p-0 text-sm',
-  md: 'h-9 w-9 p-0 text-sm',
-  lg: 'h-10 w-10 p-0 text-sm',
+  sm: 'h-8 w-8 p-0 text-body',
+  md: 'h-9 w-9 p-0 text-body',
+  lg: 'h-10 w-10 p-0 text-body',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

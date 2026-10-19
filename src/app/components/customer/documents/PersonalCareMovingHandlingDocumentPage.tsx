@@ -198,7 +198,7 @@ export function PersonalCareDocumentContent() {
               </p>
 
               {linkedRecordings.length === 1 && (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from <strong>{linkedRecordings[0].label}</strong>, recorded{' '}
                   <strong>
                     {linkedRecordings[0].recordingMeta.split(' · ')[0]} at{' '}
@@ -208,7 +208,7 @@ export function PersonalCareDocumentContent() {
                 </p>
               )}
               {linkedRecordings.length > 1 && (
-                <p className="text-sm text-purple-800 mt-0.5">
+                <p className="text-body text-purple-800 mt-0.5">
                   Generated from <strong>{linkedRecordings.length} recordings</strong> — not every entry is a direct
                   quote, so please review before accepting.
                 </p>

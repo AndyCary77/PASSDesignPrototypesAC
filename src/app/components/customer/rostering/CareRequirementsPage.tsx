@@ -96,7 +96,7 @@ function CareRequirementSection({
   return (
     <div className="p-6" data-testid={`${testId}-section`}>
       <h6 className="text-base font-semibold text-gray-900 mb-1">{title}</h6>
-      <p className="text-sm text-gray-500 mb-4">{getDescriptionText()}</p>
+      <p className="text-body text-gray-500 mb-4">{getDescriptionText()}</p>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 flex flex-wrap gap-2">
           {items.length > 0 ? (

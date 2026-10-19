@@ -164,7 +164,7 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
       >
         {/* Date / time */}
         <div className="flex flex-col justify-center gap-0.5 px-4 py-3 w-[170px] min-w-0 border-r border-gray-200">
-          <div className="flex items-center gap-1.5 text-gray-800 font-semibold text-sm">
+          <div className="flex items-center gap-1.5 text-gray-800 font-semibold text-body">
             <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             {visit.date}
           </div>
@@ -179,7 +179,7 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
 
         {/* Worker */}
         <div className="flex flex-col justify-center gap-0.5 px-4 py-3 w-[220px] min-w-0 border-r border-gray-200">
-          <div className="flex items-center gap-1.5 text-gray-800 text-sm font-medium">
+          <div className="flex items-center gap-1.5 text-gray-800 text-body font-medium">
             <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             {visit.worker}
           </div>
@@ -199,7 +199,7 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
         <div className="flex items-center gap-3 px-4 py-3 flex-1 min-w-0">
           <div className="flex items-center gap-1.5 shrink-0">
             <CalendarCheck className="w-3.5 h-3.5 shrink-0" style={{ color: status.text }} />
-            <span className="text-sm font-medium text-gray-800">{visit.visitType}</span>
+            <span className="text-body font-medium text-gray-800">{visit.visitType}</span>
           </div>
           {!open && (
             <span className="text-xs text-gray-400 truncate">{visit.notes}</span>
@@ -229,7 +229,7 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
           {/* Notes — text starts aligned with the carer icon above */}
           <div className="flex flex-col gap-1 flex-1 min-w-0 px-4">
             <span className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1">Notes</span>
-            <p className="text-sm text-gray-700 leading-relaxed">{visit.notes}</p>
+            <p className="text-body text-gray-700 leading-relaxed">{visit.notes}</p>
           </div>
 
           {/* Tasks */}
@@ -244,7 +244,7 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
                   : 'bg-[rgb(33,166,33)] text-white';
                 const TaskIcon = taskStatus === 'refused' ? Plus : taskStatus === 'cancelled' ? X : Check;
                 return (
-                  <div key={i} className="flex gap-3 text-sm">
+                  <div key={i} className="flex gap-3 text-body">
                     <span className="text-gray-500 shrink-0 w-12 pt-1">{task.time}</span>
                     <div className="flex flex-col gap-1.5 min-w-0">
                       <span
@@ -258,13 +258,13 @@ function VisitRow({ visit, defaultOpen }: { visit: Visit; defaultOpen?: boolean 
                           {task.reason && (
                             <div>
                               <div className="text-xs text-gray-400">Reason</div>
-                              <div className="text-sm font-semibold text-gray-700">{task.reason}</div>
+                              <div className="text-body font-semibold text-gray-700">{task.reason}</div>
                             </div>
                           )}
                           {task.note && (
                             <div>
                               <div className="text-xs text-gray-400">Notes</div>
-                              <div className="text-sm font-semibold text-gray-700">{task.note}</div>
+                              <div className="text-body font-semibold text-gray-700">{task.note}</div>
                             </div>
                           )}
                         </div>
@@ -328,7 +328,7 @@ export function CareNotes() {
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="text-sm border border-gray-300 rounded px-2 py-1 text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#5c1c85]"
+            className="text-body border border-gray-300 rounded px-2 py-1 text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#5c1c85]"
           >
             <option value="">All</option>
             <option value="ACTIVITY">Activity</option>
@@ -369,7 +369,7 @@ export function CareNotes() {
           <div key={date} className="flex flex-col gap-2">
             {/* Date group header */}
             <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-gray-700">{date}</span>
+              <span className="text-body font-semibold text-gray-700">{date}</span>
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-xs text-gray-400">{visits.length} {visits.length === 1 ? 'visit' : 'visits'}</span>
             </div>

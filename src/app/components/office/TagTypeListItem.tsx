@@ -27,7 +27,7 @@ export function TagTypeListItem({ tagType, footer, to }: TagTypeListItemProps) {
             <span title="Limit one tag per person"><UserRound className="w-3.5 h-3.5 text-gray-400" /></span>
           )}
         </div>
-        <p className="text-sm text-gray-500 mb-3">
+        <p className="text-body text-gray-500 mb-3">
           {appliesToLabel} — {tagType.description}
         </p>
         <div className="flex flex-wrap gap-2">

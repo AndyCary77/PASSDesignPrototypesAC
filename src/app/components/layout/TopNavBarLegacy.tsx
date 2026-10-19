@@ -18,7 +18,7 @@ export function Header() {
   return (
     <header className={`flex flex-col w-full text-white transition-transform duration-300 ${scrolled ? '-translate-y-full' : 'translate-y-0'}`}>
       {/* Top System Bar */}
-      <div className="bg-[#6d1b98] h-12 flex items-center justify-between px-4 text-sm font-semibold">
+      <div className="bg-[#6d1b98] h-12 flex items-center justify-between px-4 text-body font-semibold">
         <div className="flex items-center gap-2 shrink-0">
           <Link to="/">
             <img src={logo} alt="PASS Logo" className="h-8 w-auto shrink-0" />

@@ -22,7 +22,7 @@ export function SubnavTabs({ tabs, activeTab, onChange, className = 'flex gap-6'
           <button
             key={id}
             onClick={() => onChange(id)}
-            className={`relative inline-flex items-center gap-1.5 pb-2 px-1 text-sm transition-colors cursor-pointer whitespace-nowrap ${
+            className={`relative inline-flex items-center gap-1.5 pb-2 px-1 text-body transition-colors cursor-pointer whitespace-nowrap ${
               isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 font-medium hover:text-gray-700'
             }`}
           >

@@ -20,8 +20,8 @@ import {
 } from '../../ui/dialog';
 import type { TaskCategory } from './types';
 
-export const inputClass = 'w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]';
-export const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
+export const inputClass = 'w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-body text-gray-900 focus:outline-none focus:border-[rgb(154,38,214)] focus:ring-1 focus:ring-[rgb(154,38,214)]';
+export const labelClass = 'block text-body font-medium text-gray-700 mb-1.5';
 
 export const CATEGORY_CONFIG: Record<TaskCategory, {
   bg: string; text: string; border: string; headerBg: string; circleBg: string; Icon: React.ComponentType<{ className?: string }>;
@@ -48,7 +48,7 @@ export const CATEGORY_CONFIG: Record<TaskCategory, {
 export function EmptyTab({ label }: { label: string }) {
   return (
     <div className="bg-white rounded-lg border border-dashed border-gray-300 py-16 text-center">
-      <p className="text-sm text-gray-500">No {label} yet</p>
+      <p className="text-body text-gray-500">No {label} yet</p>
       <p className="text-xs text-gray-400 mt-1">Nothing has been added for this customer.</p>
     </div>
   );
@@ -152,7 +152,7 @@ function CareplanVersionHistoryModal({ open, onOpenChange }: { open: boolean; on
         </DialogHeader>
 
         <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-2.5 text-left font-medium text-gray-700 border-b border-gray-200">Date Modified</th>
@@ -219,7 +219,7 @@ export function AcceptButton({ onAccept }: { onAccept: () => void }) {
     <button
       type="button"
       onClick={e => { e.stopPropagation(); onAccept(); }}
-      className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
     >
       <Check className="w-3.5 h-3.5" /> Accept
     </button>
@@ -476,14 +476,14 @@ export function CarePlanDraftBanner({
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
               <div className="flex items-center gap-2 min-w-0">
                 <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
-                <p className="text-sm text-purple-900">Drafted by Assessment Hero — add a document to update.</p>
+                <p className="text-body text-purple-900">Drafted by Assessment Hero — add a document to update.</p>
               </div>
               <div className="flex items-center gap-4 flex-shrink-0">
                 <button
                   type="button"
                   title={sources!.join(', ')}
                   onClick={() => navigate(`/customers/${customer.id}/documents?tab=assessments`)}
-                  className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer"
                 >
                   {`View document${sources!.length > 1 ? `s (${sources!.length})` : ''}`}
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -534,7 +534,7 @@ export function CarePlanDraftBanner({
               </span>
             )}
           </p>
-          <p className="text-sm text-purple-800 mt-0.5">
+          <p className="text-body text-purple-800 mt-0.5">
             Drafted from <DraftSourcesNote sources={sources!} kind={draftedFromDocuments ? 'document' : 'recording'} /> —{' '}
             {total > 0
               ? 'nothing here is part of the live care plan until you accept it.'
@@ -549,7 +549,7 @@ export function CarePlanDraftBanner({
           Publish, until nothing's left to review). */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-purple-50 border-t border-purple-200 px-4 py-3">
         <div className="flex items-center gap-4">
-          <p className="text-sm text-purple-800">
+          <p className="text-body text-purple-800">
             {pendingOutcomes} outcome{pendingOutcomes === 1 ? '' : 's'} · {pendingTasks} task{pendingTasks === 1 ? '' : 's'}
             {activeTab === 'visits'
               ? ' — visits come from the service agreement in Rostering, so none are drafted here.'
@@ -563,7 +563,7 @@ export function CarePlanDraftBanner({
             <button
               type="button"
               onClick={() => navigate(`/customers/${customer.id}/documents?tab=assessments`)}
-              className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
+              className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
             >
               {`View document${sources!.length > 1 ? 's' : ''}`}
               <ChevronRight className="w-3.5 h-3.5" />
@@ -643,14 +643,14 @@ export function CarePlanDraftFlow() {
       <>
         <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 mb-2">
           <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-          <p className="text-sm text-blue-800">
+          <p className="text-body text-blue-800">
             You can leave this page while the draft runs — the process will continue in the background.
           </p>
         </div>
         <div className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 shadow-sm">
           <div className="flex items-center gap-2.5 mb-4">
             <Sparkles className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0" />
-            <p className="text-sm font-semibold text-purple-900">
+            <p className="text-body font-semibold text-purple-900">
               Drafting the care plan from <DraftSourcesNote sources={availableDraft.sources} kind={sourceKind} />…
             </p>
           </div>
@@ -670,7 +670,7 @@ export function CarePlanDraftFlow() {
                       {state === 'done' ? <Check className="w-3 h-3" /> : state === 'active' ? <Loader2 className="w-3 h-3 animate-spin" /> : i + 1}
                     </span>
                   </span>
-                  <span className={`text-sm text-center ${state === 'pending' ? 'text-purple-400' : 'text-purple-900 font-medium'}`}>
+                  <span className={`text-body text-center ${state === 'pending' ? 'text-purple-400' : 'text-purple-900 font-medium'}`}>
                     {step.label}
                   </span>
                 </div>
@@ -700,7 +700,7 @@ export function CarePlanDraftFlow() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-base font-semibold text-[rgb(12,77,12)]">Care plan drafted</p>
-          <p className="text-sm text-[rgb(16,100,16)] mt-0.5">
+          <p className="text-body text-[rgb(16,100,16)] mt-0.5">
             {availableDraft.outcomes} outcomes and {availableDraft.tasks} tasks drafted from{' '}
             <DraftSourcesNote sources={availableDraft.sources} kind={sourceKind} />, each linked to the visits they belong to. Review
             and accept them one by one — nothing is part of the live plan until you do.
@@ -727,7 +727,7 @@ export function CarePlanDraftFlow() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-base font-semibold text-purple-900">Draft this care plan with Assessment Hero</p>
-            <p className="text-sm text-purple-800 mt-0.5">
+            <p className="text-body text-purple-800 mt-0.5">
               Select completed assessments and documents to draft outcomes and tasks for this care plan. You can review and edit the drafts before accepting them.
             </p>
           </div>
@@ -824,7 +824,7 @@ function CarePlanDraftSourcePicker({
 
         <div className="space-y-2 max-h-72 overflow-y-auto">
           {activeList.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center">
+            <p className="text-body text-gray-500 py-4 text-center">
               No completed {tab} yet — nothing here is finished enough to draft from.
             </p>
           ) : (
@@ -834,7 +834,7 @@ function CarePlanDraftSourcePicker({
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer"
               >
                 <Checkbox checked={selectedIds.has(doc.id)} onCheckedChange={() => toggle(doc.id)} />
-                <span className="text-sm text-gray-900">{doc.title}</span>
+                <span className="text-body text-gray-900">{doc.title}</span>
               </label>
             ))
           )}
@@ -874,7 +874,7 @@ function ChangeDocumentsButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1 text-sm font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
+        className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer flex-shrink-0"
       >
         <RefreshCw className="w-3.5 h-3.5" />
         Update documents
@@ -902,7 +902,7 @@ export function TaskBadge({ title, category }: { title: string; category: TaskCa
   const c = CATEGORY_CONFIG[category];
   const { Icon } = c;
   return (
-    <span className={`inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-sm font-medium border ${c.bg} ${c.text} ${c.border}`}>
+    <span className={`inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-body font-medium border ${c.bg} ${c.text} ${c.border}`}>
       <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
       {title}
     </span>
@@ -920,7 +920,7 @@ export function VisitBadge({ title }: { title: string }) {
 
 export function OutcomeBadge({ title }: { title: string }) {
   return (
-    <span className="inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-sm font-medium border text-amber-800" style={{ backgroundColor: '#feefdc', borderColor: '#fcd9a8' }}>
+    <span className="inline-flex items-start gap-1.5 px-3 py-1 rounded-md text-body font-medium border text-amber-800" style={{ backgroundColor: '#feefdc', borderColor: '#fcd9a8' }}>
       <StarSolidIcon className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600" />
       {title}
     </span>
