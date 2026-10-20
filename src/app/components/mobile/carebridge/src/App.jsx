@@ -81,6 +81,18 @@ const ClockFilledIcon = () => (
     <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/>
   </svg>
 )
+const WarningIcon = ({ size = 22 }) => (
+  // Rounded corners come from a round-joined stroke on the triangle; the
+  // exclamation mark is drawn on top in the banner's own background colour
+  // (#fdf1f0, see .cb-storage-banner) rather than cut out, since a stroke
+  // would otherwise thin the cut-out until the bar disappeared.
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 5.5 5 18.5h14L12 5.5Z" fill="currentColor" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+    <rect x="11" y="9.5" width="2" height="5" rx="1" fill="#fdf1f0" />
+    <circle cx="12" cy="17" r="1.2" fill="#fdf1f0" />
+  </svg>
+)
+
 const ClockIcon = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="9" />
@@ -416,6 +428,31 @@ function RecordingLimitBanner({ remaining, maxSeconds }) {
   )
 }
 
+// Minimum free device storage needed to start a recording (AIOP-24761 iOS
+// twin AIOP-24760; agreed with the team at 50 MB — a 17-minute recording is
+// roughly 28 MB in testing). It's checked when the Consent screen
+// opens, not only when Start is tapped: by then the care manager has just
+// asked the customer for verbal consent, so finding out afterwards that
+// nothing can be saved is the worst moment to learn it. The real app would
+// also re-check on Start (space can change in between) and log a blocked
+// attempt to Bugfender; here `?lowStorage=1` / the demo toggle stand in for
+// the device reading, and the log is a console line.
+const MIN_FREE_STORAGE_MB = 50
+
+function LowStorageBanner() {
+  return (
+    <div className="cb-storage-banner" role="alert">
+      <span className="cb-storage-banner-icon"><WarningIcon /></span>
+      <div className="cb-storage-banner-body">
+        <div className="cb-storage-banner-title">Not enough free space</div>
+        <div className="cb-storage-banner-text">
+          Assessment Hero needs at least {MIN_FREE_STORAGE_MB} MB free to record. Free up some space on your device, then come back to start.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Temporarily off — the per-section completion checklist on the "Before
 // You Finish" review screen (X of Y sections complete, the field-count
 // badges, the grouped section list) is a later-phase feature, not
@@ -523,7 +560,7 @@ function TemplateScreen({ customer, onBack, onPick }) {
 
 // ─── Screen 3: consent ───────────────────────────────────────
 
-function ConsentScreen({ customer, template, docsLabel, consent, setConsent, limits, onBack, onStart }) {
+function ConsentScreen({ customer, template, docsLabel, consent, setConsent, limits, lowStorage, onBack, onStart }) {
   const first = customer?.name.split(' ')[0] || 'the customer'
   const [platform] = usePlatform()
   const [micTest, setMicTest] = useState('idle') // idle | testing | ok
@@ -564,6 +601,7 @@ function ConsentScreen({ customer, template, docsLabel, consent, setConsent, lim
       <StatusBar />
       <AppHeader title="Consent to Record" onBack={onBack} />
       <div className="cb-body cb-body-flush">
+        {lowStorage && <LowStorageBanner />}
         <div className="cb-consent-intro">
           With consent, <strong>Assessment Hero</strong> records the conversation, then
           drafts the {docsLabel} once it's uploaded — so you can focus on {first}, not
@@ -663,7 +701,7 @@ function ConsentScreen({ customer, template, docsLabel, consent, setConsent, lim
       </div>
 
       <div className="cb-footer">
-        <button className="round-btn primary-btn cb-full-btn" disabled={!consent} onClick={onStart}>
+        <button className="round-btn primary-btn cb-full-btn" disabled={!consent || lowStorage} onClick={onStart}>
           <CareBridgeIcon size={20} /> Start recording
         </button>
       </div>
@@ -1008,6 +1046,15 @@ export default function App() {
   const [seconds, setSeconds] = useState(0)
   const [locked, setLocked] = useState(false)
   const [limits] = useState(loadRecordingLimits)
+  // Demo stand-in for the device reporting under MIN_FREE_STORAGE_MB free.
+  const [lowStorage, setLowStorage] = useState(() =>
+    new URLSearchParams(window.location.search).get('lowStorage') === '1'
+  )
+  useEffect(() => {
+    if (lowStorage && step === 'consent') {
+      console.warn(`[Assessment Hero] Recording blocked: under ${MIN_FREE_STORAGE_MB} MB free storage`)
+    }
+  }, [lowStorage, step])
   // Set when the recording was stopped by the time limit rather than by the
   // user — changes the Before You Finish screen (notice, no Resume).
   const [limitReached, setLimitReached] = useState(false)
@@ -1143,6 +1190,13 @@ export default function App() {
       {/* Demo-only, outside the phone and deliberately faint (full strength
           on hover/focus): jumps the clock so the time-limit warning and the
           automatic stop can be shown without waiting an hour. */}
+      {(step === 'customer' || step === 'template' || step === 'consent') && (
+        <div className="cb-demo-controls">
+          <button type="button" aria-pressed={lowStorage} onClick={() => setLowStorage(v => !v)}>
+            Demo: low storage {lowStorage ? 'on' : 'off'}
+          </button>
+        </div>
+      )}
       {step === 'record' && (
         <div className="cb-demo-controls">
           <button type="button" onClick={() => setSeconds(s => Math.max(s, limits.maxSeconds - limits.warnSecondsBefore))}>Demo: warning (5 min left)</button>
@@ -1161,7 +1215,7 @@ export default function App() {
             <div className="cb-track-item" style={{ width: `${100 / STEPS.length}%` }}>
               <ConsentScreen
                 customer={customer} template={template} docsLabel={docsLabel}
-                consent={consent} setConsent={setConsent} limits={limits}
+                consent={consent} setConsent={setConsent} limits={limits} lowStorage={lowStorage}
                 // A deep-linked visit never went through Customer/Template
                 // (those steps only exist to make the choices the picker
                 // upstream already made) — so backing out of Consent should

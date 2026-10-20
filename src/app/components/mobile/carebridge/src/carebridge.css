@@ -1060,6 +1060,35 @@
   color: var(--greyscale-2-grey-20);
 }
 .cb-limit-banner--review { width: auto; max-width: none; margin: 16px 16px 0; }
+/* Low-storage block on Consent — red (this stops the action, unlike the
+   amber heads-up above), with the warning icon and wording carrying the state
+   too. Full-bleed margins to sit in the flush consent body. */
+.cb-storage-banner {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 16px 0;
+  padding: 12px 14px;
+  background: #fdf1f0;
+  border: 1px solid var(--rag-red-red-overdue);
+  border-radius: 12px;
+}
+.cb-storage-banner-icon { color: var(--rag-red-red-overdue); flex-shrink: 0; display: flex; margin-top: 1px; }
+.cb-storage-banner-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cb-storage-banner-title {
+  font-family: Barlow, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+}
+.cb-storage-banner-text {
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--greyscale-2-grey-20);
+}
 .cb-sr-only {
   position: absolute;
   width: 1px;
