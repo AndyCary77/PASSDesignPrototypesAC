@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { CARE_TYPES } from '../components/employee/availabilityData';
+import { CARE_TYPES, DEFAULT_AVAILABILITY_TYPES, type AvailabilityType } from '../components/employee/availabilityData';
 
 /**
  * Office-level Roster settings that other screens need to read. Lives above
@@ -44,7 +44,7 @@ const DEFAULT_ADVANCED: AdvancedSettings = {
   publishClashes: false,
   autoVerifyTimesheets: false,
   editSentInvoices: false,
-  // Off by default: not every customer works rotations by care type.
+  // Off by default: not every customer works rotations of different types of work.
   availabilityByCareType: false,
 };
 
@@ -52,14 +52,16 @@ interface Stored {
   advanced: AdvancedSettings;
   table: TableSettings;
   typeOverrides: TypeOverrides;
-  /** Has "Availability by care type" ever been switched on? Drives the first-time notice. */
+  /** Has "Availability types" ever been switched on? Drives the first-time notice. */
   careTypeEverEnabled: boolean;
+  /** How the office groups its visit types into availability types. */
+  availabilityTypes: AvailabilityType[];
 }
 
 const STORAGE_KEY = 'pass-roster-settings';
 
 function read(): Stored {
-  const fallback = { advanced: DEFAULT_ADVANCED, table: DEFAULT_TABLE, typeOverrides: {}, careTypeEverEnabled: false };
+  const fallback = { advanced: DEFAULT_ADVANCED, table: DEFAULT_TABLE, typeOverrides: {}, careTypeEverEnabled: false, availabilityTypes: DEFAULT_AVAILABILITY_TYPES };
   if (typeof window === 'undefined') return fallback;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -70,6 +72,9 @@ function read(): Stored {
       table: { ...DEFAULT_TABLE, ...parsed.table },
       typeOverrides: parsed.typeOverrides ?? {},
       careTypeEverEnabled: !!parsed.careTypeEverEnabled,
+      availabilityTypes: Array.isArray(parsed.availabilityTypes) && parsed.availabilityTypes.length
+        ? parsed.availabilityTypes.map((t: AvailabilityType) => ({ ...t, enabled: t.enabled ?? true }))
+        : DEFAULT_AVAILABILITY_TYPES,
     };
   } catch {
     return fallback;
@@ -80,11 +85,13 @@ interface RosterSettingsContextValue {
   advanced: AdvancedSettings;
   table: TableSettings;
   typeOverrides: TypeOverrides;
+  availabilityTypes: AvailabilityType[];
   saveTypeOverrides: (next: TypeOverrides) => void;
+  saveAvailabilityTypes: (next: AvailabilityType[]) => void;
   /**
    * Saves the advanced settings. Returns true when this save turned
-   * "Availability by care type" on for the very first time, so the caller can
-   * show the "existing availability is treated as Personal care" notice.
+   * "Availability types" on for the very first time, so the caller can
+   * show the "existing availability is treated as the default type" notice.
    */
   saveAdvanced: (next: AdvancedSettings, table: TableSettings) => boolean;
 }
@@ -110,13 +117,16 @@ export function RosterSettingsProvider({ children }: { children: ReactNode }) {
   };
 
   const saveTypeOverrides = (next: TypeOverrides) => setState(prev => ({ ...prev, typeOverrides: next }));
+  const saveAvailabilityTypes = (next: AvailabilityType[]) => setState(prev => ({ ...prev, availabilityTypes: next }));
 
   return (
     <RosterSettingsContext.Provider value={{
         advanced: state.advanced,
         table: state.table,
         typeOverrides: state.typeOverrides,
+        availabilityTypes: state.availabilityTypes,
         saveTypeOverrides,
+        saveAvailabilityTypes,
         saveAdvanced,
       }}>
       {children}
@@ -130,7 +140,7 @@ export function useRosterSettings(): RosterSettingsContextValue {
   return ctx;
 }
 
-/** Is care type shown on (and used by) availability for this office? */
+/** Are availability types shown on (and used by) availability for this office? */
 export function useAvailabilityByCareType(): boolean {
   return useRosterSettings().advanced.availabilityByCareType;
 }

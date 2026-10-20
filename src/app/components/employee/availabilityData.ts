@@ -18,6 +18,71 @@ export const DEFAULT_CARE_TYPE: CareTypeId = 'personal-care';
 export const getCareType = (id: CareTypeId) =>
   CARE_TYPES.find((c) => c.id === id) ?? CARE_TYPES[0];
 
+/**
+ * Availability types: the office groups its visit (care) types into a few
+ * groups of work, set once in Roster settings. A visit type can sit in more
+ * than one group. Exactly one group is the default, which any availability
+ * that hasn't been given a type is treated as. Groups can be disabled, never
+ * deleted.
+ */
+export type AvailabilityType = {
+  id: string;
+  name: string;
+  colour: string;
+  visitTypeIds: CareTypeId[];
+  isDefault: boolean;
+  enabled: boolean;
+};
+
+export const DEFAULT_AVAILABILITY_TYPES: AvailabilityType[] = [
+  {
+    id: 'day-care',
+    name: 'Day care',
+    colour: '#2F5BB7',
+    visitTypeIds: ['personal-care', 'companionship', 'complex-care', 'shadowing'],
+    isDefault: true,
+    enabled: true,
+  },
+  {
+    id: 'nights',
+    name: 'Nights',
+    colour: '#1E3A5F',
+    visitTypeIds: ['sleeping-night', 'waking-night'],
+    isDefault: false,
+    enabled: true,
+  },
+  {
+    id: 'live-in',
+    name: 'Live-in',
+    colour: '#8B3FA8',
+    visitTypeIds: ['live-in'],
+    isDefault: false,
+    enabled: true,
+  },
+];
+
+/** Colours an availability type can be given. All dark enough for white text/ticks on top. */
+export const AVAILABILITY_TYPE_COLOURS = [
+  { name: 'Blue', value: '#2F5BB7' },
+  { name: 'Navy', value: '#1E3A5F' },
+  { name: 'Purple', value: '#8B3FA8' },
+  { name: 'Teal', value: '#0F766E' },
+  { name: 'Amber', value: '#B45309' },
+  { name: 'Pink', value: '#BE185D' },
+  { name: 'Green', value: '#4D7C0F' },
+  { name: 'Orange', value: '#C2410C' },
+  { name: 'Cyan', value: '#0E7490' },
+  { name: 'Violet', value: '#6D28D9' },
+  { name: 'Red', value: '#B91C1C' },
+  { name: 'Slate', value: '#475569' },
+];
+
+/** Visit types that aren't in any enabled availability type, so Schedule Hero can't suggest carers for them. */
+export function uncoveredVisitTypeIds(types: AvailabilityType[], visitTypeIds: string[]): string[] {
+  const covered = new Set(types.filter((t) => t.enabled).flatMap((t) => t.visitTypeIds as string[]));
+  return visitTypeIds.filter((id) => !covered.has(id));
+}
+
 /** Each slot of availability carries the care type it's worked as. */
 export type TimeRange = { start: string; end: string; careType: CareTypeId };
 /** A day can hold several slots of each kind, e.g. a split shift. */

@@ -350,12 +350,12 @@ export function EmployeeContractScreen() {
               {/* Pointer for offices where the setting is still off, so it can be found from here. */}
               {!availabilityByCareType && (
                 <p className="mt-1">
-                  Do they work blocks of different care types, like homecare weeks then live-in weeks?{' '}
+                  Do they work blocks of different types of work, like day care weeks then live-in weeks?{' '}
                   <Link
-                    to="/office/roster-settings?edit=availability-by-care-type#availability-by-care-type"
+                    to="/office/roster-settings?edit=availability-types#availability-types"
                     className="font-semibold text-[rgb(154,38,214)] underline underline-offset-2 hover:opacity-80"
                   >
-                    Turn on availability by care type in Roster Settings
+                    Turn on availability types in Roster Settings
                   </Link>
                 </p>
               )}

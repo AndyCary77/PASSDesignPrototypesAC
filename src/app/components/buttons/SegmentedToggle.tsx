@@ -15,6 +15,7 @@ export function SegmentedToggle({
   variant = 'pill',
   disabled = false,
   ariaLabel,
+  neutral = false,
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
@@ -32,6 +33,12 @@ export function SegmentedToggle({
   variant?: 'pill' | 'track';
   disabled?: boolean;
   ariaLabel?: string;
+  /**
+   * For choosing between two views/modes (Board | Table) rather than switching
+   * something on or off: the selected segment is a raised white one on the grey
+   * track, whichever side it is, instead of green "on". Use with `variant="track"`.
+   */
+  neutral?: boolean;
 }) {
   const track = variant === 'track';
   const base = track
@@ -39,7 +46,11 @@ export function SegmentedToggle({
     : `px-4 py-1.5 text-body font-medium transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`;
   const unselected = track ? 'text-gray-600 hover:text-gray-900' : 'text-gray-500 hover:bg-gray-50';
   // rgb(28, 135, 28): white text on it clears 4.5:1 contrast.
-  const selectedOn = track ? 'bg-[rgb(28,135,28)] text-white' : `${onColor} text-white`;
+  const selectedOn = track
+    ? neutral
+      ? 'bg-white text-[rgb(154,38,214)] shadow-sm'
+      : 'bg-[rgb(28,135,28)] text-white'
+    : `${onColor} text-white`;
   const selectedOff = track ? 'bg-white text-gray-900 shadow-sm' : `${offColor} text-white`;
   const on = (
     <button

@@ -85,8 +85,10 @@ export function EditSlideout({
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-8 py-8 bg-gray-50">
+        {/* Scrollable body. `relative` so absolutely-positioned content inside it (e.g. sr-only
+            labels) is contained and clipped here, rather than stretching the dialog's own
+            scroll area — which scrollIntoView would then scroll, shifting the whole panel up. */}
+        <div className="relative flex-1 overflow-y-auto px-8 py-8 bg-gray-50">
           {typeof children === 'function' ? children(close) : children}
         </div>
 

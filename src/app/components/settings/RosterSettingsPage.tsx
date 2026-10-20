@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState, type ComponentType, type KeyboardEvent, type ReactNode } from 'react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Info, TriangleAlert } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Button } from '../buttons/Button';
 import { InfoBanner } from '../banners/InfoBanner';
@@ -18,8 +18,14 @@ import {
   type TypeOverrides,
 } from '../../data/RosterSettingsContext';
 import { SegmentedToggle } from '../buttons/SegmentedToggle';
-import { CARE_TYPES } from '../employee/availabilityData';
+import {
+  CARE_TYPES,
+  AVAILABILITY_TYPE_COLOURS,
+  uncoveredVisitTypeIds,
+  type AvailabilityType,
+} from '../employee/availabilityData';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { SectionNav, type SectionNavItem } from '../layout/SectionNav';
 import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
 import { useActiveSection } from '../../hooks/useActiveSection';
@@ -411,8 +417,14 @@ const ADVANCED_TOGGLES: { key: AdvancedSettingKey; title: string; helper: string
   },
 ];
 
-const CARE_TYPE_AVAILABILITY_HELPER =
-  'Set employee availability by care type, for example 3 weeks of homecare then 1 week of live-in. Scheduling and capacity then only count availability for the care type needed.';
+const AVAILABILITY_TYPES_HELPER =
+  'Group your visit types into availability types, for example Day care, Nights and Live-in. Each slot of an employee’s availability is set as one of these types, so Schedule Hero only suggests them for visits that type covers, and the capacity tool reports hours per type.';
+
+const AVAILABILITY_TYPES_RULES = [
+  'Each visit type sits in one availability type, so Schedule Hero always knows which one it needs.',
+  'Availability types can be switched off but not deleted.',
+  'Exactly one availability type is the default. Availability that hasn’t been given a type is treated as the default.',
+];
 
 const ORDERING_LABEL = { 'first-name': 'First name', 'last-name': 'Last name' } as const;
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
@@ -663,6 +675,48 @@ const ColourButton = ({ colour, label }: { colour: string | null; label: string 
   </button>
 );
 
+/** The colour button from the visit types table, but live: opens a palette and reports the pick. */
+function ColourPicker({ colour, label, onChange }: { colour: string; label: string; onChange: (c: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2 py-2 cursor-pointer hover:bg-gray-50"
+        >
+          <Swatch colour={colour} />
+          <ChevronDown className="w-4 h-4 text-gray-600" aria-hidden="true" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-3">
+        <div role="radiogroup" aria-label={label} className="grid grid-cols-4 gap-2">
+          {AVAILABILITY_TYPE_COLOURS.map((c) => {
+            const selected = c.value.toLowerCase() === colour.toLowerCase();
+            return (
+              <button
+                key={c.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={c.name}
+                title={c.name}
+                onClick={() => { onChange(c.value); setOpen(false); }}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border-2 cursor-pointer ${selected ? 'border-gray-900' : 'border-transparent hover:border-gray-400'}`}
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: c.value }}>
+                  {selected && <Check className="h-4 w-4 text-white" aria-hidden="true" />}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const HolidayCheckbox = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <input
     type="checkbox"
@@ -704,6 +758,295 @@ const TableHeader = ({ title, description, count, total, show, onShow, id }: {
 );
 
 
+// ─── Availability types ──────────────────────────────────────────────────────
+
+const Dot = ({ colour }: { colour: string }) => (
+  <span aria-hidden="true" className="inline-block h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: colour }} />
+);
+
+const VisitTypeChip = ({ label, colour }: { label: string; colour: string }) => (
+  <span className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-900">
+    <Dot colour={colour} />
+    {label}
+  </span>
+);
+
+const DefaultPill = () => (
+  <span className="inline-flex rounded-full border border-gray-400 bg-gray-100 px-2.5 py-0.5 text-sm font-semibold text-gray-900">
+    Default
+  </span>
+);
+
+/** Visit types in no enabled availability type — Schedule Hero can't suggest carers for them. */
+function UncoveredWarning({ labels, className = '' }: { labels: string[]; className?: string }) {
+  if (!labels.length) return null;
+  return (
+    <div
+      role="alert"
+      className={`flex items-start gap-3 rounded-md border border-amber-600 bg-amber-50 px-4 py-3 text-body text-gray-900 ${className}`.trim()}
+    >
+      <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+      <p className="text-body text-gray-900">
+        <strong>{labels.join(', ')}</strong> {labels.length === 1 ? 'isn’t' : 'aren’t'} in any availability type.
+        Schedule Hero can’t suggest carers for {labels.length === 1 ? 'this visit type' : 'these visit types'} until
+        {labels.length === 1 ? ' it’s' : ' they’re'} added to one.
+      </p>
+    </div>
+  );
+}
+
+/** An info icon that opens a small popover (click / Enter / touch), for detail that doesn't need to be on screen all the time. */
+function InfoPopover({ label, children, wide = false }: { label: string; children: ReactNode; wide?: boolean }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-700 cursor-pointer hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-[rgb(154,38,214)]"
+        >
+          <Info className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className={`${wide ? 'w-96' : 'w-64'} p-3 text-body font-normal text-gray-900`}>
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Explains the default availability type (it's always on, and untyped availability falls back to it). */
+function DefaultTypeInfo() {
+  return (
+    <InfoPopover label="About the default availability type">
+      This is the default availability type, so it’s always on. Availability with no type set is treated as this one.
+    </InfoPopover>
+  );
+}
+
+type BoardVisitType = { id: string; label: string; colour: string };
+
+/**
+ * The visit-types-into-availability-types board: one row per availability
+ * type, visit types as chips inside them. Moving is never drag-only — a chip is
+ * a button: select it (Enter/Space/click), then ↑ / ↓ or a row's "Move here"
+ * button. Moves are announced in a live region and focus stays on the chip.
+ */
+function AvailabilityTypesBoard({
+  types,
+  visitTypes,
+  nameError,
+  onPatch,
+  onAssign,
+}: {
+  types: AvailabilityType[];
+  visitTypes: BoardVisitType[];
+  nameError: (t: AvailabilityType) => string | null;
+  onPatch: (id: string, patch: Partial<AvailabilityType>) => void;
+  onAssign: (visitId: string, typeId: string | null) => void;
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState('');
+  // Mouse drag and drop: an extra on top of the keyboard / "Move here" ways of moving a chip.
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const chipRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const pendingFocus = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingFocus.current) {
+      chipRefs.current[pendingFocus.current]?.focus();
+      pendingFocus.current = null;
+    }
+  });
+
+  const typeOf = (visitId: string) => types.find((t) => (t.visitTypeIds as string[]).includes(visitId)) ?? null;
+  const unassigned = visitTypes.filter((v) => !typeOf(v.id));
+  // Top to bottom, including the "Not in an availability type" row when it's showing.
+  const columns: { id: string | null; type: AvailabilityType | null }[] = [
+    ...(unassigned.length ? [{ id: null, type: null }] : []),
+    ...types.map((t) => ({ id: t.id, type: t })),
+  ];
+  const selected = visitTypes.find((v) => v.id === selectedId) ?? null;
+
+  const moveTo = (visit: BoardVisitType, targetId: string | null) => {
+    const target = types.find((t) => t.id === targetId);
+    onAssign(visit.id, targetId);
+    pendingFocus.current = visit.id;
+    setSelectedId(null);
+    const position = columns.findIndex((c) => c.id === targetId) + 1;
+    setAnnouncement(`${visit.label} moved to ${target?.name.trim() || 'Not in an availability type'}, row ${position} of ${columns.length}`);
+  };
+
+  const onChipKey = (e: KeyboardEvent, visit: BoardVisitType) => {
+    if (e.key === 'Escape' && selectedId) {
+      setSelectedId(null);
+      setAnnouncement(`${visit.label} deselected`);
+      return;
+    }
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    const current = typeOf(visit.id)?.id ?? null;
+    const at = columns.findIndex((c) => c.id === current);
+    const step = e.key === 'ArrowDown' ? 1 : -1;
+    // Next row that can take it: switched-off types can't be moved into.
+    for (let i = at + step; i >= 0 && i < columns.length; i += step) {
+      const col = columns[i];
+      if (col.type && !col.type.enabled) continue;
+      moveTo(visit, col.id);
+      return;
+    }
+    setAnnouncement(`${visit.label} is already in the ${step > 0 ? 'bottom' : 'top'} row`);
+  };
+
+  const chip = (v: BoardVisitType) => {
+    const isSelected = v.id === selectedId;
+    return (
+      <div
+        key={v.id}
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', v.id);
+          setDraggingId(v.id);
+          setSelectedId(null);
+        }}
+        onDragEnd={() => { setDraggingId(null); setOverId(null); }}
+        className={draggingId === v.id ? 'opacity-40' : ''}
+      >
+      <button
+        ref={(el) => { chipRefs.current[v.id] = el; }}
+        type="button"
+        aria-pressed={isSelected}
+        onClick={() => {
+          setSelectedId(isSelected ? null : v.id);
+          setAnnouncement(isSelected ? `${v.label} deselected` : `${v.label} selected. Press up or down arrow, or choose Move here in a row, to move it.`);
+        }}
+        onKeyDown={(e) => onChipKey(e, v)}
+        className={`flex w-full items-center gap-2.5 rounded-lg border-2 bg-white px-3 py-2 text-left text-body font-medium text-gray-900 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50 ${
+          isSelected ? 'border-[rgb(154,38,214)] shadow-md' : 'border-gray-300 hover:border-gray-500'
+        }`}
+      >
+        <Dot colour={v.colour} />
+        <span className="flex-1">{v.label}</span>
+        <span aria-hidden="true" className="text-gray-500">⇅</span>
+      </button>
+      </div>
+    );
+  };
+
+  const moveHere = (targetId: string | null) =>
+    selected && typeOf(selected.id)?.id !== targetId ? (
+      <button
+        type="button"
+        onClick={() => moveTo(selected, targetId)}
+        className="w-full rounded-lg border-2 border-dashed border-[rgb(154,38,214)] bg-white px-3 py-2 text-body font-semibold text-[rgb(154,38,214)] cursor-pointer hover:bg-[rgba(154,38,214,0.05)]"
+      >
+        Move {selected.label} here
+      </button>
+    ) : null;
+
+  return (
+    <div>
+      <p className="text-body text-gray-700">
+        Drag a visit type into a row. Or select it, then press <kbd className="rounded border border-gray-300 bg-white px-1.5">↑</kbd>{' '}
+        <kbd className="rounded border border-gray-300 bg-white px-1.5">↓</kbd> or choose “Move here” in a row.
+      </p>
+      <div className="sr-only" role="status" aria-live="polite">{announcement}</div>
+      <div className="mt-3 space-y-4">
+        {columns.map((col) => {
+          if (!col.type) {
+            return (
+              <section key="unassigned" aria-label="Not in an availability type" className="flex flex-col overflow-hidden rounded-[10px] border-2 border-dashed border-amber-600 bg-amber-50 md:flex-row">
+                <div className="px-4 py-3 text-body font-semibold text-gray-900 md:w-72 md:shrink-0">Not in an availability type</div>
+                <div className="grid flex-1 gap-2 px-4 py-3 sm:grid-cols-2 xl:grid-cols-3">{unassigned.map(chip)}</div>
+              </section>
+            );
+          }
+          const t = col.type;
+          const err = nameError(t);
+          const id = `availability-type-name-${t.id}`;
+          return (
+            // A full-colour bar down the left edge, and the same colour as a light tint across the row.
+            <section
+              key={t.id}
+              aria-label={t.name.trim() || 'Unnamed availability type'}
+              className="flex flex-col overflow-hidden rounded-[10px] border border-l-8 border-gray-300 md:flex-row"
+              style={{ borderLeftColor: t.colour, backgroundColor: `${t.colour}14` }}
+            >
+              <div className="flex flex-col gap-3 px-4 py-3 md:w-72 md:shrink-0">
+                <div>
+                  <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-gray-900">Availability type</label>
+                  <div className="flex items-center gap-2">
+                    <ColourPicker colour={t.colour} label={`${t.name.trim() || 'Availability type'} colour`} onChange={(c) => onPatch(t.id, { colour: c })} />
+                    <input
+                      id={id}
+                      type="text"
+                      value={t.name}
+                      placeholder="Name"
+                      aria-invalid={!!err}
+                      aria-describedby={err ? `${id}-error` : undefined}
+                      onChange={(e) => onPatch(t.id, { name: e.target.value })}
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-body font-semibold text-gray-900"
+                    />
+                  </div>
+                  {err && <p id={`${id}-error`} className="mt-1.5 text-body font-medium text-red-700">{err}</p>}
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span id={`${id}-enabled`} className="flex items-center gap-1.5 text-body font-semibold text-gray-900">
+                    Enabled
+                    {t.isDefault && <DefaultTypeInfo />}
+                  </span>
+                  <SegmentedToggle
+                    offFirst
+                    value={t.enabled}
+                    onChange={(v) => onPatch(t.id, { enabled: v })}
+                    onLabel="Yes"
+                    offLabel="No"
+                    variant="track"
+                    disabled={t.isDefault}
+                    ariaLabel={`${t.name.trim() || 'Unnamed availability type'} enabled`}
+                  />
+                </div>
+              </div>
+              <div
+                className={`flex-1 px-4 py-3 md:border-l md:border-black/10 ${t.enabled ? '' : 'opacity-70'} ${overId === t.id ? 'outline-dashed outline-2 -outline-offset-4 outline-[rgb(154,38,214)]' : ''}`}
+                style={{ minHeight: '6.5rem' }}
+                // Switched-off types aren't drop targets, matching the keyboard behaviour.
+                onDragOver={(e) => {
+                  if (!draggingId || !t.enabled) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (overId !== t.id) setOverId(t.id);
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOverId(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const visit = visitTypes.find((v) => v.id === (draggingId ?? e.dataTransfer.getData('text/plain')));
+                  setDraggingId(null);
+                  setOverId(null);
+                  if (visit && typeOf(visit.id)?.id !== t.id && t.enabled) moveTo(visit, t.id);
+                }}
+              >
+                {!t.enabled && <p className="mb-2 text-body font-medium text-gray-800">Switched off. Visit types can’t be moved in.</p>}
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {t.enabled && moveHere(t.id)}
+                  {visitTypes.filter((v) => typeOf(v.id)?.id === t.id).map(chip)}
+                </div>
+                {!visitTypes.some((v) => typeOf(v.id)?.id === t.id) && (
+                  <p className="text-body text-gray-700">No visit types yet</p>
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Edit slide-out for "Visit and event types": the two tables in edit mode,
  * with the Availability by care type setting as its own panel between them
@@ -724,8 +1067,10 @@ function VisitEventTypesSlideout({
   /** Called after a save, once the slide-out has started closing. */
   onSaved: () => void;
 }) {
-  const { advanced, table, typeOverrides, saveTypeOverrides, saveAdvanced } = useRosterSettings();
+  const { advanced, table, typeOverrides, availabilityTypes, saveTypeOverrides, saveAvailabilityTypes, saveAdvanced } = useRosterSettings();
   const [draft, setDraft] = useState<TypeOverrides>(typeOverrides);
+  const [typesDraft, setTypesDraft] = useState<AvailabilityType[]>(availabilityTypes);
+  const [typesView, setTypesView] = useState<'board' | 'table'>('board');
   const [careTypeAvailability, setCareTypeAvailability] = useState(advanced.availabilityByCareType);
   const [showDisabledVisit, setShowDisabledVisit] = useState(false);
   const [showDisabledEvent, setShowDisabledEvent] = useState(false);
@@ -746,6 +1091,7 @@ function VisitEventTypesSlideout({
 
   const dirty =
     JSON.stringify(draft) !== JSON.stringify(typeOverrides) ||
+    JSON.stringify(typesDraft) !== JSON.stringify(availabilityTypes) ||
     careTypeAvailability !== advanced.availabilityByCareType;
 
   // Draft-applied rows
@@ -755,6 +1101,42 @@ function VisitEventTypesSlideout({
   });
   const eventRows = applyEventOverrides(draft);
   const shownVisit = visitRows.filter((r) => showDisabledVisit || r.enabled);
+  const enabledVisitRows = visitRows.filter((r) => r.enabled);
+
+  // Availability types draft
+  const patchType = (id: string, patch: Partial<AvailabilityType>) =>
+    setTypesDraft((ts) => ts.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  // A visit type belongs to one availability type: assigning it moves it out of any other.
+  const assignVisitType = (visitId: string, typeId: string | null) =>
+    setTypesDraft((ts) =>
+      ts.map((t) => {
+        const without = (t.visitTypeIds as string[]).filter((id) => id !== visitId);
+        return { ...t, visitTypeIds: (t.id === typeId ? [...without, visitId] : without) as AvailabilityType['visitTypeIds'] };
+      }),
+    );
+  const addType = () =>
+    setTypesDraft((ts) => [
+      ...ts,
+      {
+        id: `custom-${Date.now()}`,
+        name: '',
+        colour: (AVAILABILITY_TYPE_COLOURS.find((c) => !ts.some((t) => t.colour === c.value)) ?? AVAILABILITY_TYPE_COLOURS[0]).value,
+        visitTypeIds: [],
+        isDefault: false,
+        enabled: true,
+      },
+    ]);
+  const nameError = (t: AvailabilityType) => {
+    const name = t.name.trim();
+    if (!name) return 'Enter a name';
+    const clash = typesDraft.some((o) => o.id !== t.id && o.name.trim().toLowerCase() === name.toLowerCase());
+    return clash ? 'Another availability type already has this name' : null;
+  };
+  // Only matters while the feature is on: the grid isn't shown (or saved from) otherwise.
+  const namesInvalid = careTypeAvailability && typesDraft.some((t) => nameError(t));
+  const uncovered = uncoveredVisitTypeIds(typesDraft, enabledVisitRows.map((v) => v.id))
+    .map((id) => enabledVisitRows.find((v) => v.id === id)!.label);
+  const defaultType = typesDraft.find((t) => t.isDefault);
   const shownEvent = eventRows.filter((r) => showDisabledEvent || r.enabled);
 
   // Types that are in use (or the default) can't be switched off — as in the live app.
@@ -766,9 +1148,10 @@ function VisitEventTypesSlideout({
       size="large"
       width="wide"
       onClose={onClose}
-      saveDisabled={!dirty}
+      saveDisabled={!dirty || namesInvalid}
       onSave={(close) => {
         saveTypeOverrides(draft);
+        saveAvailabilityTypes(typesDraft.map((t) => ({ ...t, name: t.name.trim() })));
         saveAdvanced({ ...advanced, availabilityByCareType: careTypeAvailability }, table);
         close();
         onSaved();
@@ -833,8 +1216,8 @@ function VisitEventTypesSlideout({
 
         {isDomiciliary && (
           <div ref={availabilityPanelRef} className="rounded-[10px] border border-gray-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-gray-900">Availability by care type</h3>
-            <InfoBanner className="mt-3">{CARE_TYPE_AVAILABILITY_HELPER}</InfoBanner>
+            <h3 className="text-lg font-semibold text-gray-900">Availability types</h3>
+            <InfoBanner className="mt-3">{AVAILABILITY_TYPES_HELPER}</InfoBanner>
             <label className="mt-4 flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
               <input
                 ref={availabilityCheckboxRef}
@@ -849,17 +1232,137 @@ function VisitEventTypesSlideout({
             <div aria-live="polite">
               {careTypeAvailability && !advanced.availabilityByCareType && (
                 <p className="mt-3 text-body text-gray-800">
-                  Existing availability will be treated as <strong>Personal care</strong> when you save. You can review
-                  it on each employee's contract afterwards.
+                  Existing availability will be treated as <strong>{defaultType?.name ?? 'the default type'}</strong> when
+                  you save. You can review it on each employee's contract afterwards.
                 </p>
               )}
               {!careTypeAvailability && advanced.availabilityByCareType && (
                 <p className="mt-3 text-body text-gray-800">
-                  Care types will be hidden on contracts and ignored by the optimiser. They're kept, and come back if
-                  you turn this on again.
+                  Availability types will be hidden on contracts and ignored by the optimiser. They're kept, and come
+                  back if you turn this on again.
                 </p>
               )}
             </div>
+
+            {/* The set-up only exists while the feature is on. */}
+            {careTypeAvailability && (
+              <>
+                <UncoveredWarning labels={uncovered} className="mt-5" />
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+                  <p className="flex items-center gap-1.5 text-body font-semibold text-gray-900">
+                    Choose the one availability type each visit type belongs to.
+                    <InfoPopover label="Availability type rules" wide>
+                      <ul className="list-disc space-y-1.5 pl-5">
+                        {AVAILABILITY_TYPES_RULES.map((r) => <li key={r}>{r}</li>)}
+                      </ul>
+                    </InfoPopover>
+                  </p>
+                  <SegmentedToggle
+                    neutral
+                    variant="track"
+                    value={typesView === 'board'}
+                    onChange={(isBoard) => setTypesView(isBoard ? 'board' : 'table')}
+                    onLabel="Board"
+                    offLabel="Table"
+                    ariaLabel="View"
+                  />
+                </div>
+                {typesView === 'board' ? (
+                  <div className="mt-3">
+                    <AvailabilityTypesBoard
+                      types={typesDraft}
+                      visitTypes={enabledVisitRows}
+                      nameError={nameError}
+                      onPatch={patchType}
+                      onAssign={assignVisitType}
+                    />
+                  </div>
+                ) : (
+                <DataTable className="mt-3 bg-white">
+                  <thead>
+                    <tr>
+                      <th className={`${TH} min-w-[11rem]`}>Visit type</th>
+                      {typesDraft.map((t) => {
+                        const err = nameError(t);
+                        const id = `availability-type-name-${t.id}`;
+                        return (
+                          <th key={t.id} className={`${TH} min-w-[15rem] align-top ${t.enabled ? '' : 'text-gray-700'}`}>
+                            <div className="flex items-center gap-2">
+                              <ColourPicker
+                                colour={t.colour}
+                                label={`${t.name.trim() || 'Availability type'} colour`}
+                                onChange={(c) => patchType(t.id, { colour: c })}
+                              />
+                              <label htmlFor={id} className="sr-only">Availability type name</label>
+                              <input
+                                id={id}
+                                type="text"
+                                value={t.name}
+                                aria-invalid={!!err}
+                                aria-describedby={err ? `${id}-error` : undefined}
+                                onChange={(e) => patchType(t.id, { name: e.target.value })}
+                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-body font-normal text-gray-900"
+                              />
+                            </div>
+                            {err && <p id={`${id}-error`} className="mt-1 text-body font-normal text-red-700">{err}</p>}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enabledVisitRows.map((v) => {
+                      const current = typesDraft.find((t) => (t.visitTypeIds as string[]).includes(v.id));
+                      return (
+                        <tr key={v.id}>
+                          <th scope="row" className={`${TD} !py-2 !align-middle text-left font-normal`}>
+                            <span className="flex items-center gap-2.5"><Dot colour={v.colour} />{v.label}</span>
+                          </th>
+                          {typesDraft.map((t) => (
+                            <td key={t.id} className={`${TD} !py-2 !align-middle`}>
+                              <input
+                                type="radio"
+                                name={`assign-${v.id}`}
+                                aria-label={`${v.label}: ${t.name.trim() || 'Unnamed availability type'}`}
+                                checked={current?.id === t.id}
+                                disabled={!t.enabled && current?.id !== t.id}
+                                onChange={() => assignVisitType(v.id, t.id)}
+                                className="h-6 w-6 cursor-pointer accent-[rgb(154,38,214)] disabled:cursor-not-allowed"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                    <tr className="bg-gray-50">
+                      <th scope="row" className={`${TD} !py-2 !align-middle text-left font-semibold text-gray-900`}>Enabled</th>
+                      {typesDraft.map((t) => (
+                        <td key={t.id} className={`${TD} !py-2 !align-middle`}>
+                          <span className="flex items-center gap-1.5">
+                            <SegmentedToggle
+                              offFirst
+                              value={t.enabled}
+                              onChange={(v) => patchType(t.id, { enabled: v })}
+                              onLabel="Yes"
+                              offLabel="No"
+                              variant="track"
+                              disabled={t.isDefault}
+                              ariaLabel={`${t.name.trim() || 'Unnamed availability type'} enabled`}
+                            />
+                            {t.isDefault && <DefaultTypeInfo />}
+                          </span>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </DataTable>
+                )}
+                <div className="mt-4">
+                  <Button variant="secondary" size="sm" onClick={addType}>Add availability type</Button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1001,17 +1504,20 @@ export function RosterSettingsPage() {
   useScrollToHash(titleHeight > 0 && infoBarBottom > 0);
 
   const navigate = useNavigate();
-  const { advanced, table, typeOverrides } = useRosterSettings();
+  const { advanced, table, typeOverrides, availabilityTypes } = useRosterSettings();
   const visitTypes = useVisitTypes().filter((v) => v.enabled);
+  const defaultAvailabilityType = availabilityTypes.find((t) => t.isDefault);
+  const uncoveredLabels = uncoveredVisitTypeIds(availabilityTypes, visitTypes.map((v) => v.id))
+    .map((id) => visitTypes.find((v) => v.id === id)!.label);
   const eventTypes = applyEventOverrides(typeOverrides).filter((e) => e.enabled);
   const { office } = useOffice();
   const isDomiciliary = office.type === 'DOMICILIARY';
   const canEdit = useFeatureFlag('canEditRosterSettings');
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  // `?edit=availability-by-care-type` opens the Visit and event types editor straight
-  // onto that setting (the contract's "turn on availability by care type" link).
+  // `?edit=availability-types` opens the Visit and event types editor straight
+  // onto that setting (the contract's "turn on availability types" link).
   const [searchParams, setSearchParams] = useSearchParams();
-  const [openedForCareType] = useState(() => searchParams.get('edit') === 'availability-by-care-type');
+  const [openedForCareType] = useState(() => ['availability-types', 'availability-by-care-type'].includes(searchParams.get('edit') ?? ''));
   const [visitEventOpen, setVisitEventOpen] = useState(openedForCareType);
   const closeVisitEvent = () => {
     setVisitEventOpen(false);
@@ -1085,21 +1591,65 @@ export function RosterSettingsPage() {
             </DataTable>
 
             {/* Its own panel, separate from the table: a setting about how these
-                care types are used, not another care type. Domiciliary only. */}
+                visit types are grouped for availability, not another visit type. Domiciliary only. */}
             {isDomiciliary && (
               <div
-                id="availability-by-care-type"
+                id="availability-types"
                 className="mt-6 rounded-[10px] border border-gray-200 bg-gray-50 p-5"
                 style={{ scrollMarginTop }}
               >
-                <h3 className="text-base font-semibold text-gray-900">Availability by care type</h3>
-                <InfoBanner className="mt-3">{CARE_TYPE_AVAILABILITY_HELPER}</InfoBanner>
+                <h3 className="text-base font-semibold text-gray-900">Availability types</h3>
+                <InfoBanner className="mt-3">{AVAILABILITY_TYPES_HELPER}</InfoBanner>
                 <dl className="mt-4">
                   <div className="grid gap-x-8 gap-y-1 sm:grid-cols-[minmax(0,26rem)_1fr]">
-                    <dt className="text-body font-semibold text-gray-700">Availability by care type</dt>
+                    <dt className="text-body font-semibold text-gray-700">Availability types</dt>
                     <dd className="text-body text-gray-900">{advanced.availabilityByCareType ? 'Enabled' : 'Disabled'}</dd>
                   </div>
                 </dl>
+
+                {advanced.availabilityByCareType && (
+                  <>
+                    <UncoveredWarning labels={uncoveredLabels} className="mt-4" />
+
+                    <DataTable className="mt-4 bg-white">
+                      <thead>
+                        <tr>
+                          <th className={TH}>Availability type</th>
+                          <th className={TH}>Visit types</th>
+                          <th className={TH}>Enabled</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {availabilityTypes.map((t) => (
+                          <tr key={t.id}>
+                            <td className={TD}>
+                              <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                <span className="flex items-center gap-3 font-semibold text-gray-900">
+                                  <Swatch colour={t.colour} />
+                                  {t.name}
+                                </span>
+                                {t.isDefault && <DefaultPill />}
+                              </span>
+                            </td>
+                            <td className={TD}>
+                              {t.visitTypeIds.length ? (
+                                <span className="flex flex-wrap gap-2">
+                                  {t.visitTypeIds.map((id) => {
+                                    const v = visitTypes.find((x) => x.id === id) ?? CARE_TYPES.find((x) => x.id === id);
+                                    return v ? <VisitTypeChip key={id} label={v.label} colour={v.colour} /> : null;
+                                  })}
+                                </span>
+                              ) : (
+                                <span className="text-gray-700">No visit types yet</span>
+                              )}
+                            </td>
+                            <td className={TD}>{yesNo(t.enabled)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </DataTable>
+                  </>
+                )}
 
                 {/* While it's on, the panel carries what needs doing next — in place,
                     rather than in a dialog stacked on the slide-out. */}
@@ -1107,9 +1657,10 @@ export function RosterSettingsPage() {
                   <div className="mt-4 border-t border-gray-200 pt-4">
                     <h4 className="text-sm font-semibold text-gray-900">Review existing availability</h4>
                     <p className="text-body text-gray-700 mt-1">
-                      Employees' existing availability is treated as <strong>Personal care</strong>. Review it on each
-                      employee's contract and set a different care type wherever they work something else, such as
-                      Live-in. Until you do, the optimiser will only match Personal care visits to that availability.
+                      Employees' existing availability is treated as <strong>{defaultAvailabilityType?.name ?? 'the default type'}</strong>.
+                      Review it on each employee's contract and set a different availability type wherever they work
+                      something else, such as Live-in. Until you do, the optimiser will only match{' '}
+                      {defaultAvailabilityType?.name ?? 'default'} visits to that availability.
                     </p>
                     <div className="mt-3">
                       <Button variant="secondary" size="sm" onClick={() => navigate('/employees/records')}>
@@ -1380,7 +1931,7 @@ export function RosterSettingsPage() {
           isDomiciliary={isDomiciliary}
           onClose={closeVisitEvent}
           focusAvailability={openedForCareType}
-          onSaved={() => window.setTimeout(() => document.getElementById('availability-by-care-type')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 350)}
+          onSaved={() => window.setTimeout(() => document.getElementById('availability-types')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 350)}
         />
       )}
     </div>
