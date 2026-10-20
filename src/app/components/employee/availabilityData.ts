@@ -14,9 +14,6 @@ export const CARE_TYPES = [
 ] as const;
 
 export type CareTypeId = (typeof CARE_TYPES)[number]['id'];
-export const DEFAULT_CARE_TYPE: CareTypeId = 'personal-care';
-export const getCareType = (id: CareTypeId) =>
-  CARE_TYPES.find((c) => c.id === id) ?? CARE_TYPES[0];
 
 /**
  * Availability types: the office groups its visit (care) types into a few
@@ -83,8 +80,19 @@ export function uncoveredVisitTypeIds(types: AvailabilityType[], visitTypeIds: s
   return visitTypeIds.filter((id) => !covered.has(id));
 }
 
-/** Each slot of availability carries the care type it's worked as. */
-export type TimeRange = { start: string; end: string; careType: CareTypeId };
+/** The id of the availability type a fresh slot gets: the office's default type. */
+export const defaultAvailabilityTypeId = (types: AvailabilityType[]) =>
+  (types.find((t) => t.isDefault) ?? types[0]).id;
+
+/**
+ * The availability type a slot is worked as. A slot with no type, or one whose
+ * type no longer exists, is treated as the default type.
+ */
+export const resolveAvailabilityType = (types: AvailabilityType[], id: string | undefined): AvailabilityType =>
+  types.find((t) => t.id === id) ?? types.find((t) => t.isDefault) ?? types[0];
+
+/** Each slot of availability carries the availability type (by id) it's worked as. */
+export type TimeRange = { start: string; end: string; availabilityType: string };
 /** A day can hold several slots of each kind, e.g. a split shift. */
 export type DayAvail = { regular?: TimeRange[]; optional?: TimeRange[] };
 
@@ -101,13 +109,13 @@ export const DAYS = [
 /** Availability is keyed `${weekIndex}-${shortDay}`, e.g. "1-Tue". */
 export const availKey = (weekIndex: number, shortDay: string) => `${weekIndex}-${shortDay}`;
 
-const slot = (start: string, end: string, careType: CareTypeId = DEFAULT_CARE_TYPE): TimeRange => ({
+const slot = (start: string, end: string, availabilityType = 'day-care'): TimeRange => ({
   start,
   end,
-  careType,
+  availabilityType,
 });
 
-// Homecare runs as split shifts around the customers' morning and evening
+// Day care runs as split shifts around the customers' morning and evening
 // calls (8h a day, 40h a week); live-in is one long block each day.
 const split = () => [slot('07:00', '11:30'), slot('16:00', '19:30')];
 const liveIn = () => [slot('08:00', '20:00', 'live-in')];
@@ -115,8 +123,8 @@ const liveIn = () => [slot('08:00', '20:00', 'live-in')];
 type WeekPattern = Record<string, DayAvail>;
 
 /**
- * Mock starting pattern — a 4-week rotation of three weeks homecare then one
- * week live-in, with some optional overtime offered in the homecare weeks.
+ * Mock starting pattern — a 4-week rotation of three weeks day care then one
+ * week live-in, with some optional overtime offered in the day care weeks.
  */
 const INITIAL_PATTERN: WeekPattern[] = [
   // Week 1 — Mon–Fri splits, Sat + Friday-evening overtime
@@ -170,9 +178,9 @@ export const slotsMinutes = (slots?: TimeRange[]) =>
 export const isValidRange = (r: TimeRange) =>
   !!r.start && !!r.end && toMinutes(r.end) > toMinutes(r.start);
 export const formatRange = (r: TimeRange) => `${r.start} – ${r.end}`;
-export const sameSlots = (a: TimeRange[] = [], b: TimeRange[] = [], ignoreCareType = false) =>
+export const sameSlots = (a: TimeRange[] = [], b: TimeRange[] = [], ignoreType = false) =>
   a.length === b.length &&
-  a.every((r, i) => r.start === b[i].start && r.end === b[i].end && (ignoreCareType || r.careType === b[i].careType));
+  a.every((r, i) => r.start === b[i].start && r.end === b[i].end && (ignoreType || r.availabilityType === b[i].availabilityType));
 
 /** True if any two (valid) slots in the list overlap. */
 export function slotsOverlap(slots: TimeRange[]) {
@@ -184,13 +192,13 @@ export function slotsOverlap(slots: TimeRange[]) {
 }
 
 /** A sensible next slot: starts where the last one ended, one hour long. */
-export function nextSlot(slots: TimeRange[]): TimeRange {
-  if (!slots.length) return { start: '09:00', end: '17:00', careType: DEFAULT_CARE_TYPE };
+export function nextSlot(slots: TimeRange[], defaultTypeId: string): TimeRange {
+  if (!slots.length) return { start: '09:00', end: '17:00', availabilityType: defaultTypeId };
   const startMins = toMinutes(slots[slots.length - 1].end) || 0;
   const endMins = Math.min(startMins + 60, 23 * 60 + 59);
   const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-  // Another slot is most often the same kind of care, so inherit the last one's type.
-  return { start: fmt(startMins), end: fmt(endMins), careType: slots[slots.length - 1].careType };
+  // Another slot is most often the same kind of work, so inherit the last one's type.
+  return { start: fmt(startMins), end: fmt(endMins), availabilityType: slots[slots.length - 1].availabilityType };
 }
 
 export function formatDuration(totalMinutes: number) {

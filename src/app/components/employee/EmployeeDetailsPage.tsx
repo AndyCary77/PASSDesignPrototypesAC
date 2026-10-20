@@ -3,6 +3,7 @@ import { Clock, Calendar, Image, Crop, Trash2, Lock, ChevronDown, Check, X } fro
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import davidPhoto from '../../imports/david_b.jpg';
+import { useRosterSettings } from '../../data/RosterSettingsContext';
 
 function TagSelectInput({
   options,
@@ -94,7 +95,14 @@ function TagSelectInput({
 
 export function EmployeeDetailsPage() {
   const [staffType, setStaffType] = useState<string[]>(['Field based']);
-  const [careSettings, setCareSettings] = useState<string[]>(['Domiciliary', 'Live-in']);
+  // Eligible care settings are the office's availability types (by id, so a rename in Roster settings carries through).
+  const { availabilityTypes } = useRosterSettings();
+  const [eligibleTypeIds, setEligibleTypeIds] = useState<string[]>(['day-care', 'live-in']);
+  // Switched-off types can't be newly picked, but one already chosen stays visible.
+  const eligibleOptions = availabilityTypes.filter((t) => t.enabled || eligibleTypeIds.includes(t.id));
+  const eligibleNames = eligibleTypeIds
+    .map((id) => availabilityTypes.find((t) => t.id === id)?.name)
+    .filter((n): n is string => !!n);
   return (
     <div className="grid grid-cols-2 gap-6 max-w-[1280px] mx-auto">
       {/* Left Column */}
@@ -393,11 +401,18 @@ export function EmployeeDetailsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-body font-medium text-gray-700 mb-2">Care setting <span className="text-red-500">*</span></label>
+                  <label className="block text-body font-medium text-gray-700 mb-1">Eligible care settings <span className="text-red-500">*</span></label>
+                  <p className="text-body text-gray-500 mb-2">The types of work this careworker can be scheduled for. Schedule Hero only suggests them for visits that fall within these.</p>
                   <TagSelectInput
-                    options={['Domiciliary', 'Live-in', 'Supported living']}
-                    value={careSettings}
-                    onChange={v => setCareSettings(v as string[])}
+                    options={eligibleOptions.map((t) => t.name)}
+                    value={eligibleNames}
+                    onChange={(v) =>
+                      setEligibleTypeIds(
+                        (v as string[])
+                          .map((name) => availabilityTypes.find((t) => t.name === name)?.id)
+                          .filter((id): id is string => !!id),
+                      )
+                    }
                     multi
                     placeholder="- Select -"
                   />

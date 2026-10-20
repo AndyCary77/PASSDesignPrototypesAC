@@ -17,13 +17,13 @@ import { Button } from '../buttons/Button';
 import { InfoBanner } from '../banners/InfoBanner';
 import { SectionNav } from '../layout/SectionNav';
 import { useScrollToHash } from '../../hooks/useScrollToHash';
-import { useAvailabilityByCareType } from '../../data/RosterSettingsContext';
+import { useAvailabilityByCareType, useRosterSettings } from '../../data/RosterSettingsContext';
 import { useInfoBarBottom } from '../../hooks/useInfoBarBottom';
 import { AvailabilityModal, type AvailabilityChange } from './AvailabilityModal';
 import {
   DAYS,
   availKey,
-  getCareType,
+  resolveAvailabilityType,
   buildInitialAvailability,
   formatDuration,
   formatRange,
@@ -398,7 +398,7 @@ export function EmployeeContractScreen() {
               selectedKeys={activeSelection}
               availability={availability}
               onConfirm={applyAvailabilityChange}
-              showCareTypes={availabilityByCareType}
+              showTypes={availabilityByCareType}
             />
 
           </section>
@@ -897,17 +897,18 @@ function WeekBlock({
   onAddHours: (key: string) => void;
   onSetWeek: (weekIndex: number, selected: boolean) => void;
 }) {
-  const showCareTypes = useAvailabilityByCareType();
+  const showTypes = useAvailabilityByCareType();
+  const { availabilityTypes } = useRosterSettings();
   const weekAllSelected = DAYS.every((d) => selectedDays.has(availKey(weekIndex, d.short)));
-  // Distinct care types worked this week, in the order they first appear
-  const weekCareTypes = [
+  // Distinct availability types worked this week, in the order they first appear
+  const weekTypes = [
     ...new Set(
       DAYS.flatMap((d) => {
         const a = availability[availKey(weekIndex, d.short)];
-        return [...(a?.regular ?? []), ...(a?.optional ?? [])].map((r) => r.careType);
+        return [...(a?.regular ?? []), ...(a?.optional ?? [])].map((r) => resolveAvailabilityType(availabilityTypes, r.availabilityType).id);
       }),
     ),
-  ].map(getCareType);
+  ].map((id) => resolveAvailabilityType(availabilityTypes, id));
   const regularMinutes = DAYS.reduce((sum, d) => sum + slotsMinutes(availability[availKey(weekIndex, d.short)]?.regular), 0);
   const optionalMinutes = DAYS.reduce((sum, d) => sum + slotsMinutes(availability[availKey(weekIndex, d.short)]?.optional), 0);
   return (
@@ -931,11 +932,11 @@ function WeekBlock({
             {title}
             {current && <span className="ml-2 text-body font-normal text-gray-800">(current week)</span>}
           </div>
-          {/* Care types worked this week — makes a 2-weeks-one-type / 2-weeks-another pattern scannable */}
-          {showCareTypes && weekCareTypes.map((c) => (
+          {/* Availability types worked this week — makes a 2-weeks-one-type / 2-weeks-another pattern scannable */}
+          {showTypes && weekTypes.map((c) => (
             <span key={c.id} className="inline-flex items-center gap-1.5 text-body font-medium text-gray-700">
               <span aria-hidden="true" className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: c.colour }} />
-              {c.label}
+              {c.name}
             </span>
           ))}
           <Button variant="tertiary" size="sm" onClick={() => onSetWeek(weekIndex, !weekAllSelected)}>
@@ -970,19 +971,20 @@ function WeekBlock({
 }
 
 /**
- * One slot as a single tinted pill: care type (dot + name) over the time.
- * The tint is the care type's colour, kept light enough for dark text to hold
+ * One slot as a single tinted pill: availability type (dot + name) over the time.
+ * The tint is the availability type's colour, kept light enough for dark text to hold
  * AA contrast, and the name + dot mean colour is never the only signal.
  * Optional overtime keeps its dashed outline (and a lighter tint) so it still
  * reads as different from regular hours.
  */
 function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) {
-  const showCareTypes = useAvailabilityByCareType();
-  const care = getCareType(slot.careType);
-  // Availability by care type is off for this office: a plain time pill, as
-  // before. The slot's care type is kept, just not shown, so it comes back if
+  const showTypes = useAvailabilityByCareType();
+  const { availabilityTypes } = useRosterSettings();
+  const care = resolveAvailabilityType(availabilityTypes, slot.availabilityType);
+  // Availability types are off for this office: a plain time pill, as
+  // before. The slot's type is kept, just not shown, so it comes back if
   // the setting is turned back on.
-  if (!showCareTypes) {
+  if (!showTypes) {
     return (
       <div
         className={`w-full rounded-full px-3 text-sm font-semibold text-gray-900 whitespace-nowrap ${
@@ -1009,7 +1011,7 @@ function SlotBlock({ slot, optional }: { slot: TimeRange; optional?: boolean }) 
           className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: care.colour }}
         />
-        {care.label}
+        {care.name}
       </span>
       <span className="text-body font-semibold">{formatRange(slot)}</span>
     </div>
