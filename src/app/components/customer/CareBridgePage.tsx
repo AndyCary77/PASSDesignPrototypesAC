@@ -26,6 +26,7 @@ import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useCustomer } from '../../data/CustomerContext';
+import { isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './documents/AssessmentHeroLimitBanner';
 import { veraise } from '../../data/vera-from-edith';
 import type { CustomerProfile } from '../../data/customers';
 import { OutcomeBadge, TaskBadge } from './caremanagement/shared';
@@ -1835,7 +1836,26 @@ export function ChangeRecordingsButton({
   const [selected, setSelected] = useState<string[]>(linkedRecordingIds);
   const [mode, setMode] = useState<RecordingSelectionMode>('merge');
 
+  const limitReached = isAssessmentHeroLimitReached(customerId);
+
   if (recordings.length < 2) return null; // nothing else to switch to
+
+  // Changing the source would re-draft the document, which the customer's
+  // drafting limit blocks — the control stays put (it's where you'd look
+  // for it) but can't be used; the limit banner on the page says why.
+  if (limitReached) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={LIMIT_REACHED_TITLE}
+        className="flex items-center gap-1 text-body font-medium text-gray-500 cursor-not-allowed"
+      >
+        <RefreshCw className="w-3.5 h-3.5" />
+        Change recording{multiSelect ? '(s)' : ''}
+      </button>
+    );
+  }
 
   const sameAsCurrent =
     selected.length === linkedRecordingIds.length && selected.every(id => linkedRecordingIds.includes(id));

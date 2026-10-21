@@ -17,6 +17,7 @@ import {
   type RecordingSelectionMode,
 } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
+import { AssessmentHeroLimitNotice } from './AssessmentHeroLimitBanner';
 import { PERSONAL_CARE_FIELDS, PERSONAL_CARE_GROUPS } from './personalCareMovingHandlingData';
 import { useScrolled } from '../../../hooks/useScrolled';
 import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
@@ -170,6 +171,8 @@ export function PersonalCareDocumentContent() {
 
   return (
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
+      <AssessmentHeroLimitNotice />
+
       {published ? (
         <div className="flex flex-col gap-3">
           <PublishedConfirmationBanner />

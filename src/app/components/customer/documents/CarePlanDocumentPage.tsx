@@ -14,6 +14,7 @@ import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
 import { CarePlanDocumentView, CareBridgeContext, PublishedConfirmationBanner, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
+import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
 import { useScrolled } from '../../../hooks/useScrolled';
 import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
@@ -193,7 +194,22 @@ export function CarePlanDocumentSubnav() {
  * see the note on relinkRecording/handleUpload/handleUnlink in the provider.
  */
 function RelinkDropdown() {
-  const { linkedSource, otherRecordings, fileInputRef, relinkRecording, handleUnlink } = useCarePlanDocument();
+  const { customer, linkedSource, otherRecordings, fileInputRef, relinkRecording, handleUnlink } = useCarePlanDocument();
+  // Same as WIITM's RelinkDropdown: picking or uploading a recording would
+  // re-draft the plan, which the customer's drafting limit blocks.
+  if (isAssessmentHeroLimitReached(customer.id)) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={LIMIT_REACHED_TITLE}
+        className="flex items-center gap-1 text-sm font-medium text-gray-500 cursor-not-allowed"
+      >
+        {linkedSource ? 'Replace recording' : 'Link a recording'}
+        <ChevronDown className="w-3.5 h-3.5" />
+      </button>
+    );
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -271,6 +287,10 @@ export function CarePlanDocumentContent() {
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
       {/* Hidden regardless of which menu item asked for it — one input, reused. */}
       <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
+
+      {/* Sits above whatever Assessment Hero state the document is in —
+          the limit is about the customer, not this document. */}
+      <AssessmentHeroLimitNotice />
 
       {isCompletedDocument ? null : published ? (
         <div className="flex flex-col gap-3">

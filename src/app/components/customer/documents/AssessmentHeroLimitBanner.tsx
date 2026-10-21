@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import { Info } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
-import type { AssessmentHeroAllowance } from '../../../data/assessmentHeroAllowance';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '../../ui/hover-card';
+import { useCustomer } from '../../../data/CustomerContext';
+import { getAssessmentHeroAllowance, type AssessmentHeroAllowance } from '../../../data/assessmentHeroAllowance';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
 // "Mrs Edith Caldwell" -> "Edith". Titles are dropped so the copy reads like a
@@ -42,8 +43,10 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
         </p>
       </div>
 
-      <Popover>
-        <PopoverTrigger asChild>
+      {/* Hover (and keyboard focus) rather than click — the detail is
+          reference, not a task, so it shouldn't need a deliberate tap. */}
+      <HoverCard openDelay={100} closeDelay={150}>
+        <HoverCardTrigger asChild>
           <button
             type="button"
             aria-label="About the Assessment Hero drafting limit"
@@ -51,8 +54,8 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
           >
             <Info className="w-5 h-5" />
           </button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-96 p-5">
+        </HoverCardTrigger>
+        <HoverCardContent align="end" className="w-96 p-5">
           <p className="text-base font-semibold text-gray-900">Assessment Hero drafting limit</p>
           <p className="text-body text-gray-800 mt-1.5">
             {first} has reached the limit of {allowance.limit} Assessment Hero drafts in the last 30 days, so no new
@@ -88,8 +91,28 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
             <li>Each draft frees up again 30 days after it was generated.</li>
             <li>Recordings and transcripts are still saved, and documents can still be completed by hand.</li>
           </ul>
-        </PopoverContent>
-      </Popover>
+        </HoverCardContent>
+      </HoverCard>
     </div>
   );
 }
+
+/**
+ * Whether the customer's Assessment Hero drafting allowance is used up —
+ * what every drafting control (Change recording(s), Replace recording,
+ * Update documents…) checks so it can disable itself in step with the banner.
+ */
+export function isAssessmentHeroLimitReached(customerId: string) {
+  const allowance = getAssessmentHeroAllowance(customerId);
+  return !!allowance && allowance.remaining <= 0;
+}
+
+/** The banner for the current customer, or nothing when they still have drafts left. */
+export function AssessmentHeroLimitNotice() {
+  const customer = useCustomer();
+  const allowance = getAssessmentHeroAllowance(customer.id);
+  if (!allowance || allowance.remaining > 0) return null;
+  return <AssessmentHeroLimitBanner customerFullName={customer.fullName} allowance={allowance} />;
+}
+
+export const LIMIT_REACHED_TITLE = "Assessment Hero's drafting limit has been reached for this customer";

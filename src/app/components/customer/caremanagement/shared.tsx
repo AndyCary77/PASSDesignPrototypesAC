@@ -8,6 +8,7 @@ import { useCareManagement, CARE_PLAN_DRAFT_STEPS } from './CareManagementContex
 import { useCareData, recordingForSource } from './useCareData';
 import { RecordingsLink, ChangeRecordingsButton, AssessmentHeroReuseBanner, PublishedConfirmationBanner, type Recording } from '../CareBridgePage';
 import { useCustomer } from '../../../data/CustomerContext';
+import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from '../documents/AssessmentHeroLimitBanner';
 import { getCompletedDocuments } from '../../../data/mock-documents';
 import { StarSolidIcon, CalendarSolidIcon, TickSolidIcon, PlusSolidIcon, NutritionSolidIcon, HydrateSolidIcon } from '../../icons/CarePlanIcons';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
@@ -392,6 +393,13 @@ function DraftSourcesNote({ sources, kind = 'recording' }: { sources: string[]; 
   );
 }
 
+interface CarePlanDraftBannerProps {
+  pendingOutcomes: number;
+  pendingTasks: number;
+  sources?: string[];
+  activeTab: 'outcomes' | 'tasks' | 'visits';
+}
+
 /**
  * CareBridge draft banner, shown above the list on each care-plan tab while
  * the plan is still a CareBridge draft rather than a real, published one.
@@ -400,14 +408,18 @@ function DraftSourcesNote({ sources, kind = 'recording' }: { sources: string[]; 
  * already part of the live plan — and, once nothing's left to review, offers
  * the Publish step that actually makes it one.
  */
-export function CarePlanDraftBanner({
-  pendingOutcomes, pendingTasks, sources, activeTab,
-}: {
-  pendingOutcomes: number;
-  pendingTasks: number;
-  sources?: string[];
-  activeTab: 'outcomes' | 'tasks' | 'visits';
-}) {
+export function CarePlanDraftBanner(props: CarePlanDraftBannerProps) {
+  // The drafting limit is about the customer, so its banner leads whichever
+  // draft/published state follows.
+  return (
+    <>
+      <AssessmentHeroLimitNotice />
+      <CarePlanDraftBannerContent {...props} />
+    </>
+  );
+}
+
+function CarePlanDraftBannerContent({ pendingOutcomes, pendingTasks, sources, activeTab }: CarePlanDraftBannerProps) {
   const customer = useCustomer();
   const navigate = useNavigate();
   const {
@@ -718,6 +730,11 @@ export function CarePlanDraftFlow() {
     );
   }
 
+  // Nothing drafted yet and the customer's drafting limit is used up — the
+  // limit banner stands in for the "Draft care plan" offer, same as WIITM's
+  // invitation banner.
+  if (isAssessmentHeroLimitReached(customer.id)) return <AssessmentHeroLimitNotice />;
+
   return (
     <>
       <div className="rounded-lg border border-purple-200 shadow-sm overflow-hidden">
@@ -867,8 +884,24 @@ function CarePlanDraftSourcePicker({
  * straight to setDraftSourceDocuments.
  */
 function ChangeDocumentsButton() {
+  const customer = useCustomer();
   const { draftSourceDocuments, setDraftSourceDocuments } = useCareManagement();
   const [open, setOpen] = useState(false);
+  // Re-picking sources is the document-sourced equivalent of changing a
+  // recording — kept visible but unusable while the drafting limit applies.
+  if (isAssessmentHeroLimitReached(customer.id)) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={LIMIT_REACHED_TITLE}
+        className="flex items-center gap-1 text-body font-medium text-gray-500 cursor-not-allowed flex-shrink-0"
+      >
+        <RefreshCw className="w-3.5 h-3.5" />
+        Update documents
+      </button>
+    );
+  }
   return (
     <>
       <button
