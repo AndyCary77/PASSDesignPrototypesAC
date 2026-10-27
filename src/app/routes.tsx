@@ -20,6 +20,7 @@ import { CareManagementProvider } from './components/customer/caremanagement/Car
 import { CareManagementSubnav } from './components/customer/caremanagement/CareManagementSubnav';
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
+import { BookingsPage } from './components/bookings/BookingsPage';
 import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
@@ -419,6 +420,10 @@ export const router = createBrowserRouter([
   {
     path: "/employees/records",
     Component: EmployeeRecordsLayout,
+  },
+  {
+    path: "/bookings",
+    Component: () => <AppShell><BookingsPage /></AppShell>,
   },
   {
     path: "/schedule",

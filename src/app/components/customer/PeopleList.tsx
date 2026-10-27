@@ -335,14 +335,18 @@ export function buildTagGroups(people: { chips: ListChip[] }[]) {
 export type TagGroups = { group: string; values: string[] }[];
 
 /** The collapsible "Tags" part of a filter panel: any value in a group matches, every group with a selection must. */
-export function TagFilterSection({ tagGroups, selected, onToggle }: {
+export function TagFilterSection({ tagGroups, selected, onToggle, display = 'checkbox', defaultOpen = [] }: {
   tagGroups: TagGroups;
   /** `${group}::${value}` */
   selected: string[];
   onToggle: (key: string) => void;
+  /** `pills`: values are toggle pills (as on the Bookings filter) rather than a checkbox grid. */
+  display?: 'checkbox' | 'pills';
+  /** Groups that start open, on top of any with something already ticked. */
+  defaultOpen?: string[];
 }) {
   // A tag group opens by default if something in it is already ticked.
-  const [open, setOpen] = useState<Set<string>>(() => new Set(selected.map(t => t.split('::')[0])));
+  const [open, setOpen] = useState<Set<string>>(() => new Set([...defaultOpen, ...selected.map(t => t.split('::')[0])]));
   const toggleOpen = (g: string) => setOpen(prev => {
     const next = new Set(prev);
     next.has(g) ? next.delete(g) : next.add(g);
@@ -367,7 +371,27 @@ export function TagFilterSection({ tagGroups, selected, onToggle }: {
                 {group}
                 {ticked > 0 && <span className="text-sm font-medium text-[rgb(109,27,152)]">({ticked})</span>}
               </button>
-              {isOpen && (
+              {isOpen && display === 'pills' && (
+                <div className="pb-3 pl-6 flex flex-wrap gap-2">
+                  {values.map(v => {
+                    const on = selected.includes(`${group}::${v}`);
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => onToggle(`${group}::${v}`)}
+                        className={`${tagPill} cursor-pointer transition-colors ${on
+                          ? 'bg-purple-100 border-[rgb(154,38,214)] text-[rgb(109,27,152)]'
+                          : 'bg-white border-gray-400 text-gray-900 hover:bg-gray-50'}`}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {isOpen && display === 'checkbox' && (
                 <div className="pb-2 pl-6 grid grid-cols-3 gap-x-4">
                   {values.map(v => (
                     <label key={v} className="flex items-center gap-2.5 py-0.5 text-sm text-gray-900 cursor-pointer">

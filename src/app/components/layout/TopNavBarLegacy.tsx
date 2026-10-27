@@ -42,7 +42,7 @@ export function Header() {
               to="/employees/list"
               active={location.pathname.startsWith('/employees')}
             />
-            <NavItem icon={<FontAwesomeIcon icon={faCalendarCheck} className="w-4 h-4" />} label="Bookings" to="/bookings" />
+            <NavItem icon={<FontAwesomeIcon icon={faCalendarCheck} className="w-4 h-4" />} label="Bookings" to="/bookings" active={location.pathname === '/bookings'} />
             <NavItem icon={<FontAwesomeIcon icon={faCalendarDays} className="w-4 h-4" />} label="Schedule" to="/schedule" active={location.pathname === '/schedule'} />
             <NavItem icon={<FontAwesomeIcon icon={faChartLine} className="w-4 h-4" />} label="Finance" to="/finance" />
             <NavItem icon={<FontAwesomeIcon icon={faFileLines} className="w-4 h-4" />} label="Reporting" to="/reporting" />

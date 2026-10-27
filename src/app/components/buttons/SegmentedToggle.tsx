@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+
 /**
  * A segmented pill for a binary state that's a real labelled choice rather
  * than a plain on/off flag (Active vs. Inactive, Yes vs. No) — mirrors the
@@ -9,6 +12,8 @@ export function SegmentedToggle({
   onChange,
   onLabel,
   offLabel,
+  onTooltip,
+  offTooltip,
   onColor = 'bg-green-600',
   offColor = 'bg-amber-500',
   offFirst = false,
@@ -19,8 +24,12 @@ export function SegmentedToggle({
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
-  onLabel: string;
-  offLabel: string;
+  /** Text, or an icon for an icon-only toggle (then pass the matching tooltip, which also names it for screen readers). */
+  onLabel: ReactNode;
+  offLabel: ReactNode;
+  /** Hover text and accessible name for each side — use when the label is an icon. */
+  onTooltip?: string;
+  offTooltip?: string;
   onColor?: string;
   offColor?: string;
   /** Put the "off" option on the left (No | Yes) rather than the "on" option (Active | Inactive). */
@@ -41,9 +50,10 @@ export function SegmentedToggle({
   neutral?: boolean;
 }) {
   const track = variant === 'track';
+  const iconOnly = typeof onLabel !== 'string' && typeof offLabel !== 'string';
   const base = track
-    ? `rounded-md px-5 py-1.5 text-body font-semibold transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`
-    : `px-4 py-1.5 text-body font-medium transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`;
+    ? `rounded-md ${iconOnly ? 'px-3.5' : 'px-5'} py-1.5 text-body font-semibold transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`
+    : `${iconOnly ? 'px-3' : 'px-4'} py-1.5 text-body font-medium transition-colors ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`;
   const unselected = track ? 'text-gray-600 hover:text-gray-900' : 'text-gray-500 hover:bg-gray-50';
   // rgb(28, 135, 28): white text on it clears 4.5:1 contrast.
   const selectedOn = track
@@ -52,30 +62,47 @@ export function SegmentedToggle({
       : 'bg-[rgb(28,135,28)] text-white'
     : `${onColor} text-white`;
   const selectedOff = track ? 'bg-white text-gray-900 shadow-sm' : `${offColor} text-white`;
-  const on = (
+  const withTooltip = (key: string, tip: string | undefined, button: ReactNode) =>
+    tip ? (
+      <Tooltip key={key}>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          className="bg-white text-gray-900 border border-gray-200 shadow-lg"
+          arrowClassName="bg-white fill-white"
+        >
+          {tip}
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      button
+    );
+  const on = withTooltip('on', onTooltip, (
     <button
       key="on"
       type="button"
       disabled={disabled}
       aria-pressed={value}
+      aria-label={onTooltip}
       onClick={() => onChange(true)}
-      className={`${base} ${value ? selectedOn : unselected}`}
+      className={`${base} ${value ? selectedOn : unselected} ${iconOnly ? 'flex items-center' : ''}`}
     >
       {onLabel}
     </button>
-  );
-  const off = (
+  ));
+  const off = withTooltip('off', offTooltip, (
     <button
       key="off"
       type="button"
       disabled={disabled}
       aria-pressed={!value}
+      aria-label={offTooltip}
       onClick={() => onChange(false)}
-      className={`${base} ${!value ? selectedOff : unselected}`}
+      className={`${base} ${!value ? selectedOff : unselected} ${iconOnly ? 'flex items-center' : ''}`}
     >
       {offLabel}
     </button>
-  );
+  ));
   return (
     <div
       role="group"

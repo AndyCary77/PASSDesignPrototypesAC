@@ -132,6 +132,7 @@ const NAV_ITEMS = [
 const NAV_LINKS = {
   customers: '/customers/list',
   employees: '/employees/list',
+  bookings: '/bookings',
   schedule: '/schedule',
   office: '/office/tags',
   admin: '/admin',
@@ -141,6 +142,7 @@ const NAV_LINKS = {
 const NAV_ACTIVE_PATHS = {
   customers: '/customers',
   employees: '/employees',
+  bookings: '/bookings',
   schedule: '/schedule',
   office: '/office',
   admin: '/admin',
