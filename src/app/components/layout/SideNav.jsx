@@ -134,6 +134,7 @@ const NAV_LINKS = {
   employees: '/employees/list',
   bookings: '/bookings',
   schedule: '/schedule',
+  enquiries: '/enquiries',
   office: '/office/tags',
   admin: '/admin',
 }
@@ -144,6 +145,7 @@ const NAV_ACTIVE_PATHS = {
   employees: '/employees',
   bookings: '/bookings',
   schedule: '/schedule',
+  enquiries: '/enquiries',
   office: '/office',
   admin: '/admin',
 }

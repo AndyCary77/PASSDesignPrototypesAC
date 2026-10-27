@@ -21,6 +21,8 @@ import { CareManagementSubnav } from './components/customer/caremanagement/CareM
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
 import { BookingsPage } from './components/bookings/BookingsPage';
+import { EnquiriesPage } from './components/enquiries/EnquiriesPage';
+import { EnquiryFormPage } from './components/enquiries/EnquiryFormPage';
 import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
 import { CustomersListPage } from './components/customer/CustomersListPage';
@@ -424,6 +426,14 @@ export const router = createBrowserRouter([
   {
     path: "/bookings",
     Component: () => <AppShell><BookingsPage /></AppShell>,
+  },
+  {
+    path: "/enquiries",
+    Component: () => <AppShell><EnquiriesPage /></AppShell>,
+  },
+  {
+    path: "/enquiries/:enquiryId",
+    Component: () => <AppShell><EnquiryFormPage /></AppShell>,
   },
   {
     path: "/schedule",

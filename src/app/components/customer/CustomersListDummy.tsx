@@ -136,7 +136,7 @@ function matchesQuery(c: ListCustomer, query: string) {
 
 // ─── The card ───────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: ListStatus }) {
+export function StatusBadge({ status }: { status: ListStatus }) {
   const label = STATUS_LABEL[status];
   if (status === 'active') {
     return (
