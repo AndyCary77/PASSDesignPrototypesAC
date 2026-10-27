@@ -152,7 +152,7 @@ export function EnquiryFormPage() {
       <div className="flex items-center justify-between gap-3">
         <Button variant="tertiary" icon={<ArrowLeft className="w-4 h-4" />} onClick={() => navigate('/enquiries')}>Back</Button>
         <div className="flex items-center gap-3">
-          <Button variant="tertiary-danger" icon={<Trash2 className="w-4 h-4" />}>Delete</Button>
+          <Button variant="secondary-danger" icon={<Trash2 className="w-4 h-4" />}>Delete</Button>
           <Button variant="primary" disabled={!dirty} onClick={() => setSaved(values)}>Save</Button>
         </div>
       </div>

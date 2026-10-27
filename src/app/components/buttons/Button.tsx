@@ -1,6 +1,6 @@
 import { forwardRef, type ReactNode } from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'tertiary-danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'secondary-danger' | 'tertiary' | 'tertiary-danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -26,6 +26,9 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary:
     'border-2 border-[rgb(154,38,214)] text-[rgb(154,38,214)] bg-white ' +
     'hover:bg-[rgba(154,38,214,0.05)]',
+  // Secondary's outline, red-tinted for a destructive action (Delete on the enquiry form).
+  'secondary-danger':
+    'border-2 border-red-600 text-red-700 bg-white hover:bg-red-50',
   tertiary:
     'bg-[#EDECF1] text-gray-700 border-0 hover:bg-[#DCD9E4]',
   // Same tertiary shape, red-tinted for a destructive action — matches the
