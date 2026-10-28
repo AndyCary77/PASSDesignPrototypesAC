@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { Check, ChevronDown, ChevronsUpDown, ChevronUp, Plus, Search, X } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { SegmentedControl } from '../buttons/SegmentedControl';
+import { PaginationBar } from '../buttons/PaginationBar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { badge } from '../customer/PeopleList';
 import { StatusBadge as CustomerStatusBadge } from '../customer/CustomersListDummy';
@@ -16,8 +17,6 @@ import {
 } from '../../data/enquiriesDummy';
 
 const PAGE_SIZE = 20;
-// How many page numbers show at once either side of the current one.
-const PAGE_WINDOW = 2;
 
 // Same pills as the status badges on the Customers/Employees lists. Closed is green: a
 // closed enquiry is one that became a customer.
@@ -52,14 +51,6 @@ function EnquiryLink({ id, name }: { id: string; name: string }) {
       {name}
     </Link>
   );
-}
-
-// Which page numbers to show: a window around the current page, so a long list doesn't
-// produce a long row of buttons.
-function pageNumbers(current: number, total: number) {
-  const start = Math.max(1, Math.min(current - PAGE_WINDOW, total - PAGE_WINDOW * 2));
-  const end = Math.min(total, start + PAGE_WINDOW * 2);
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
 
 function matchesQuery(e: Enquiry, query: string) {
@@ -258,30 +249,7 @@ export function EnquiriesPage() {
 
         {/* Docked to the bottom of the table. */}
         {rows.length > 0 && (
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 p-3 border-t border-gray-200">
-            <span aria-live="polite" className="text-body text-gray-600">
-              Showing {first + 1}–{first + visible.length} of {rows.length}
-            </span>
-            <nav aria-label="Pagination" className="flex items-center gap-1.5">
-              <Button variant="tertiary" size="sm" disabled={current === 1} onClick={() => setPage(1)}>First</Button>
-              {pageNumbers(current, pageCount).map(n => (
-                <Button
-                  key={n}
-                  variant={n === current ? 'primary' : 'tertiary'}
-                  size="sm"
-                  iconOnly
-                  aria-label={`Page ${n}`}
-                  aria-current={n === current ? 'page' : undefined}
-                  onClick={() => setPage(n)}
-                >
-                  {n}
-                </Button>
-              ))}
-              <Button variant="tertiary" size="sm" disabled={current === pageCount} onClick={() => setPage(pageCount)}>Last</Button>
-            </nav>
-            {/* Empty third column keeps the pagination centred. */}
-            <span aria-hidden="true" />
-          </div>
+          <PaginationBar page={current} pageCount={pageCount} from={first + 1} to={first + visible.length} total={rows.length} onPage={setPage} />
         )}
       </div>
     </div>

@@ -32,7 +32,7 @@ export interface TagTypeGroup {
 
 // Five-tone pastel palette lifted from the real tenant's chip colours —
 // used for Area only; every other tag type renders plain/uncoloured pills.
-const PALETTE = [
+export const PALETTE = [
   { bg: '#f8e9ef', text: '#65263d', border: '#eabfcf' }, // pink
   { bg: '#e0f1f1', text: '#004947', border: '#a6d7d6' }, // teal
   { bg: '#eaeefa', text: '#2a3c70', border: '#c2cef1' }, // blue

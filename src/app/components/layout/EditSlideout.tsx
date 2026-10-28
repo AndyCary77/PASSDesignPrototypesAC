@@ -24,6 +24,7 @@ export function EditSlideout({
   saveDisabled = false,
   size = 'default',
   width = 'default',
+  readOnly = false,
 }: {
   title: ReactNode;
   onClose: () => void;
@@ -37,6 +38,8 @@ export function EditSlideout({
   size?: 'default' | 'large';
   /** `wide` for panels holding multi-column tables. */
   width?: 'default' | 'wide';
+  /** For a panel that only shows something: the footer is a single Close button, with no save. */
+  readOnly?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -93,9 +96,9 @@ export function EditSlideout({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 flex items-center justify-between bg-white px-8 py-4 flex-shrink-0">
-          <Button type="button" variant="tertiary" size="lg" onClick={close}>Cancel</Button>
-          {formId ? (
+        <div className={`border-t border-gray-200 flex items-center bg-white px-8 py-4 flex-shrink-0 ${readOnly ? 'justify-end' : 'justify-between'}`}>
+          <Button type="button" variant="tertiary" size="lg" onClick={close}>{readOnly ? 'Close' : 'Cancel'}</Button>
+          {readOnly ? null : formId ? (
             <Button type="submit" form={formId} size="lg" disabled={saveDisabled}>{saveLabel}</Button>
           ) : (
             <Button type="button" size="lg" disabled={saveDisabled} onClick={() => onSave?.(close)}>{saveLabel}</Button>

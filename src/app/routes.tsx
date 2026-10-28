@@ -33,6 +33,7 @@ import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './componen
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { TagsManagementPage } from './components/office/TagsManagementPage';
 import { TagTypeDetailPage } from './components/office/TagTypeDetailPage';
+import { TagDetailPage } from './components/office/TagDetailPage';
 import { OfficeProvider } from './components/office/OfficeContext';
 import { OfficeSubnav } from './components/office/OfficeSubnav';
 import { CustomerProvider } from './data/CustomerContext';
@@ -310,6 +311,14 @@ function TagTypeDetailLayout() {
   );
 }
 
+function TagDetailLayout() {
+  return (
+    <AppShell>
+      <TagDetailPage />
+    </AppShell>
+  );
+}
+
 function EmployeeLayout() {
   return (
     <AppShell infoBar={<EmployeeInfo />}>
@@ -452,6 +461,10 @@ export const router = createBrowserRouter([
   {
     path: "/office/tags/:tagTypeId",
     Component: TagTypeDetailLayout,
+  },
+  {
+    path: "/office/tags/:tagTypeId/:tagId",
+    Component: TagDetailLayout,
   },
   // ─── Component isolation demos ───────────────────────────────────────────────
   {

@@ -1,8 +1,9 @@
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, Link } from 'react-router';
 import { ArrowLeft, Tag as TagIcon, Plus } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { TAG_TYPE_GROUPS } from './tagsMockData';
 import { TagSummaryPill } from './TagSummaryPill';
+import { tagAudit } from './tagMembers';
 import { Banner } from './Banner';
 
 // Read-only "Tag Type" detail field — matches the label/value pairs in the
@@ -29,6 +30,8 @@ export function TagTypeDetailPage() {
       </div>
     );
   }
+
+  const audit = tagAudit(tagType.id);
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
@@ -81,12 +84,26 @@ export function TagTypeDetailPage() {
           Tags
         </h4>
         <div className="flex flex-wrap gap-2">
-          {tagType.tags.map(tag => <TagSummaryPill key={tag.id} tag={tag} />)}
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm border border-dashed border-gray-300 text-gray-400">
-            <Plus className="w-3.5 h-3.5" /> Add
-          </span>
+          {/* Each tag opens its own page, showing who has it. */}
+          {tagType.tags.map(tag => (
+            <Link
+              key={tag.id}
+              to={`/office/tags/${tagType.id}/${tag.id}`}
+              className="rounded-full outline-none transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50"
+            >
+              <TagSummaryPill tag={tag} />
+            </Link>
+          ))}
+          {/* Not wired — this is a static page. */}
+          <Button variant="secondary" size="sm" icon={<Plus className="w-4 h-4" />}>Add</Button>
         </div>
       </div>
+
+      <p className="text-center text-sm text-gray-600">
+        Modified: {audit.modified}
+        <span className="mx-5" aria-hidden="true" />
+        Created: {audit.created}
+      </p>
     </div>
   );
 }
