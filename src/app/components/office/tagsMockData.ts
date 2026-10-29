@@ -62,6 +62,7 @@ export const TAG_TYPE_GROUPS: TagTypeGroup[] = [
         name: 'Territory',
         appliesTo: ['Customers', 'Employees'],
         description: 'Contains the different territories your service are split into',
+        limitOnePerTag: true,
         tags: [
           { id: 'territory-durham-north', name: 'Durham North', count: 24 },
           { id: 'territory-north-tyneside', name: 'North Tyneside', count: 321 },
@@ -94,26 +95,18 @@ export const TAG_TYPE_GROUPS: TagTypeGroup[] = [
           { id: 'diabetes', name: 'Diabetes mellitus', count: 0 },
           { id: 'epilepsy', name: 'Epilepsy', count: 0 },
           { id: 'copd', name: 'COPD - Chronic obstructive pulmonary disease', count: 3 },
-        ],
-      },
-      {
-        id: 'training-qualifications',
-        name: 'Training & Qualifications',
-        appliesTo: ['Employees'],
-        description: 'Contains the different training and qualifications your employees have',
-        tags: [
-          { id: 'duodopa', name: 'Duodopa', count: 10 },
+          { id: 'duodopa', name: 'Duodopa', count: 6 },
         ],
       },
       {
         id: 'care-setting',
         name: 'Care Setting',
         appliesTo: ['Employees'],
-        description: 'Care settings an employee can work in, used by the AI solver for roster matching.',
+        description: 'The availability types an employee is eligible to work in, used by the AI solver for roster matching.',
         tags: [
+          { id: 'day-care', name: 'Day care' },
+          { id: 'nights', name: 'Nights' },
           { id: 'live-in-setting', name: 'Live-in' },
-          { id: 'waking-night', name: 'Waking Night' },
-          { id: 'sleeping-night', name: 'Sleeping Night' },
         ],
       },
       {

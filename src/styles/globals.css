@@ -336,3 +336,6 @@
 html {
   font-size: var(--font-size);
 }
+/* A wide table wrapped in TableScrollbars scrolls with its own drawn bars, so the native one is hidden. */
+.table-scrollbars-wrap [data-slot="table-container"] { scrollbar-width: none; }
+.table-scrollbars-wrap [data-slot="table-container"]::-webkit-scrollbar { display: none; }

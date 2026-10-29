@@ -165,7 +165,8 @@ export function MissingTagsView({ rows, onAssign }: {
               </div>
             </div>
 
-            {/* Which type they're missing. */}
+            {/* Which type they're missing; only worth choosing between when more than one type is mandatory. */}
+            {typeCounts.length > 1 && (
             <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-gray-200" style={{ backgroundColor: GREY }}>
               <span className="text-body text-gray-700 mr-1">Missing</span>
               <Button variant={activeType === null ? 'primary' : 'tertiary'} size="sm" aria-pressed={activeType === null} onClick={() => { setTypeFilter(null); reset(); }}>
@@ -183,6 +184,7 @@ export function MissingTagsView({ rows, onAssign }: {
                 </Button>
               ))}
             </div>
+            )}
 
             {selectedRows.length > 0 && (
               <div className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-purple-200 bg-purple-50">

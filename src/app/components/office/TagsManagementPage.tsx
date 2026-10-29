@@ -12,6 +12,7 @@ import { useOffice, OFFICE_TABS } from './OfficeContext';
 import { ReviewAllocationsView } from './ReviewAllocationsView';
 import { MissingTagsView } from './MissingTagsView';
 import { Banner } from './Banner';
+import type { RelationChange } from './personRelations';
 import { ALL_TAG_TYPES, buildAllocations, buildMissing, typeName, type Assigned, type BulkChange, type MissingRow } from './tagAllocations';
 
 type Lens = 'types' | 'review' | 'missing';
@@ -34,6 +35,7 @@ export function TagsManagementPage() {
   // Review allocations. They count from then on in every view, and the latest can be undone.
   const [assigned, setAssigned] = useState<Assigned[]>([]);
   const [bulk, setBulk] = useState<BulkChange[]>([]);
+  const [relations, setRelations] = useState<RelationChange[]>([]);
   const [lastBatch, setLastBatch] = useState<{ text: string; undo: () => void } | null>(null);
   const allocations = useMemo(() => buildAllocations(assigned, bulk), [assigned, bulk]);
   const missing = useMemo(() => buildMissing(assigned), [assigned]);
@@ -47,9 +49,17 @@ export function TagsManagementPage() {
       undo: () => { setAssigned(a => a.filter(i => !items.includes(i))); setLastBatch(null); },
     });
   };
-  const bulkApply = (changes: BulkChange[], text: string) => {
+  const bulkApply = (changes: BulkChange[], text: string, relationChanges: RelationChange[]) => {
     setBulk(b => [...b, ...changes]);
-    setLastBatch({ text, undo: () => { setBulk(b => b.filter(c => !changes.includes(c))); setLastBatch(null); } });
+    setRelations(r => [...r, ...relationChanges]);
+    setLastBatch({
+      text,
+      undo: () => {
+        setBulk(b => b.filter(c => !changes.includes(c)));
+        setRelations(r => r.filter(c => !relationChanges.includes(c)));
+        setLastBatch(null);
+      },
+    });
   };
 
   const batchBanner = lastBatch && (
@@ -73,7 +83,7 @@ export function TagsManagementPage() {
   }, [query]);
 
   return (
-    <div className={`flex flex-col mx-auto w-full ${activeTab === 'roster' || activeTab === 'settings' ? '' : activeTab === 'details' ? 'max-w-6xl' : activeTab === 'tags' ? 'max-w-[1280px]' : 'max-w-5xl'}`}>
+    <div className={`flex flex-col mx-auto w-full ${activeTab === 'roster' || activeTab === 'settings' ? '' : activeTab === 'details' ? 'max-w-6xl' : activeTab === 'tags' ? (lens === 'review' ? '' : 'max-w-[1280px] !mx-0') : 'max-w-5xl'}`}>
       {activeTab === 'details' ? (
         <OfficeDetailsPage />
       ) : activeTab === 'roster' ? (
@@ -106,7 +116,7 @@ export function TagsManagementPage() {
                 See where every tag is used: on a profile, or as a rule in roster matching. Select a number to see who is behind it.
               </p>
               {batchBanner}
-              <ReviewAllocationsView allocations={allocations} onBulkApply={bulkApply} onBulkUndo={() => lastBatch?.undo()} />
+              <ReviewAllocationsView allocations={allocations} relations={relations} onBulkApply={bulkApply} onBulkUndo={() => lastBatch?.undo()} />
             </>
           )}
 

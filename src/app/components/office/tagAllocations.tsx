@@ -27,7 +27,7 @@ export interface PlacementInfo {
 export const PLACEMENTS: PlacementInfo[] = [
   { id: 'customer-tag', label: 'Customer has', ticketLabel: 'Customer tag', group: 'profile', entity: 'customer', description: "A tag on the customer's profile, used for grouping and filtering.", Icon: User },
   { id: 'employee-tag', label: 'Employee has', ticketLabel: 'Employee tag', group: 'profile', entity: 'employee', description: "A tag on the employee's profile, used for grouping and filtering.", Icon: UserCheck },
-  { id: 'restriction', label: "Employee can't work with", ticketLabel: 'Employee restriction', group: 'roster', entity: 'employee', description: "From the employee's Roster Matching Profile. They won't be matched to customers with this.", Icon: Ban },
+  { id: 'restriction', label: 'Employee restriction', ticketLabel: 'Employee restriction', group: 'roster', entity: 'employee', description: "From the employee's Roster Matching Profile. Anything that stops them attending a visit; for now, a home environment tag on the customer (pets, smoking).", Icon: Ban },
   { id: 'mandatory', label: 'Customer needs', ticketLabel: 'Customer mandatory requirement', group: 'roster', entity: 'customer', description: 'From Care requirements. Only employees who have this tag can be matched.', Icon: Lock },
   { id: 'preferred', label: 'Customer prefers', ticketLabel: 'Customer preferred requirement', group: 'roster', entity: 'customer', description: 'From Care requirements. Employees who have this tag are matched first.', Icon: Star },
   { id: 'environment', label: 'Home has', ticketLabel: 'Customer environment', group: 'roster', entity: 'customer', description: 'Household conditions (pets, smoking). Used to rule out employees with a matching restriction.', Icon: House },
@@ -54,8 +54,7 @@ export interface Allocation {
   kind: PersonKind;
   /**
    * Requirements only. 'customer' is the customer's default, as in PASS today. 'visit' is the
-   * preview of tags that could be set on one visit instead; it only appears when the
-   * "Include visit-level" switch is on.
+   * preview of tags that could be set on one visit instead, which is switched off (see VISIT_LEVEL).
    */
   scope: 'customer' | 'visit';
   visit?: string;
@@ -65,20 +64,25 @@ export const ALL_TAG_TYPES: TagType[] = TAG_TYPE_GROUPS.flatMap(g => g.tagTypes)
 
 const VISITS = ['Morning visit', 'Lunch visit', 'Teatime visit', 'Bedtime visit'];
 
+/**
+ * Whether some requirements are shown as set on a single visit. Parked until the customer table is
+ * right: with it off, every requirement is a customer default, and the screens don't mention visits.
+ */
+const VISIT_LEVEL = false;
+
 // How many people sit in the roster-matching places for a tag (the profile counts come from the
 // tag's own usage count). Only some tags are used this way.
 const ROSTER_COUNTS: Record<string, Partial<Record<Placement, number>>> = {
-  dogs: { environment: 6, restriction: 3 },
-  cats: { environment: 4, restriction: 2 },
-  'other-pets': { environment: 2, restriction: 1 },
-  smoker: { environment: 5, restriction: 2 },
+  dogs: { environment: 6, restriction: 5 },
+  cats: { environment: 4, restriction: 4 },
+  'other-pets': { environment: 2, restriction: 2 },
+  smoker: { environment: 5, restriction: 4 },
   duodopa: { mandatory: 4, preferred: 1 },
   dementia: { mandatory: 2, preferred: 2 },
   parkinsons: { mandatory: 1 },
   stroke: { mandatory: 1 },
   copd: { preferred: 1 },
-  'waking-night': { mandatory: 2 },
-  'sleeping-night': { preferred: 1 },
+  nights: { mandatory: 2, preferred: 1 },
   'live-in-setting': { mandatory: 1 },
   english: { preferred: 3 },
   polish: { preferred: 1 },
@@ -88,12 +92,12 @@ const ROSTER_COUNTS: Record<string, Partial<Record<Placement, number>>> = {
   'live-in': { mandatory: 1 },
 };
 
-/** A tag type that's mandatory (at onboarding) for customers, employees or both. */
+/**
+ * A tag type that's mandatory (at onboarding) for customers, employees or both. For now only Territory:
+ * everyone should have one, and it's what the Missing tags view looks for.
+ */
 export const MANDATORY_TYPES: { typeId: string; entities: PersonKind[] }[] = [
-  { typeId: 'area', entities: ['customer', 'employee'] },
-  { typeId: 'territory', entities: ['customer'] },
-  { typeId: 'staff-type', entities: ['employee'] },
-  { typeId: 'care-setting', entities: ['employee'] },
+  { typeId: 'territory', entities: ['customer', 'employee'] },
 ];
 
 export const typeName = (typeId: string) => ALL_TAG_TYPES.find(t => t.id === typeId)?.name ?? typeId;
@@ -172,7 +176,7 @@ export function buildAllocations(assigned: Assigned[], bulk: BulkChange[] = []):
         pick(ALL_CUSTOMERS, n, `${tag.id}-${placement}`).forEach(person => {
           // Roughly one requirement in three is shown as set on a single visit, for the preview.
           const h = hash(`${person.id}-${tag.id}-${placement}`);
-          const onVisit = h % 3 === 0;
+          const onVisit = VISIT_LEVEL && h % 3 === 0;
           push({ tagType, tag, placement, person, scope: onVisit ? 'visit' : 'customer', visit: onVisit ? VISITS[h % VISITS.length] : undefined });
         });
       }
