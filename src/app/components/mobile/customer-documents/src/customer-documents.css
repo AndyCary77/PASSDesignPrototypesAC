@@ -449,7 +449,9 @@
 }
 .docs-cb-banner-top {
   display: flex;
-  align-items: center;
+  /* Top, not centre: the banner grows (usage label, offline warning) and
+     the icon should stay beside the title rather than drift to the middle. */
+  align-items: flex-start;
   gap: 10px;
   background: #fff;
   padding: 10px 12px;
@@ -1000,6 +1002,9 @@
   flex-shrink: 0;
 }
 .docs-cb-limit-icon { display: flex; flex-shrink: 0; }
+/* Offline, this banner grows to several lines — keep the icon with the
+   first line instead of centred. */
+.docs-cb-limit--offline .docs-cb-limit-icon { align-self: flex-start; }
 .docs-cb-limit-text {
   flex: 1;
   min-width: 0;
@@ -1062,7 +1067,7 @@
 .docs-demo-controls {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 76px;
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -1132,3 +1137,104 @@
   cursor: pointer;
 }
 .docs-cb-meter-info:active { background: rgba(154, 38, 214, 0.1); border-radius: 50%; }
+
+/* ── Offline mode ───────────────────────────────────────────────────
+   Demo switch (bottom-right, outside the phone) + everything it changes.
+   Chrome: status bar and header go grey (#8f8e94, the production grey) and a black
+   "Visit last refreshed" strip sits under the header; the customer card
+   stays purple, as in production. */
+.docs-offline-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid var(--greyscale-2-grey-20);
+  border-radius: 24px;
+  background: #fff;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--greyscale-2-grey-20);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+}
+.docs-offline-toggle--on { background: #000; border-color: #000; color: #fff; }
+
+.screen-area[data-offline] .status-bar,
+.screen-area[data-offline] .app-header { background: #8f8e94; }
+
+.docs-offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #000;
+  color: #fff;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+.docs-offline-banner svg { flex-shrink: 0; }
+
+/* The warning that accompanies any last-known allowance figure. */
+.docs-offline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-family: Barlow, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #8a5a00;
+}
+.docs-offline-note strong { font-weight: 700; }
+.docs-offline-note-icon { display: flex; flex-shrink: 0; margin-top: 1px; color: #d59934; }
+.docs-offline-note--in-limit { margin-top: 6px; font-weight: 500; color: var(--greyscale-2-grey-20); }
+
+/* Picker: label + warning share one strip, with the strip's bottom rule. */
+.docs-cb-allowance-offline {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
+  flex-shrink: 0;
+}
+.docs-cb-allowance-offline .docs-cb-allowance--bar { padding: 0; border-bottom: none; }
+.docs-cb-allowance-offline .docs-offline-note { margin-top: 2px; }
+
+/* Stale usage bars: diagonal hatching instead of a solid fill, so a
+   last-known figure reads as "estimate" at a glance (the hatch keeps the
+   fill's own purple/amber, so "running low" still shows). */
+.docs-cb-meter--stale span,
+.docs-cb-limit-meter-bar--stale span {
+  background-image: repeating-linear-gradient(
+    45deg, rgba(255, 255, 255, 0.55) 0 3px, transparent 3px 6px
+  );
+  background-color: var(--brand-purple-6-purple-4);
+}
+.docs-cb-meter--low.docs-cb-meter--stale span,
+.docs-cb-limit-meter-bar--low.docs-cb-limit-meter-bar--stale span { background-color: #d59934; }
+
+/* Sheet: the "You're offline" notice at the top of the drafting-limit sheet. */
+.docs-offline-sheet-notice {
+  display: flex;
+  gap: 12px;
+  margin: 4px 24px 8px;
+  padding: 12px;
+  background: #f5f5f5;
+  border: 1px solid var(--greyscale-4-grey-40);
+  border-radius: 10px;
+}
+.docs-offline-sheet-notice-icon { display: flex; flex-shrink: 0; margin-top: 1px; color: #000; }
+.docs-offline-sheet-notice p {
+  margin: 0;
+  font-family: Barlow, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #000;
+}

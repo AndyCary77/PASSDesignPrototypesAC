@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useId } from 'react'
+import { useState, useRef, useEffect, useId, createContext, useContext } from 'react'
 import StatusBar from '../../assets/StatusBar'
 import ScreenSlider from '../../assets/ScreenSlider'
 import PhoneFrame from '../../assets/PhoneFrame'
@@ -139,6 +139,59 @@ const InfoIcon = ({ size = 14 }) => (
     <path fillRule="evenodd" d="M12,2 C17.52,2 22,6.48 22,12 C22,17.52 17.52,22 12,22 C6.48,22 2,17.52 2,12 C2,6.48 6.48,2 12,2 Z M10.6662105,9.93690394 L10.581437,9.93690394 C10.1076337,9.93690394 9.72611507,10.3209137 9.72611507,10.7922258 C9.72611507,11.2660291 10.1101248,11.6475478 10.581437,11.6475478 L10.6662105,11.6475478 L10.6662105,16.6348056 L10.5826825,16.6348056 C10.1096134,16.6348056 9.72611507,17.0183039 9.72611507,17.491373 C9.72611507,17.9644422 10.1096134,18.3479405 10.5826825,18.3479405 L13.4173175,18.3479405 C13.8903866,18.3479405 14.2738849,17.9644422 14.2738849,17.491373 C14.2738849,17.0183039 13.8903866,16.6348056 13.4173175,16.6348056 L13.3387717,16.6348056 L13.3362805,10.936904 C13.3360752,10.3847645 12.8884201,9.93727594 12.3362806,9.93727594 L10.6662105,9.93690394 Z M11.8678197,5.65205952 C11.0006244,5.65205952 10.2992557,6.35342819 10.2992557,7.22062354 C10.2992557,8.08781889 11.0006244,8.78918756 11.8678197,8.78918756 C12.7350151,8.78918756 13.4363837,8.08781889 13.4363837,7.22062354 C13.4363837,6.35342819 12.7350151,5.65205952 11.8678197,5.65205952 Z"/>
   </svg>
 )
+
+const CloudOffIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96zM3 5.27l2.75 2.74C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l2 2L21 20.73 4.27 4 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h1.73z"/>
+  </svg>
+)
+const WarningIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+  </svg>
+)
+
+// ─── Offline mode ────────────────────────────────────────────
+// Demo-only switch (bottom-right, outside the phone) that makes the whole
+// phone behave as if the device had lost signal: the status bar/header go
+// grey, a black "last refreshed" banner appears under the header, and every
+// allowance surface falls back to its last known value with a warning that
+// it may be out of date — the server's count is the final decision once the
+// recording uploads. Provided at the root so each screen can read it without
+// prop-drilling.
+const OfflineContext = createContext(false)
+const useOffline = () => useContext(OfflineContext)
+
+// How long ago the visit was last refreshed (hh:mm), as the real app shows.
+const OFFLINE_LAST_REFRESH = '02:37'
+
+// Black strip under the header, mirroring the real app's "Visit last
+// refreshed" banner. White 14px/600 on black — far above AA.
+function OfflineBanner() {
+  const offline = useOffline()
+  if (!offline) return null
+  return (
+    <div className="docs-offline-banner" role="status">
+      <CloudOffIcon size={20} />
+      <span>Visit last refreshed {OFFLINE_LAST_REFRESH} ago</span>
+    </div>
+  )
+}
+
+// The warning that goes with any last-known allowance figure. "May be out of
+// date" always shows; the "server's decision is final" half only matters
+// while a recording can still be made against a nearly-used allowance
+// (`low`: 10–11 of 12 used), so it's held back in the comfortable state and
+// dropped once the limit is reached — nothing can be recorded or uploaded
+// then. `className` lets each surface set its own spacing.
+function OfflineAllowanceNote({ low = false, className = '' }) {
+  return (
+    <div className={`docs-offline-note${className ? ` ${className}` : ''}`}>
+      <span className="docs-offline-note-icon"><WarningIcon size={16} /></span>
+      <span><strong>Offline:</strong> may be out of date.{low && ' The server’s decision is final once uploaded.'}</span>
+    </div>
+  )
+}
 
 // Uploaded via the Mobile Icons library's "Upload icon" feature (Icons/
 // Mobile Uploads/Used across multiple mobile screens/), copied in verbatim
@@ -867,6 +920,7 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
         <span className="app-header-title">All customers</span>
         <div style={{ width: 36 }} />
       </div>
+      <OfflineBanner />
 
       <div className="docs-customer-card">
         <h2 className="docs-customer-name">{CUSTOMER.name}</h2>
@@ -992,6 +1046,7 @@ function formatAllowanceDate(date) {
 // way; only the opening sentence changes. Stresses that the allowance belongs
 // to this one customer, not the office as a whole.
 function DraftAllowanceSheet({ customerName, allowance, onClose }) {
+  const offline = useOffline()
   const first = customerName.split(' ')[0]
   const exhausted = allowance.remaining <= 0
   return (
@@ -1003,15 +1058,23 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
           <button className="docs-sheet-close-btn" onClick={onClose} aria-label="Close"><CloseIcon /></button>
         </div>
         <div className="docs-cb-limit-sheet-body">
+          {offline && (
+            <div className="docs-offline-sheet-notice" role="note">
+              <span className="docs-offline-sheet-notice-icon"><CloudOffIcon size={22} /></span>
+              <p>
+                <strong>You’re offline.</strong> This is the last known allowance, from when the visit was last refreshed ({OFFLINE_LAST_REFRESH} ago). It may be out of date{!exhausted && ', and the server’s decision is final once your recording is uploaded'}.
+              </p>
+            </div>
+          )}
           <p className="docs-sheet-message docs-cb-limit-sheet-intro">
             {exhausted
               ? <>{first} has reached the limit of {allowance.limit} Assessment Hero drafts in the last 30 days, so no new documents can be drafted for {first} right now.</>
               : <>{first} has used {allowance.used} of {allowance.limit} Assessment Hero drafts in the last 30 days. This is {first}’s own allowance — other customers each have their own.</>}
           </p>
           <div className="docs-cb-limit-meter">
-            <p className="docs-cb-limit-meter-label">{allowance.used} of {allowance.limit} drafts used · rolling 30 days</p>
+            <p className="docs-cb-limit-meter-label">{offline && 'Last known: '}{allowance.used} of {allowance.limit} drafts used · rolling 30 days</p>
             <div
-              className={`docs-cb-limit-meter-bar${allowance.remaining <= LOW_DRAFTS_THRESHOLD ? ' docs-cb-limit-meter-bar--low' : ''}`}
+              className={`docs-cb-limit-meter-bar${allowance.remaining <= LOW_DRAFTS_THRESHOLD ? ' docs-cb-limit-meter-bar--low' : ''}${offline ? ' docs-cb-limit-meter-bar--stale' : ''}`}
               role="progressbar"
               aria-label={`Drafts used for ${first}`}
               aria-valuemin={0}
@@ -1022,7 +1085,7 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
             </div>
           </div>
           <p className="docs-cb-limit-next">
-            {exhausted ? 'Next available' : 'Next draft frees up'}: <strong>{formatAllowanceDate(allowance.nextAvailableAt)}</strong>
+            {exhausted ? 'Next available' : 'Next draft frees up'}{offline && ' (last known)'}: <strong>{formatAllowanceDate(allowance.nextAvailableAt)}</strong>
             {allowance.nextAvailableCount > 0 && ` (${allowance.nextAvailableCount === 1 ? '1 draft' : `${allowance.nextAvailableCount} drafts`})`}
           </p>
           <ul className="docs-cb-limit-rules">
@@ -1046,16 +1109,18 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
 // itself) rather than red; the detail is behind the info button, as a
 // bottom sheet — the phone equivalent of the desktop popover.
 function AssessmentHeroLimitBanner({ customerName, allowance }) {
+  const offline = useOffline()
   const [open, setOpen] = useState(false)
   useBackHandler(open, () => setOpen(false))
   return (
     <>
-      <div className="docs-cb-limit" role="status">
+      <div className={`docs-cb-limit${offline ? ' docs-cb-limit--offline' : ''}`} role="status">
         <span className="docs-cb-limit-icon"><AssessmentHeroIcon size={20} /></span>
-        <p className="docs-cb-limit-text">
-          <strong>Assessment Hero limit reached.</strong>{' '}
+        <div className="docs-cb-limit-text">
+          <strong>{offline ? 'Limit reached when last refreshed.' : 'Assessment Hero limit reached.'}</strong>{' '}
           Available again from {formatAllowanceDate(allowance.nextAvailableAt)}
-        </p>
+          {offline && <OfflineAllowanceNote className="docs-offline-note--in-limit" />}
+        </div>
         <button
           type="button"
           className="docs-cb-limit-info"
@@ -1087,10 +1152,20 @@ function DraftAllowanceNote({ allowance, customerName, showCostHint = false, cla
   const { used, limit, remaining } = allowance
   const first = customerName.split(' ')[0]
   const low = remaining <= LOW_DRAFTS_THRESHOLD
-  return (
+  const offline = useOffline()
+  const text = (
     <p className={`docs-cb-allowance${low ? ' docs-cb-allowance--low' : ''}${className ? ` ${className}` : ''}`}>
-      {used} of {limit} drafts used for {first} in the last 30 days{showCostHint && ' · each document uses 1'}
+      {offline && 'Last known: '}{used} of {limit} drafts used for {first} in the last 30 days{showCostHint && ' · each document uses 1'}
     </p>
+  )
+  if (!offline) return text
+  // The bar-style note carries its own bottom rule, so the warning sits
+  // inside the same strip rather than splitting it in two.
+  return (
+    <div className="docs-cb-allowance-offline">
+      {text}
+      <OfflineAllowanceNote low={low} />
+    </div>
   )
 }
 
@@ -1099,6 +1174,7 @@ function DraftAllowanceNote({ allowance, customerName, showCostHint = false, cla
 // clear the allowance is theirs alone, not the office's. The info button opens
 // the same sheet as the limit-reached banner for the full rules.
 function DraftAllowanceMeter({ allowance, customerName }) {
+  const offline = useOffline()
   const [open, setOpen] = useState(false)
   useBackHandler(open, () => setOpen(false))
   const first = customerName.split(' ')[0]
@@ -1106,11 +1182,11 @@ function DraftAllowanceMeter({ allowance, customerName }) {
   return (
     <>
       <p className={`docs-cb-allowance${low ? ' docs-cb-allowance--low' : ''}`}>
-        {allowance.used} of {allowance.limit} drafts used for {first}
+        {offline && 'Last known: '}{allowance.used} of {allowance.limit} drafts used for {first}
       </p>
       <div className="docs-cb-meter-row">
         <div
-          className={`docs-cb-meter${low ? ' docs-cb-meter--low' : ''}`}
+          className={`docs-cb-meter${low ? ' docs-cb-meter--low' : ''}${offline ? ' docs-cb-meter--stale' : ''}`}
           role="progressbar"
           aria-label={`Drafts used for ${first} in the last 30 days`}
           aria-valuemin={0}
@@ -1128,6 +1204,7 @@ function DraftAllowanceMeter({ allowance, customerName }) {
           <InfoIcon size={20} />
         </button>
       </div>
+      {offline && <OfflineAllowanceNote low={low} />}
       {open && <DraftAllowanceSheet customerName={customerName} allowance={allowance} onClose={() => setOpen(false)} />}
     </>
   )
@@ -1272,13 +1349,14 @@ const MAX_ASSESSMENT_HERO_DOCUMENTS = 12
 // limit is what's stopping the user, and it's announced politely to screen
 // readers (role="status") rather than interrupting like an alert.
 function SelectionLimitBanner({ maxSelectable, limitedByAllowance, customerName, remaining }) {
+  const offline = useOffline()
   const first = customerName.split(' ')[0]
   return (
     <div className="docs-cb-limit-banner" role="status">
       <span className="docs-cb-limit-banner-icon"><InfoIcon size={20} /></span>
       <p className="docs-cb-limit-banner-text">
         {limitedByAllowance
-          ? <><strong>Only {remaining} {remaining === 1 ? 'draft' : 'drafts'} left for {first}.</strong> You can select up to {maxSelectable}. Untick one to choose another.</>
+          ? <><strong>Only {remaining} {remaining === 1 ? 'draft' : 'drafts'} left for {first}{offline && ' (last known)'}.</strong> You can select up to {maxSelectable}. Untick one to choose another.</>
           : <><strong>Maximum of {MAX_ASSESSMENT_HERO_DOCUMENTS} documents can be selected.</strong> Untick one to choose another.</>}
       </p>
     </div>
@@ -1421,6 +1499,7 @@ function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, 
           <span className="app-header-title">Select documents</span>
           <div style={{ width: 36 }} />
         </div>
+        <OfflineBanner />
         <p className="docs-cb-select-intro">Choose which documents this recording is for — Assessment Hero drafts each one from the conversation.</p>
         {allowance && <DraftAllowanceNote allowance={allowance} customerName={CUSTOMER.name} showCostHint className="docs-cb-allowance--bar" />}
         {atLimit && <SelectionLimitBanner maxSelectable={maxSelectable} limitedByAllowance={limitedByAllowance} customerName={CUSTOMER.name} remaining={allowance?.remaining ?? 0} />}
@@ -2099,6 +2178,7 @@ export default function App() {
   // exhausted one also closes the document picker if it's open, since
   // drafting is no longer possible.
   const [allowanceScenario, setAllowanceScenario] = useState(null)
+  const [offline, setOffline] = useState(false)
   const allowance = allowanceScenario ? getDemoAllowance(allowanceScenario) : null
   const toggleAllowanceDemo = (scenario) => {
     if (allowanceScenario === scenario) { setAllowanceScenario(null); return }
@@ -2179,7 +2259,7 @@ export default function App() {
   const systemBack = () => handleSystemBack(() => { window.location.href = '../customers/?transition=back' })
 
   return (
-    <>
+    <OfflineContext.Provider value={offline}>
       <a href="/" className="back-link"><ChevronLeftIcon size={16} /> Prototypes</a>
       {/* Demo-only, outside the phone: toggles the "Assessment Hero drafting
           limit reached" scenario on the Documents screen. */}
@@ -2194,8 +2274,20 @@ export default function App() {
           {allowanceScenario === 'exhausted' ? 'Demo: reset drafting limit' : 'Demo: drafting limit reached'}
         </button>
       </div>
+      {/* Demo-only: the one switch for offline mode, bottom-right. Sits
+          above the (faint) allowance scenarios so it's the first thing to
+          reach for; whichever scenario is on is then shown "last known". */}
+      <button
+        type="button"
+        className={`docs-offline-toggle${offline ? ' docs-offline-toggle--on' : ''}`}
+        aria-pressed={offline}
+        onClick={() => setOffline(o => !o)}
+      >
+        <CloudOffIcon size={18} />
+        {offline ? 'Offline mode: on' : 'Offline mode: off'}
+      </button>
       <PhoneFrame onSystemBack={systemBack}>
-        <div className={`screen-area page-slide${entering ? ' slide-entering' : ''}`}>
+        <div className={`screen-area page-slide${entering ? ' slide-entering' : ''}`} data-offline={offline ? 'true' : undefined}>
           <DocumentsRootScreen onOpenSection={openSection} onOpenCareBridge={careBridgeSelect.open} allowance={allowance} />
           {/* Assessments/Other Documents/Incidents present as a modal sheet
               (closed via an X, not a back-chevron) sliding up from the
@@ -2267,6 +2359,6 @@ export default function App() {
           )}
         </div>
       </PhoneFrame>
-    </>
+    </OfflineContext.Provider>
   )
 }
