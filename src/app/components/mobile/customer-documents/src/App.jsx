@@ -1062,7 +1062,7 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
             <div className="docs-offline-sheet-notice" role="note">
               <span className="docs-offline-sheet-notice-icon"><CloudOffIcon size={22} /></span>
               <p>
-                <strong>You’re offline.</strong> This is the last known allowance, from when the visit was last refreshed ({OFFLINE_LAST_REFRESH} ago). It may be out of date{!exhausted && ', and the server’s decision is final once your recording is uploaded'}.
+                <strong>You’re offline.</strong> This is the last allowance this device received. It may be out of date{!exhausted && ', and the server’s decision is final once your recording is uploaded'}.
               </p>
             </div>
           )}
@@ -1117,7 +1117,7 @@ function AssessmentHeroLimitBanner({ customerName, allowance }) {
       <div className={`docs-cb-limit${offline ? ' docs-cb-limit--offline' : ''}`} role="status">
         <span className="docs-cb-limit-icon"><AssessmentHeroIcon size={20} /></span>
         <div className="docs-cb-limit-text">
-          <strong>{offline ? 'Limit reached when last refreshed.' : 'Assessment Hero limit reached.'}</strong>{' '}
+          <strong>{offline ? 'Last known: Assessment Hero limit reached.' : 'Assessment Hero limit reached.'}</strong>{' '}
           Available again from {formatAllowanceDate(allowance.nextAvailableAt)}
           {offline && <OfflineAllowanceNote className="docs-offline-note--in-limit" />}
         </div>
