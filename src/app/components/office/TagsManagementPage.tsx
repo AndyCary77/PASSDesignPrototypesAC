@@ -40,7 +40,7 @@ export function TagsManagementPage() {
   const setLens = (v: Lens) => setParams(v === 'types' ? {} : { view: v });
 
   // Changes made on these screens: tags given from Missing tags, and bulk adds and removes from
-  // Review allocations. They count from then on in every view, and the latest can be undone.
+  // Tag assignments. They count from then on in every view, and the latest can be undone.
   const [assigned, setAssigned] = useState<Assigned[]>([]);
   const [bulk, setBulk] = useState<BulkChange[]>([]);
   const [relations, setRelations] = useState<RelationChange[]>([]);
@@ -114,7 +114,7 @@ export function TagsManagementPage() {
               ariaLabel="Tags view"
               options={[
                 { value: 'types', label: 'Tag types' },
-                { value: 'review', label: 'Review allocations' },
+                { value: 'review', label: 'Tag assignments' },
                 { value: 'missing', label: `Missing tags${missing.length > 0 ? ` · ${missing.length}` : ''}` },
               ]}
             />
@@ -132,7 +132,7 @@ export function TagsManagementPage() {
             </div>
           </div>
 
-          {/* Review allocations runs the full width of the screen; the other views sit centred at a readable width. */}
+          {/* Tag assignments runs the full width of the screen; the other views sit centred at a readable width. */}
           <div className={`space-y-6 ${lens === 'review' ? '' : 'max-w-[1280px] mx-auto w-full'}`}>
           {lens === 'review' && (
             <>

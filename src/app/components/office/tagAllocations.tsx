@@ -2,7 +2,7 @@ import { Ban, House, Lock, Star, User, UserCheck, type LucideIcon } from 'lucide
 import { TAG_TYPE_GROUPS, type TagSummary, type TagType } from './tagsMockData';
 import { ALL_CUSTOMERS, ALL_EMPLOYEES, hash, pick, tagMembers, type TagPerson } from './tagMembers';
 
-// Made-up data for the Review allocations and Missing tags views: who a tag is applied to,
+// Made-up data for the Tag assignments and Missing tags views: who a tag is applied to,
 // and in which of the six places a tag can sit. Deterministic, so the same tag always shows
 // the same people; the people come from the Customers and Employees lists.
 

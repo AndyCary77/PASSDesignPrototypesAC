@@ -29,7 +29,7 @@ import {
   kindOf,
 } from './tagAllocations';
 
-// Review allocations: where every tag is used. By tag, a grid of the tags against the six
+// Tag assignments (Review allocations in the code): where every tag is used. By tag, a grid of the tags against the six
 // places a tag can sit (a number in each cell that opens the people behind it); or by person,
 // one row each with everything they've been given.
 
