@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { Search, Tag as TagIcon } from 'lucide-react';
+import { Info, Search, Tag as TagIcon } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { SegmentedControl } from '../buttons/SegmentedControl';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { TAG_TYPE_GROUPS } from './tagsMockData';
 import { TagTypeListItem } from './TagTypeListItem';
 import { OfficeDetailsPage } from './OfficeDetailsPage';
@@ -16,6 +17,13 @@ import type { RelationChange } from './personRelations';
 import { ALL_TAG_TYPES, buildAllocations, buildMissing, typeName, type Assigned, type BulkChange, type MissingRow } from './tagAllocations';
 
 type Lens = 'types' | 'review' | 'missing';
+
+// What each view is for. It sits behind the info button beside the view switch, so the page itself stays compact.
+const VIEW_INFO = {
+  types: 'Tags can be used to assign custom attributes to your customers and employees. Tag types group your tags. Once configured, tags will be available within filters throughout PASS to help you target and match your customers and employees in ways that suit your delivery of care.',
+  review: 'See where every tag is used: on a profile, or as a rule in roster matching. Select a number to see who is behind it.',
+  missing: "Active customers and employees who have no tag from a tag type that's marked mandatory, soonest needed first.",
+} as const;
 
 export function TagsManagementPage() {
   // Tab state (and, for "Details", the form state + Save action) is owned
@@ -83,7 +91,7 @@ export function TagsManagementPage() {
   }, [query]);
 
   return (
-    <div className={`flex flex-col mx-auto w-full ${activeTab === 'roster' || activeTab === 'settings' ? '' : activeTab === 'details' ? 'max-w-6xl' : activeTab === 'tags' ? (lens === 'review' ? '' : 'max-w-[1280px] !mx-0') : 'max-w-5xl'}`}>
+    <div className={`flex flex-col mx-auto w-full ${activeTab === 'roster' || activeTab === 'settings' ? '' : activeTab === 'details' ? 'max-w-6xl' : activeTab === 'tags' ? '' : 'max-w-5xl'}`}>
       {activeTab === 'details' ? (
         <OfficeDetailsPage />
       ) : activeTab === 'roster' ? (
@@ -97,7 +105,9 @@ export function TagsManagementPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div>
+          {/* The view switch, centred under the Office tabs, with an info button for what the view is. It stays put whatever width the view below needs. */}
+          <div className="flex justify-center">
+            <div className="relative">
             <SegmentedControl
               value={lens}
               onChange={setLens}
@@ -108,13 +118,24 @@ export function TagsManagementPage() {
                 { value: 'missing', label: `Missing tags${missing.length > 0 ? ` · ${missing.length}` : ''}` },
               ]}
             />
+            {/* Beside the switch rather than part of it, so the switch itself stays centred. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="tertiary" iconOnly size="sm" aria-label="About this view" className="absolute left-full top-1/2 -translate-y-1/2 ml-2">
+                  <Info className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="center" className="w-[min(380px,calc(100vw-3rem))] p-4">
+                <p className="text-body text-gray-900">{VIEW_INFO[lens]}</p>
+              </PopoverContent>
+            </Popover>
+            </div>
           </div>
 
+          {/* Review allocations runs the full width of the screen; the other views sit centred at a readable width. */}
+          <div className={`space-y-6 ${lens === 'review' ? '' : 'max-w-[1280px] mx-auto w-full'}`}>
           {lens === 'review' && (
             <>
-              <p className="text-body text-gray-600 max-w-3xl">
-                See where every tag is used: on a profile, or as a rule in roster matching. Select a number to see who is behind it.
-              </p>
               {batchBanner}
               <ReviewAllocationsView allocations={allocations} relations={relations} onBulkApply={bulkApply} onBulkUndo={() => lastBatch?.undo()} />
             </>
@@ -122,9 +143,6 @@ export function TagsManagementPage() {
 
           {lens === 'missing' && (
             <>
-              <p className="text-body text-gray-600 max-w-3xl">
-                Active customers and employees who have no tag from a tag type that's marked mandatory, soonest needed first.
-              </p>
               {batchBanner}
               <MissingTagsView rows={missing} onAssign={assign} />
             </>
@@ -138,12 +156,7 @@ export function TagsManagementPage() {
                 <TagIcon className="w-5 h-5" />
               </span>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Tag Types &amp; Tags</h3>
-                <p className="text-body text-gray-500 max-w-3xl">
-                  Tags can be used to assign custom attributes to your customers and employees. Tag types group your
-                  tags — once configured, tags will be available within filters throughout PASS to help you target
-                  and match your customers and employees in ways that suit your delivery of care.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900">Tag Types &amp; Tags</h3>
               </div>
             </div>
 
@@ -190,6 +203,7 @@ export function TagsManagementPage() {
             ))
           )}
           </>)}
+          </div>
         </div>
       )}
     </div>

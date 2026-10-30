@@ -132,6 +132,13 @@ export function languageTagsOf(person: TagPerson) {
 export const careSettingOf = (person: TagPerson) =>
   isLiveInCarer(person) ? 'live-in-setting' : [1, 2].includes(hash(`${person.id}-care`) % 12) ? 'nights' : 'day-care';
 
+// Staff type follows the role: the office team are Office Staff, careworkers and supervisors Field Staff.
+// A few active employees have none yet (about one in twelve), so there's something for a "missing" check to find.
+const OFFICE_ROLES = ['Manager', 'Care Coordinator', 'Super user', 'Test'];
+/** The one staff type an employee has, if they've been given one. */
+export const staffTypeOf = (person: TagPerson) =>
+  hash(`${person.id}-staff`) % 12 === 0 ? undefined : OFFICE_ROLES.includes(person.role ?? '') ? 'office-staff' : 'field-staff';
+
 /**
  * Who's on a tag. The tag's usage count is split between employees and customers
  * (when the type applies to both, roughly one employee to three customers); each list
@@ -139,9 +146,10 @@ export const careSettingOf = (person: TagPerson) =>
  * (e.g. 231) show a believable handful rather than every person.
  */
 export function tagMembers(tagType: TagType, tag: TagSummary) {
-  if (tagType.id === 'territory' || tagType.id === 'area' || tagType.id === 'language' || tagType.id === 'care-setting') {
+  if (tagType.id === 'territory' || tagType.id === 'area' || tagType.id === 'language' || tagType.id === 'care-setting' || tagType.id === 'staff-type') {
     const has = (p: TagPerson) =>
       tagType.id === 'care-setting' ? careSettingOf(p) === tag.id
+      : tagType.id === 'staff-type' ? staffTypeOf(p) === tag.id
       : tagType.id === 'territory' ? territoryTagOf(p) === tag.id
       : tagType.id === 'area' ? areaTagsOf(p).includes(tag.id)
       : languageTagsOf(p).includes(tag.id);

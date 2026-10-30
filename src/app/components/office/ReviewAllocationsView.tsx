@@ -14,6 +14,8 @@ import { Tag } from '../ui/tag';
 import { TableScrollbars } from '../ui/table-scrollbars';
 import { customerRelationsOf, disfavouredOf, relationsOf, type RelationChange } from './personRelations';
 import { BulkEditSlideout, type BulkColumn } from './BulkEditSlideout';
+import { ColumnFilter, NO_FILTERS, PeopleFilterPanel, describeMissing, describeRule, ruleMatches, type FilterColumn, type FilterRule, type PeopleFilters } from './PeopleFilter';
+import { ALL_CUSTOMERS, ALL_EMPLOYEES, type TagPerson } from './tagMembers';
 import type { TagSummary, TagType } from './tagsMockData';
 import {
   ALL_TAG_TYPES,
@@ -24,6 +26,7 @@ import {
   type BulkChange,
   type Placement,
   type PersonKind,
+  kindOf,
 } from './tagAllocations';
 
 // Review allocations: where every tag is used. By tag, a grid of the tags against the six
@@ -35,7 +38,7 @@ const LIGHT_TOOLTIP = {
   arrowClassName: 'bg-white fill-white',
 } as const;
 
-const PERSON_PAGE_SIZE = 12;
+const PERSON_PAGE_SIZES = [12, 50, 100];
 const GREY = '#f6f7f9';
 
 const noun = (kind: PersonKind, n: number) => (kind === 'customer' ? (n === 1 ? 'customer' : 'customers') : n === 1 ? 'employee' : 'employees');
@@ -220,15 +223,43 @@ const bulkColumns = (kind: PersonKind): BulkColumn[] =>
 
 const plainPill = (tag: TagSummary): TagSummary => ({ ...tag, count: undefined });
 
+/** The named people in a People column. */
+function namedIn(col: Extract<PersonCol, { kind: 'people' }>, person: TagPerson, kind: PersonKind, relations: RelationChange[]): TagPerson[] {
+  if (kind === 'employee' && col.relation === 'disfavoured') return disfavouredOf(person, relations);
+  const named = kind === 'employee' ? relationsOf(person) : customerRelationsOf(person);
+  return (named as Record<string, TagPerson[]>)[col.relation] ?? [];
+}
+
+/** What a person holds in a column, as ids (tags, or named people), for the filter to test. */
+function heldIn(col: PersonCol, person: TagPerson, items: Allocation[], kind: PersonKind, relations: RelationChange[]) {
+  if (col.kind === 'people') return new Set(namedIn(col, person, kind, relations).map(p => p.id));
+  return new Set(items.filter(a => (col.kind === 'type' ? a.tagType.id === col.typeId && col.placements.includes(a.placement) : a.placement === col.placement)).map(a => a.tag.id));
+}
+
+/** The filter's view of a column: its name, and which tags it could hold. */
+function filterColumn(col: PersonCol): FilterColumn {
+  if (col.kind === 'people') return { id: col.id, title: col.title, isType: false };
+  if (col.kind === 'type') {
+    const type = ALL_TAG_TYPES.find(t => t.id === col.typeId)!;
+    return { id: col.id, title: col.title, sub: col.sub, isType: true, groups: [{ type, tags: type.tags }] };
+  }
+  // A requirement can be any tag an employee can hold, bar Environment (that's a home / restriction, not a skill).
+  return {
+    id: col.id, title: col.title, sub: col.sub, isType: false,
+    groups: ALL_TAG_TYPES.filter(t => t.appliesTo.includes('Employees') && t.id !== 'environment').map(type => ({ type, tags: type.tags })),
+  };
+}
+
 /** One cell of the By person table: the tags, requirements or named people for one column. */
-function PersonCell({ col, person, kind, items, relations }: { col: PersonCol; person: Allocation['person']; kind: PersonKind; items: Allocation[]; relations: RelationChange[] }) {
+function PersonCell({ col, person, kind, items, relations, faded }: { col: PersonCol; person: Allocation['person']; kind: PersonKind; items: Allocation[]; relations: RelationChange[]; faded?: boolean }) {
+  // Inactive and finished people's tags are faded (the grey labels aren't: any lighter fails contrast).
+  const fade = faded ? 'opacity-75' : '';
   const none = <span className="text-body text-gray-500" aria-label="None">–</span>;
 
   if (col.kind === 'people') {
-    const named = kind === 'employee' ? relationsOf(person) : customerRelationsOf(person);
-    const list = kind === 'employee' && col.relation === 'disfavoured' ? disfavouredOf(person, relations) : (named as Record<string, Allocation['person'][]>)[col.relation] ?? [];
+    const list = namedIn(col, person, kind, relations);
     return list.length === 0 ? none : (
-      <ul className="flex flex-wrap gap-1.5">
+      <ul className={`flex flex-wrap gap-1.5 ${fade}`}>
         {list.map(p => <li key={p.id} className="max-w-full"><Tag label={p.name} variant={col.variant} /></li>)}
       </ul>
     );
@@ -237,7 +268,7 @@ function PersonCell({ col, person, kind, items, relations }: { col: PersonCol; p
   const here = items.filter(a => (col.kind === 'type' ? a.tagType.id === col.typeId && col.placements.includes(a.placement) : a.placement === col.placement));
   if (here.length === 0) return none;
   const pills = (list: Allocation[]) => (
-    <ul className="flex flex-wrap gap-1.5">
+    <ul className={`flex flex-wrap gap-1.5 ${fade}`}>
       {list.map(a => <li key={a.id}><TagSummaryPill tag={plainPill(a.tag)} /></li>)}
     </ul>
   );
@@ -267,14 +298,18 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
   onBulkApply: (changes: BulkChange[], text: string, relations: RelationChange[]) => void;
   onBulkUndo: () => void;
 }) {
-  const [mode, setMode] = useState<'tag' | 'person'>('tag');
+  const [mode, setMode] = useState<'tag' | 'person'>('person');
   const [query, setQuery] = useState('');
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [types, setTypes] = useState<string[]>([]);
   const [showFinished, setShowFinished] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
+  // The By person filter: conditions on columns, a "missing a tag" check, and which columns show.
+  const [filters, setFilters] = useState<PeopleFilters>(NO_FILTERS);
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const [open, setOpen] = useState<{ type: TagType; tag: TagSummary; placement: Placement; label: string } | null>(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PERSON_PAGE_SIZES[0]);
   // Bulk selection, in the By person list.
   const [selected, setSelected] = useState<string[]>([]);
   const [bulk, setBulk] = useState<'add' | 'remove' | null>(null);
@@ -285,21 +320,27 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
   const q = query.trim().toLowerCase();
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter(x => x !== v) : [...list, v]);
 
-  // What's counted at all: finished people are hidden by default.
+  // What's counted at all: finished and inactive people are hidden by default.
   const base = useMemo(
-    () => allocations.filter(a => showFinished || !a.person.finished),
-    [allocations, showFinished],
+    () => allocations.filter(a => (showFinished || !a.person.finished) && (showInactive || a.person.note !== 'Inactive')),
+    [allocations, showFinished, showInactive],
   );
   const cols = TAG_COLUMNS.filter(c => placements.length === 0 || c.placements.some(p => placements.includes(p)));
   const profileCols = cols.filter(c => c.group === 'profile').length;
   const rosterCols = cols.length - profileCols;
-  // The By person columns for this kind of person, less any the filters rule out. The named-people
-  // columns aren't tags, so they only show while no tag filter is set.
-  const personCols = (personKind === 'employee' ? EMPLOYEE_COLUMNS : CUSTOMER_COLUMNS).filter(c => {
-    if (c.kind === 'people') return placements.length === 0 && types.length === 0;
-    const where = c.kind === 'type' ? c.placements : [c.placement];
-    return (placements.length === 0 || where.some(p => placements.includes(p))) && (c.kind !== 'type' || types.length === 0 || types.includes(c.typeId));
-  });
+  // The By person columns for this kind of person, less any switched off in the filter.
+  const allPersonCols = personKind === 'employee' ? EMPLOYEE_COLUMNS : CUSTOMER_COLUMNS;
+  const personCols = allPersonCols.filter(c => !filters.hidden.includes(c.id));
+  const filterColumns = useMemo(() => allPersonCols.map(filterColumn), [allPersonCols]);
+  // Conditions on a column the other kind of person doesn't have (Staff Type on customers) wait until it's back.
+  const activeRules = filters.rules.filter(r => allPersonCols.some(c => c.id === r.colId));
+  const missingIds = filters.missing.colIds.filter(id => allPersonCols.some(c => c.id === id));
+  /** Set (or with null, clear) the one filter a column's heading holds. */
+  const setColumnRule = (colId: string, rule: Pick<FilterRule, 'has' | 'tagIds'> | null) => {
+    setFilters(f => ({ ...f, rules: [...f.rules.filter(r => r.colId !== colId), ...(rule ? [{ id: `col-${colId}`, colId, ...rule }] : [])] }));
+    reset();
+  };
+  const personFilterCount = activeRules.length + (missingIds.length > 0 ? 1 : 0) + (filters.hidden.length > 0 ? 1 : 0);
   // A heavier divider where the named people begin, since they're a different kind of thing from tags.
   const colEdge = (i: number) =>
     i === 0 ? '' : personCols[i].kind === 'people' && personCols[i - 1].kind !== 'people' ? 'border-l-2 border-gray-400' : 'border-l border-gray-300';
@@ -325,35 +366,41 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
   const tagRowCount = byTag.reduce((n, g) => n + g.rows.length, 0);
 
   // ── By person ──
+  // Everyone of this kind, not only those with a tag: the people with nothing in a column are exactly
+  // the ones "missing" is looking for.
+  const isShown = (p: TagPerson) => (showFinished || !p.finished) && (showInactive || p.note !== 'Inactive');
   const byPerson = useMemo(() => {
-    const m = new Map<string, { person: Allocation['person']; kind: Allocation['kind']; items: Allocation[] }>();
-    base
-      .filter(a => a.kind === personKind && (placements.length === 0 || placements.includes(a.placement)) && (types.length === 0 || types.includes(a.tagType.id)))
-      .filter(a => !q || a.person.name.toLowerCase().includes(q) || a.tag.name.toLowerCase().includes(q) || a.tagType.name.toLowerCase().includes(q))
-      .forEach(a => {
-        const e = m.get(a.person.id) ?? { person: a.person, kind: a.kind, items: [] };
-        e.items.push(a);
-        m.set(a.person.id, e);
-      });
-    return [...m.values()].sort((x, y) => x.person.name.localeCompare(y.person.name));
-  }, [base, placements, types, q, personKind]);
+    const itemsByPerson = new Map<string, Allocation[]>();
+    base.forEach(a => itemsByPerson.set(a.person.id, [...(itemsByPerson.get(a.person.id) ?? []), a]));
+    const heldFor = (colId: string, e: { person: TagPerson; items: Allocation[] }) =>
+      heldIn(allPersonCols.find(c => c.id === colId)!, e.person, e.items, personKind, relations);
+    return (personKind === 'customer' ? ALL_CUSTOMERS : ALL_EMPLOYEES)
+      .filter(isShown)
+      .map(person => ({ person, kind: personKind, items: itemsByPerson.get(person.id) ?? [] }))
+      .filter(e => !q || e.person.name.toLowerCase().includes(q) || e.items.some(a => a.tag.name.toLowerCase().includes(q) || a.tagType.name.toLowerCase().includes(q)))
+      .filter(e => activeRules.every(r => ruleMatches(r, heldFor(r.colId, e))))
+      .filter(e => missingIds.length === 0 || (filters.missing.mode === 'any' ? missingIds.some(id => heldFor(id, e).size === 0) : missingIds.every(id => heldFor(id, e).size === 0)))
+      .sort((x, y) => x.person.name.localeCompare(y.person.name));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, q, personKind, filters, relations, showFinished, showInactive]);
   const kindCounts = useMemo(() => ({
-    customer: new Set(base.filter(a => a.kind === 'customer').map(a => a.person.id)).size,
-    employee: new Set(base.filter(a => a.kind === 'employee').map(a => a.person.id)).size,
-  }), [base]);
-  const pageCount = Math.max(1, Math.ceil(byPerson.length / PERSON_PAGE_SIZE));
+    customer: ALL_CUSTOMERS.filter(isShown).length,
+    employee: ALL_EMPLOYEES.filter(isShown).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [showFinished, showInactive]);
+  const pageCount = Math.max(1, Math.ceil(byPerson.length / pageSize));
   const current = Math.min(page, pageCount);
-  const personStart = (current - 1) * PERSON_PAGE_SIZE;
-  const visiblePeople = byPerson.slice(personStart, personStart + PERSON_PAGE_SIZE);
+  const personStart = (current - 1) * pageSize;
+  const visiblePeople = byPerson.slice(personStart, personStart + pageSize);
 
   // The selection is a list of people, not rows: it holds across pages and filters, so a person ticked
   // on page one stays ticked when you search, filter or move on. Switching between customers and
   // employees starts a new one, since a bulk edit is for one or the other.
   const personIndex = useMemo(() => {
     const m = new Map<string, { person: Allocation['person']; kind: Allocation['kind'] }>();
-    allocations.forEach(a => m.set(a.person.id, { person: a.person, kind: a.kind }));
+    [...ALL_CUSTOMERS, ...ALL_EMPLOYEES].forEach(person => m.set(person.id, { person, kind: kindOf(person) }));
     return m;
-  }, [allocations]);
+  }, []);
   const selectedPeople = useMemo(
     () => selected.map(id => personIndex.get(id)).filter(<T,>(e: T | undefined): e is T => !!e).sort((x, y) => x.person.name.localeCompare(y.person.name)),
     [selected, personIndex],
@@ -363,6 +410,8 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
   const pageAll = pageIds.length > 0 && pageIds.every(id => selected.includes(id));
   const pageSome = pageIds.some(id => selected.includes(id));
   const allMatching = matchingIds.length > 0 && matchingIds.every(id => selected.includes(id));
+  // Whether a search or filter is narrowing the list, so "all" means all of those rather than everyone.
+  const narrowed = q !== '' || activeRules.length > 0 || missingIds.length > 0;
   const hiddenByFilters = selectedPeople.filter(e => !matchingIds.includes(e.person.id)).length;
   const toggleOne = (id: string) => setSelected(l => toggle(l, id));
   const togglePage = () => setSelected(l => (pageAll ? l.filter(id => !pageIds.includes(id)) : [...new Set([...l, ...pageIds])]));
@@ -371,10 +420,26 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
 
 
   const resultCount = mode === 'tag' ? tagRowCount : byPerson.length;
-  const filterCount = placements.length + types.length;
+  const filterCount = mode === 'person' ? personFilterCount : placements.length + types.length;
   // Anything that changes what's listed goes back to page one. The selection is kept.
   const reset = () => setPage(1);
 
+  // From a By tag count: the same people in By person, filtered to that tag in the column it sits in, so they can be acted on.
+  const openInByPerson = () => {
+    if (!open) return;
+    const kind = placementInfo(open.placement).entity;
+    const cols = kind === 'employee' ? EMPLOYEE_COLUMNS : CUSTOMER_COLUMNS;
+    const col = cols.find(c => (c.kind === 'type' ? c.typeId === open.type.id && c.placements.includes(open.placement) : c.kind === 'requirement' && c.placement === open.placement));
+    setMode('person');
+    setPersonKind(kind);
+    setQuery('');
+    setPlacements([]);
+    setTypes([]);
+    setSelected([]);
+    setFilters({ ...NO_FILTERS, rules: col ? [{ id: `col-${col.id}`, colId: col.id, has: true, tagIds: [open.tag.id] }] : [] });
+    setPage(1);
+    setOpen(null);
+  };
   const openList = open
     ? base
         .filter(a => a.tag.id === open.tag.id && a.placement === open.placement)
@@ -383,7 +448,7 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm overflow-clip">
         {/* Docked bar, as on Bookings and Enquiries. */}
         <div className="flex items-center gap-3 p-3 border-b border-gray-200">
           <SegmentedControl
@@ -394,7 +459,7 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
               reset();
             }}
             ariaLabel="Group by"
-            options={[{ value: 'tag', label: 'By tag' }, { value: 'person', label: 'By person' }]}
+            options={[{ value: 'person', label: 'By person' }, { value: 'tag', label: 'By tag' }]}
           />
           {mode === 'person' && (
             <SegmentedControl
@@ -413,7 +478,7 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
               ]}
             />
           )}
-          <div role="search" className="relative flex-1 min-w-0">
+          <div role="search" className="relative flex-1 min-w-0 max-w-[560px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" aria-hidden="true" />
             <input
               type="text"
@@ -442,7 +507,18 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                 {filterCount > 0 && <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-[rgb(154,38,214)] border-2 border-white" />}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-[min(520px,calc(100vw-3rem))] max-h-[70vh] overflow-y-auto p-4">
+            <PopoverContent align="start" className={`${mode === 'person' ? 'w-[min(560px,calc(100vw-3rem))]' : 'w-[min(520px,calc(100vw-3rem))]'} max-h-[75vh] overflow-y-auto p-4`}>
+              {mode === 'person' ? (
+                <PeopleFilterPanel
+                  columns={filterColumns}
+                  filters={filters}
+                  onChange={f => { setFilters(f); reset(); }}
+                  resultCount={resultCount}
+                  noun={personKind}
+                  nounPlural={personKind === 'customer' ? 'customers' : 'employees'}
+                />
+              ) : (
+              <>
               <div className="grid grid-cols-2 gap-6">
                 <CheckGroup
                   legend="Where it sits"
@@ -464,16 +540,43 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                 canClear={filterCount > 0}
                 onClear={() => { setPlacements([]); setTypes([]); reset(); }}
               />
+              </>
+              )}
             </PopoverContent>
           </Popover>
         </div>
 
+        {/* What the By person filter is doing, so it can be read and taken off at a glance. */}
+        {mode === 'person' && (activeRules.length > 0 || missingIds.length > 0) && (
+          <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-gray-200 bg-white">
+            <span className="text-body text-gray-700">Showing people where</span>
+            {[
+              ...activeRules.map(r => ({ key: r.id, text: describeRule(r, filterColumns), remove: () => setFilters(f => ({ ...f, rules: f.rules.filter(x => x.id !== r.id) })) })),
+              ...(missingIds.length > 0 ? [{ key: 'missing', text: describeMissing({ ...filters.missing, colIds: missingIds }, filterColumns), remove: () => setFilters(f => ({ ...f, missing: { ...f.missing, colIds: [] } })) }] : []),
+            ].map(chip => (
+              <span key={chip.key} className="inline-flex items-center gap-0.5 rounded-full border border-purple-200 bg-purple-50 pl-3 pr-1 text-sm font-medium text-purple-900">
+                {chip.text}
+                <Button variant="tertiary" iconOnly size="sm" aria-label={`Remove filter: ${chip.text}`} onClick={() => { chip.remove(); reset(); }} className="!h-7 !w-7">
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </span>
+            ))}
+            <Button variant="tertiary" size="sm" onClick={() => { setFilters(f => ({ ...f, rules: [], missing: { ...f.missing, colIds: [] } })); reset(); }}>Clear filters</Button>
+          </div>
+        )}
+
         {/* Second bar: what's included. */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2.5 border-b border-gray-200" style={{ backgroundColor: GREY }}>
-          <label className="flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
-            <input type="checkbox" className="h-5 w-5 accent-[rgb(154,38,214)] cursor-pointer" checked={showFinished} onChange={e => { setShowFinished(e.target.checked); reset(); }} />
-            Show finished
-          </label>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <label className="flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
+              <input type="checkbox" className="h-5 w-5 accent-[rgb(154,38,214)] cursor-pointer" checked={showInactive} onChange={e => { setShowInactive(e.target.checked); reset(); }} />
+              Show inactive
+            </label>
+            <label className="flex items-center gap-2.5 text-body text-gray-800 cursor-pointer w-fit">
+              <input type="checkbox" className="h-5 w-5 accent-[rgb(154,38,214)] cursor-pointer" checked={showFinished} onChange={e => { setShowFinished(e.target.checked); reset(); }} />
+              Show finished
+            </label>
+          </div>
         </div>
 
         {mode === 'tag' ? (
@@ -568,7 +671,7 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                   <TableCell colSpan={cols.length + 1} className="py-12 text-center whitespace-normal">
                     <p className="text-base font-semibold text-gray-900">No tags match{q && <> “{query.trim()}”</>}</p>
                     <div className="mt-3 flex justify-center">
-                      <Button variant="tertiary" onClick={() => { setQuery(''); setPlacements([]); setTypes([]); reset(); }}>Clear search and filters</Button>
+                      <Button variant="tertiary" onClick={() => { setQuery(''); setPlacements([]); setTypes([]); setFilters(NO_FILTERS); reset(); }}>Clear search and filters</Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -580,11 +683,11 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
             {(selectedPeople.length > 0 || pageAll) && (
               <div className="border-b border-purple-200 bg-purple-50">
                 <div className="flex items-center justify-between gap-4 px-4 py-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="tertiary" size="sm" aria-label={`${selectedPeople.length} selected. Review who`} className="!text-purple-900 !font-semibold">
-                          {selectedPeople.length} selected <ChevronDown className="w-4 h-4" aria-hidden="true" />
+                        <Button variant="tertiary" size="sm" aria-live="polite" aria-label={`${selectedPeople.length} selected. Review who`} className="!text-purple-900 !font-semibold">
+                          {allMatching && byPerson.length > 1 ? `All ${byPerson.length} selected` : `${selectedPeople.length} selected`} <ChevronDown className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent align="start" className="w-[min(360px,calc(100vw-3rem))] p-0">
@@ -608,6 +711,12 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                         </ul>
                       </PopoverContent>
                     </Popover>
+                    {/* The header tick only does this page, so offer everyone on the list in one go. */}
+                    {pageAll && !allMatching && byPerson.length > visiblePeople.length && (
+                      <Button variant="tertiary" size="sm" onClick={() => setSelected(l => [...new Set([...l, ...matchingIds])])}>
+                        Select all {byPerson.length} {noun(personKind, byPerson.length)}{narrowed && ' in this search'}
+                      </Button>
+                    )}
                     {hiddenByFilters > 0 && <span className="text-sm text-purple-900">{hiddenByFilters} not shown by the current search or filters</span>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -616,21 +725,6 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                     <Button size="sm" icon={<Plus className="w-4 h-4" />} disabled={selectedPeople.length === 0} onClick={() => setBulk('add')}>Add tags</Button>
                   </div>
                 </div>
-                {/* The header tick only does this page, so say how to take everyone who matches in one go. */}
-                {byPerson.length > visiblePeople.length && (allMatching || pageAll) && (
-                  <div aria-live="polite" className="px-4 py-2 border-t border-purple-200 bg-white text-body text-gray-900 text-center">
-                    {allMatching ? (
-                      <>All <span className="font-semibold">{byPerson.length}</span> {noun(personKind, byPerson.length)} that match are selected. </>
-                    ) : (
-                      <>All <span className="font-semibold">{visiblePeople.length}</span> on this page are selected. </>
-                    )}
-                    {allMatching ? (
-                      <Button variant="tertiary" size="sm" onClick={() => setSelected([])}>Clear selection</Button>
-                    ) : (
-                      <Button variant="tertiary" size="sm" onClick={() => setSelected(l => [...new Set([...l, ...matchingIds])])}>Select all {byPerson.length} that match</Button>
-                    )}
-                  </div>
-                )}
               </div>
             )}
             <TableScrollbars pinnedWidth={PINNED_WIDTH} background={GREY}>
@@ -650,15 +744,23 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                   <TableHead className={`w-[220px] h-auto px-4 py-3 align-top text-sm font-semibold text-gray-700 sticky left-[56px] z-10 bg-inherit ${NAME_EDGE}`}>Person</TableHead>
                   {personCols.map((c, i) => (
                     <TableHead key={c.id} style={{ width: c.width }} className={`h-auto px-3 py-3 align-top whitespace-normal ${colEdge(i)}`}>
-                      <span className="block text-sm font-semibold text-gray-900">{c.title}</span>
-                      {'sub' in c && c.sub && <span className="block text-sm font-normal text-gray-600">{c.sub}</span>}
+                      <div className="flex items-start justify-between gap-1">
+                        <div className="min-w-0">
+                          <span className="block text-sm font-semibold text-gray-900">{c.title}</span>
+                          {'sub' in c && c.sub && <span className="block text-sm font-normal text-gray-600">{c.sub}</span>}
+                        </div>
+                        <ColumnFilter column={filterColumns.find(f => f.id === c.id)!} rule={activeRules.find(r => r.colId === c.id)} onChange={r => setColumnRule(c.id, r)} />
+                      </div>
                     </TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visiblePeople.map(({ person, items }) => (
-                  <TableRow key={person.id} className="bg-white hover:bg-purple-50 border-gray-200">
+                {visiblePeople.map(({ person, items }) => {
+                  // Inactive and finished people only show when asked for, so they're faded and badged.
+                  const dormant = person.finished || person.note === 'Inactive';
+                  return (
+                  <TableRow key={person.id} className={`${dormant ? 'bg-gray-50' : 'bg-white'} hover:bg-purple-50 border-gray-200`}>
                     <TableCell className="align-top px-4 py-3.5 sticky left-0 z-10 bg-inherit">
                       <input
                         type="checkbox"
@@ -669,25 +771,33 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                       />
                     </TableCell>
                     <TableCell className={`align-top px-4 py-3 whitespace-normal sticky left-[56px] z-10 bg-inherit ${NAME_EDGE}`}>
-                      <div className="text-body font-semibold text-gray-900">{person.name}</div>
-                      {/* An employee is described by their role (Careworker, Supervisor, Care Manager…). */}
-                      {(person.role || person.note) && (
-                        <div className="text-sm text-gray-600">{[person.role, person.note].filter(Boolean).join(' · ')}</div>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className={`text-body font-semibold ${dormant ? 'text-gray-600' : 'text-gray-900'}`}>{person.name}</span>
+                        {dormant && (
+                          <span className={`${badge} !px-2 !py-0 whitespace-nowrap ${person.finished ? 'bg-gray-200 text-gray-900 border-gray-400' : 'bg-amber-50 text-amber-900 border-amber-300'}`}>
+                            {person.note}
+                          </span>
+                        )}
+                      </div>
+                      {/* An employee is described by their role (Careworker, Supervisor, Care Manager…). The status shows as a badge instead where it's inactive or finished. */}
+                      {(person.role || (person.note && !dormant)) && (
+                        <div className="text-sm text-gray-600">{[person.role, dormant ? undefined : person.note].filter(Boolean).join(' · ')}</div>
                       )}
                     </TableCell>
                     {personCols.map((c, ci) => (
                       <TableCell key={c.id} className={`align-top px-3 py-3 whitespace-normal ${colEdge(ci)}`}>
-                        <PersonCell col={c} person={person} kind={personKind} items={items} relations={relations} />
+                        <PersonCell col={c} person={person} kind={personKind} items={items} relations={relations} faded={dormant} />
                       </TableCell>
                     ))}
                   </TableRow>
-                ))}
+                  );
+                })}
                 {byPerson.length === 0 && (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={personCols.length + 2} className="py-12 text-center whitespace-normal">
                       <p className="text-base font-semibold text-gray-900">No people match{q && <> “{query.trim()}”</>}</p>
                       <div className="mt-3 flex justify-center">
-                        <Button variant="tertiary" onClick={() => { setQuery(''); setPlacements([]); setTypes([]); reset(); }}>Clear search and filters</Button>
+                        <Button variant="tertiary" onClick={() => { setQuery(''); setPlacements([]); setTypes([]); setFilters(NO_FILTERS); reset(); }}>Clear search and filters</Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -703,6 +813,10 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                 to={personStart + visiblePeople.length}
                 total={byPerson.length}
                 onPage={setPage}
+                pageSize={pageSize}
+                pageSizes={PERSON_PAGE_SIZES}
+                onPageSize={n => { setPageSize(n); setPage(1); }}
+                docked
               />
             )}
           </>
@@ -758,6 +872,15 @@ export function ReviewAllocationsView({ allocations, relations, onBulkApply, onB
                 </TableBody>
               </Table>
             </div>
+            {openList.length > 0 && (
+              <Button variant="secondary" onClick={openInByPerson}>
+                {(() => {
+                  const n = new Set(openList.map(a => a.person.id)).size;
+                  const who = noun(placementInfo(open.placement).entity, n);
+                  return n === 1 ? `Open this ${who} in By person` : `Open these ${n} ${who} in By person`;
+                })()}
+              </Button>
+            )}
             <Link to={`/office/tags/${open.type.id}/${open.tag.id}`} className="inline-block text-body font-semibold text-[rgb(109,27,152)] hover:underline">
               Open the {open.tag.name} tag
             </Link>

@@ -34,7 +34,7 @@ import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { TagsManagementPage } from './components/office/TagsManagementPage';
 import { TagTypeDetailPage } from './components/office/TagTypeDetailPage';
 import { TagDetailPage } from './components/office/TagDetailPage';
-import { OfficeProvider } from './components/office/OfficeContext';
+import { OfficeProvider, useOffice } from './components/office/OfficeContext';
 import { OfficeSubnav } from './components/office/OfficeSubnav';
 import { CustomerProvider } from './data/CustomerContext';
 import SideNav from './components/layout/SideNav';
@@ -46,14 +46,14 @@ import { useNavMode } from './components/layout/NavModeContext';
 // Legacy mode drops the side rail entirely and goes back to the old
 // single top-bar layout — that's what "legacy" meant before the new side
 // nav existed, not just a different-looking top bar alongside the rail.
-function LegacyAppShell({ infoBar, children }: { infoBar?: React.ReactNode; children: React.ReactNode }) {
+function LegacyAppShell({ infoBar, children, wide }: { infoBar?: React.ReactNode; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="sticky top-0 z-40">
         <Header />
         {infoBar}
       </div>
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-6">
+      <main className={`flex-1 ${wide ? '' : 'max-w-[1600px]'} w-full mx-auto px-6 py-6`}>
         {children}
       </main>
     </div>
@@ -65,9 +65,10 @@ function LegacyAppShell({ infoBar, children }: { infoBar?: React.ReactNode; chil
 // like a continuation of the same motion, not a second separate delay.
 const SHELL_CROSSFADE_MS = 150;
 
-function renderShellFor(mode: 'new' | 'legacy', infoBar: React.ReactNode, children: React.ReactNode) {
+// `wide` lifts the 1600px page cap, for data tables that need the whole screen (Office › Tags).
+function renderShellFor(mode: 'new' | 'legacy', infoBar: React.ReactNode, children: React.ReactNode, wide?: boolean) {
   if (mode === 'legacy') {
-    return <LegacyAppShell infoBar={infoBar}>{children}</LegacyAppShell>;
+    return <LegacyAppShell infoBar={infoBar} wide={wide}>{children}</LegacyAppShell>;
   }
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -77,7 +78,7 @@ function renderShellFor(mode: 'new' | 'legacy', infoBar: React.ReactNode, childr
           <TopNav appName="Office Name" />
           {infoBar}
         </div>
-        <main className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-6">
+        <main className={`flex-1 ${wide ? '' : 'max-w-[1600px]'} w-full mx-auto px-6 py-6`}>
           {children}
         </main>
       </div>
@@ -85,7 +86,7 @@ function renderShellFor(mode: 'new' | 'legacy', infoBar: React.ReactNode, childr
   );
 }
 
-function AppShell({ infoBar, children }: { infoBar?: React.ReactNode; children: React.ReactNode }) {
+function AppShell({ infoBar, children, wide }: { infoBar?: React.ReactNode; children: React.ReactNode; wide?: boolean }) {
   const { mode } = useNavMode();
   // Rendered mode lags the real one by one crossfade — dips to opacity 0,
   // swaps which shell is actually mounted while invisible, then fades back
@@ -114,7 +115,7 @@ function AppShell({ infoBar, children }: { infoBar?: React.ReactNode; children: 
         transition: `opacity ${SHELL_CROSSFADE_MS}ms ease`,
       }}
     >
-      {renderShellFor(displayMode, infoBar, children)}
+      {renderShellFor(displayMode, infoBar, children, wide)}
     </div>
   );
 }
@@ -296,10 +297,18 @@ function ScheduleLayout() {
 function OfficeLayout() {
   return (
     <OfficeProvider>
-      <AppShell infoBar={<OfficeSubnav />}>
-        <TagsManagementPage />
-      </AppShell>
+      <OfficeShell />
     </OfficeProvider>
+  );
+}
+
+// Inside the provider so it can see which tab is open: the Tags tab's tables run the full width of the screen.
+function OfficeShell() {
+  const { activeTab } = useOffice();
+  return (
+    <AppShell infoBar={<OfficeSubnav />} wide={activeTab === 'tags'}>
+      <TagsManagementPage />
+    </AppShell>
   );
 }
 
