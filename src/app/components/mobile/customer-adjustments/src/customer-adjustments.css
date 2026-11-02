@@ -108,33 +108,28 @@
 }
 .cm-key {
   position: absolute;
-  top: 108px;
+  top: 98px;
   right: 20px;
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* ── Compact state, once the content below has scrolled ──────────────
-   Everything animates between the two states so the card shrinks smoothly rather than jumping. */
-.cm-customer-card { transition: padding 0.2s ease; }
-.cm-customer-name { transition: margin 0.2s ease, padding 0.2s ease, font-size 0.2s ease; }
-.cm-meta { overflow: hidden; max-height: 44px; transition: max-height 0.2s ease, margin 0.2s ease, opacity 0.2s ease; }
-.cm-meta-label { display: block; max-height: 20px; transition: max-height 0.2s ease, margin 0.2s ease, opacity 0.2s ease; }
-.cm-avatar { transition: width 0.2s ease, height 0.2s ease, top 0.2s ease; }
-.cm-high-risk { transition: top 0.2s ease, right 0.2s ease; }
-.cm-key { transition: opacity 0.2s ease; }
-
-.cm-customer-card--compact { padding: 8px 16px 10px; }
-.cm-customer-card--compact .cm-customer-name { margin-bottom: 2px; padding-right: 150px; font-size: 17px; }
-.cm-customer-card--compact .cm-meta--dob { max-height: 0; margin-bottom: 0; opacity: 0; }
-.cm-customer-card--compact .cm-meta--address { margin-bottom: 8px; }
-.cm-customer-card--compact .cm-meta-label { max-height: 0; margin-bottom: 0; opacity: 0; }
-.cm-customer-card--compact .cm-avatar { top: 8px; width: 36px; height: 36px; }
-.cm-customer-card--compact .cm-high-risk { top: 14px; right: 60px; }
-.cm-customer-card--compact .cm-key { opacity: 0; pointer-events: none; }
-
-@media (prefers-reduced-motion: reduce) {
-  .cm-customer-card, .cm-customer-name, .cm-meta, .cm-meta-label, .cm-avatar, .cm-high-risk, .cm-key { transition: none; }
+/* ── Collapsing on scroll ────────────────────────────────────────────
+   --p runs 0 → 1 as the content scrolls (set from App.jsx). Each value below is its full-size value moving to its
+   compact one by p, so the card shrinks in step with the scroll. No CSS transitions: they would lag behind the finger. */
+.cm-customer-card { --p: 0; padding: calc(6px - 2px * var(--p)) 16px calc(24px - 12px * var(--p)); }
+.cm-customer-name {
+  margin-bottom: calc(8px - 6px * var(--p));
+  padding-right: calc(88px + 62px * var(--p));
+  font-size: calc(18px - 1px * var(--p));
 }
+.cm-meta { overflow: hidden; margin-bottom: calc(12px - 4px * var(--p)); }
+/* The date of birth row folds away completely, the address's label with it; the address itself stays. */
+.cm-meta--dob { max-height: calc(44px * (1 - var(--p))); margin-bottom: calc(12px * (1 - var(--p))); }
+.cm-meta--dob, .cm-meta-label { opacity: max(0, calc(1 - 1.6 * var(--p))); }
+.cm-meta-label { display: block; max-height: calc(20px * (1 - var(--p))); margin-bottom: calc(2px * (1 - var(--p))); }
+.cm-avatar { top: calc(6px - 2px * var(--p)); width: calc(56px - 20px * var(--p)); height: calc(56px - 20px * var(--p)); }
+.cm-high-risk { top: calc(68px - 58px * var(--p)); right: calc(16px + 44px * var(--p)); }
+.cm-key { opacity: max(0, calc(1 - 2 * var(--p))); }
 
 /* White bar under the card with the screen's title, as on mobile/customer-documents. */
 .ra-menu-bar {

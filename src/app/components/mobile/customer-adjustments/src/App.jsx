@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import StatusBar from '../../assets/StatusBar'
 import PhoneFrame from '../../assets/PhoneFrame'
 import { handleSystemBack } from '../../assets/backStack'
@@ -16,6 +16,8 @@ import { activeItems, categoryName, formatRafDate, formatRafDateTime, getRafReco
 const CUSTOMER = { name: PROFILE.name, recordId: 'arthur-barrington' }
 const CHIP_ICONS = { allergies: AllergiesIcon, dnacpr: DnacprIcon, dols: DolsIcon }
 const PAGE_SIZE = 5
+// How far the content scrolls while the header collapses from full to compact.
+const COLLAPSE_RANGE = 110
 
 const ArrowLeftIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -124,13 +126,14 @@ export default function App() {
   const [transition] = useState(() => new URLSearchParams(window.location.search).get('transition'))
   const [level, setLevel] = useState('2')
   const [offline, setOffline] = useState(false)
-  // The purple header shrinks once the content has scrolled a little (DOB row, address label and key go, padding
-  // tightens), so more of the list is visible. Two thresholds so it doesn't flicker around one: it collapses
-  // past 40px and only expands again back near the top.
-  const [compact, setCompact] = useState(false)
+  // The purple header shrinks as the content scrolls: --p (0 at the top, 1 after COLLAPSE_RANGE px) drives every
+  // measurement in the CSS, so it follows the finger continuously instead of snapping between two states. Written
+  // straight to the element rather than through React state, so scrolling doesn't re-render the screen.
+  const cardRef = useRef(null)
   const handleScroll = (e) => {
-    const top = e.currentTarget.scrollTop
-    setCompact(c => (c ? top > 8 : top > 40))
+    const p = Math.min(1, Math.max(0, e.currentTarget.scrollTop / COLLAPSE_RANGE))
+    cardRef.current?.style.setProperty('--p', p.toFixed(3))
+    cardRef.current?.querySelector('.cm-key')?.setAttribute('aria-hidden', p > 0.9 ? 'true' : 'false')
   }
   // When this device last heard from the national flag; shown as the spec's "last retrieved" time.
   const [retrievedAt] = useState(() => new Date())
@@ -168,7 +171,7 @@ export default function App() {
               </div>
             )}
 
-            <div className={`cm-customer-card${compact ? ' cm-customer-card--compact' : ''}`}>
+            <div className="cm-customer-card" ref={cardRef}>
               <h1 className="cm-customer-name">{PROFILE.name}</h1>
               <div className="cm-meta cm-meta--address"><span className="cm-meta-label">Address</span>{PROFILE.addressLine1}, {PROFILE.addressLine2}</div>
               <div className="cm-meta cm-meta--dob"><span className="cm-meta-label">Date of Birth</span>{PROFILE.dob}</div>
@@ -181,7 +184,7 @@ export default function App() {
               </div>
               <img className="cm-avatar" src={PROFILE.photo} alt="" />
               {PROFILE.highRisk && <span className="cm-high-risk">HIGH RISK</span>}
-              <span className="cm-key" aria-hidden={compact}><KeyIcon size={22} /></span>
+              <span className="cm-key"><KeyIcon size={22} /></span>
             </div>
 
             <div className="ra-menu-bar">
