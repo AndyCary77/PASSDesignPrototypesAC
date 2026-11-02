@@ -23,9 +23,11 @@ const BASE =
 const VARIANT: Record<ButtonVariant, string> = {
   primary:
     'bg-[rgb(154,38,214)] text-white hover:bg-[rgb(130,28,190)]',
+  // Hover tint is the opaque equivalent of 5% purple over white (not rgba), so on a coloured
+  // background the button stays white-based instead of picking up that colour on hover.
   secondary:
     'border-2 border-[rgb(154,38,214)] text-[rgb(154,38,214)] bg-white ' +
-    'hover:bg-[rgba(154,38,214,0.05)]',
+    'hover:bg-[rgb(250,244,253)]',
   // Secondary's outline, red-tinted for a destructive action (Delete on the enquiry form).
   'secondary-danger':
     'border-2 border-red-600 text-red-700 bg-white hover:bg-red-50',

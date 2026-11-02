@@ -6,6 +6,8 @@ import { useScrolled } from '../../hooks/useScrolled';
 import { useOverflowNav } from '../../hooks/useOverflowNav';
 import { useCustomer } from '../../data/CustomerContext';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
+import { useRafAccess } from '../../data/RafAccessContext';
+import { RafAccessSwitcher } from './RafAccessSwitcher';
 
 const inactiveTabClass =
   'px-4 py-3 text-body font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
@@ -219,6 +221,9 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
   const scrolled = useScrolled();
   const customer = useCustomer();
   const showCareBridgeTab = useFeatureFlag('customerCareBridgeTab');
+  // No Reasonable Adjustment Flag access level = no tab (AIOP-22349).
+  const { level: rafLevel } = useRafAccess();
+  const showReasonableAdjustmentsTab = rafLevel !== 'none';
   const base = `/customers/${customer.id}`;
 
   const contactBits = [
@@ -266,10 +271,13 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
       { key: 'rostering', type: 'link', label: 'Rostering', to: base, exact: true },
       { key: 'communications', type: 'inert', label: 'Communications' },
       { key: 'medicalhistory', type: 'link', label: 'Medical History', to: `${base}/medicalhistory` },
+      ...(showReasonableAdjustmentsTab
+        ? [{ key: 'reasonableadjustments', type: 'link' as const, label: 'Reasonable Adjustments', to: `${base}/reasonableadjustments` }]
+        : []),
       { key: 'customerfile', type: 'inert', label: 'Customer File' },
     );
     return items;
-  }, [base, showCareBridgeTab]);
+  }, [base, showCareBridgeTab, showReasonableAdjustmentsTab]);
 
   const { containerRef, moreRef, itemRefs, visibleCount, hasOverflow } = useOverflowNav(navItems.length);
 
@@ -405,6 +413,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
           </nav>
         </div>
       </div>
+      <RafAccessSwitcher />
     </div>
   );
 }

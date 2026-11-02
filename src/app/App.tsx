@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router';
 import { router } from './routes';
 import { NavModeProvider } from './components/layout/NavModeContext';
 import { FeatureFlagsProvider } from './data/FeatureFlagsContext';
+import { RafAccessProvider } from './data/RafAccessContext';
 import { RosterSettingsProvider } from './data/RosterSettingsContext';
 import { FontWeightProvider } from './data/FontWeightContext';
 import { FontWeightToggle } from './components/layout/FontWeightToggle';
@@ -19,6 +20,7 @@ export default function App() {
   return (
     <FeatureFlagsProvider>
       <RosterSettingsProvider>
+      <RafAccessProvider>
       <NavModeProvider>
         <FontWeightProvider>
           <RouterProvider router={router} />
@@ -29,6 +31,7 @@ export default function App() {
           <FontWeightToggle />
         </FontWeightProvider>
       </NavModeProvider>
+      </RafAccessProvider>
       </RosterSettingsProvider>
     </FeatureFlagsProvider>
   );
