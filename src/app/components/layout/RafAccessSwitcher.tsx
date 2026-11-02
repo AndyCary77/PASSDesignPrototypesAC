@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
-import { useRafAccess, type NationalFlagState, type RafAccessLevel } from '../../data/RafAccessContext';
+import { useRafAccess, type NationalFlagState, type RafAccessLevel, type SaveOutcome } from '../../data/RafAccessContext';
 import { SegmentedControl } from '../buttons/SegmentedControl';
 import { Button } from '../buttons/Button';
 
@@ -12,12 +12,14 @@ import { Button } from '../buttons/Button';
  *    the tab itself is hidden, which is the only way back from "No access".
  *  - "National flag" (on the Reasonable Adjustments tab only): what the NHS holds for the customer,
  *    and a button standing in for another organisation changing it.
+ *  - "Next save" (same tab): whether the national flag service accepts the next change, to review the
+ *    error messages. One-shot, so the retry succeeds.
  *
  * Rendered from the customer header and floated bottom-right, like the Default/Bolder toggle
  * bottom-left; portalled to the body so no ancestor's sticky/transform can move it.
  */
 export function RafAccessSwitcher() {
-  const { level, setLevel, nationalFlag, setNationalFlag, simulateNationalChange } = useRafAccess();
+  const { level, setLevel, nationalFlag, setNationalFlag, simulateNationalChange, saveOutcome, setSaveOutcome } = useRafAccess();
   const onRaTab = useLocation().pathname.endsWith('/reasonableadjustments');
 
   return createPortal(
@@ -53,6 +55,19 @@ export function RafAccessSwitcher() {
           <Button variant="secondary" size="sm" onClick={simulateNationalChange} disabled={nationalFlag === 'no-nhs-number'}>
             NHS update
           </Button>
+
+          <span className="mt-1 text-sm font-medium text-gray-700 text-center">Next save</span>
+          <SegmentedControl<SaveOutcome>
+            ariaLabel="Whether the national flag accepts the next save"
+            orientation="vertical"
+            value={saveOutcome}
+            onChange={setSaveOutcome}
+            options={[
+              { value: 'ok', label: 'Works' },
+              { value: 'error', label: 'Fails' },
+              { value: 'conflict', label: 'Conflict' },
+            ]}
+          />
         </>
       )}
     </div>,

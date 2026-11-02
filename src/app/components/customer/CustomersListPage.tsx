@@ -5,6 +5,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 import { Button } from '../buttons/Button';
 import { CUSTOMER_LIST, type CustomerProfile } from '../../data/customers';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
+import { useRafAccess } from '../../data/RafAccessContext';
+import { ReasonableAdjustmentsBadge } from './ReasonableAdjustmentsBadge';
 import { CustomersListDummy } from './CustomersListDummy';
 
 function reviewBadgeStyle(daysLeft: number): React.CSSProperties {
@@ -38,6 +40,7 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
   // CareBridge tab switched off, a CareBridge lander goes to Care Management
   // instead (where the plan is written up by hand).
   const showCareBridgeTab = useFeatureFlag('customerCareBridgeTab');
+  const { hasFlag } = useRafAccess();
   const landingTab = customer.landingTab === 'carebridge' && !showCareBridgeTab ? 'caremanagement' : customer.landingTab;
 
   return (
@@ -50,7 +53,7 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="text-base font-semibold text-gray-900 truncate">{customer.fullName}</span>
           {customer.highRisk && (
-            <span className="flex-shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide">
+            <span className="flex-shrink-0 bg-red-700 text-white text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide">
               HIGH RISK
             </span>
           )}
@@ -98,7 +101,8 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
               {customer.suburb && <p>{customer.suburb}</p>}
               <p className="font-medium text-gray-900">{customer.postcode}</p>
             </div>
-            {(customer.dnacpr || customer.dols) && (
+            {/* The flag badges stack here rather than in the header, which has no room for another one next to the name, the review date and the status. */}
+            {(customer.dnacpr || customer.dols || hasFlag(customer.id)) && (
               <div className="flex flex-col gap-1.5 items-end flex-shrink-0">
                 {customer.dnacpr && (
                   <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
@@ -111,6 +115,7 @@ function CustomerCard({ customer }: { customer: CustomerProfile }) {
                     DoLS
                   </span>
                 )}
+                {hasFlag(customer.id) && <ReasonableAdjustmentsBadge variant="card" />}
               </div>
             )}
           </div>

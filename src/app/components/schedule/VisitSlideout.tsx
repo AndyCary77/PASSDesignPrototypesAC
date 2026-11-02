@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { X, Calendar, ChevronDown, EllipsisVertical, CheckCircle2, Coffee, Utensils, Pill, PhoneCall, AlertTriangle } from 'lucide-react';
+import { X, Calendar, ChevronDown, EllipsisVertical, CheckCircle2, Coffee, Utensils, Pill, PhoneCall, AlertTriangle, Flag, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Tag } from '../ui/tag';
 import { VisitNoteIcon } from '../icons/VisitNoteIcon';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Button } from '../buttons/Button';
+import { useRafAccess } from '../../data/RafAccessContext';
+import { activeItems, formatRafDate } from '../../data/reasonableAdjustments';
+import { RafItemDetails } from '../customer/RafItemDetails';
 import davidPhoto from '../../imports/david_b.jpg';
 import customerPhoto from '../../imports/david_f.jpg';
 
@@ -34,6 +37,66 @@ function FooterTag({ children }: { children: React.ReactNode }) {
     >
       {children}
     </span>
+  );
+}
+
+// This prototype's visit is always with Arthur Barrington.
+const VISIT_CUSTOMER_ID = 'arthur-barrington';
+
+/**
+ * The visit's Customer Details tab. For a customer with a Reasonable Adjustment Flag it shows their
+ * Reasonable Adjustments, so whoever is planning or assigning the visit can see what the person needs. Only the
+ * adjustments, as the audit page's Level 1 view: never impairments or underlying conditions, and no controls to
+ * change anything (that all lives on the Reasonable Adjustments tab). Shown to users with any RA access level.
+ * It reads PASS's own stored copy rather than calling the national flag, so opening the panel is instant.
+ */
+function CustomerDetailsContent({ onOpenTab }: { onOpenTab: () => void }) {
+  const navigate = useNavigate();
+  const { level, getFlagRecord } = useRafAccess();
+  const record = getFlagRecord(VISIT_CUSTOMER_ID);
+  const showAdjustments = level !== 'none' && record !== null;
+  const adjustments = record ? activeItems(record, 'adjustment') : [];
+
+  return (
+    <div className="w-full space-y-6">
+      {showAdjustments && record && (
+        <section className="bg-white rounded-[12px] border border-gray-200 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-purple-100 border border-purple-200 flex items-center justify-center flex-shrink-0">
+                <Flag className="w-5 h-5 text-purple-900" fill="currentColor" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Reasonable Adjustments</h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => { onOpenTab(); navigate(`/customers/${VISIT_CUSTOMER_ID}/reasonableadjustments`); }}
+              className="text-body text-[rgb(154,38,214)] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              Open Reasonable Adjustments <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          </div>
+
+          {adjustments.length === 0 ? (
+            <p className="px-6 py-5 text-body text-gray-700">No reasonable adjustments have been recorded.</p>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {adjustments.map(item => (
+                <li key={item.id} className="px-6 py-4">
+                  <RafItemDetails item={item} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className="px-6 py-3 border-t border-gray-200 bg-gray-50 text-sm text-gray-600">
+            Last updated on: {formatRafDate(record.lastUpdatedOn)}. Shown from PASS's record; the Reasonable Adjustments tab checks the national flag.
+          </p>
+        </section>
+      )}
+
+      <p className="text-gray-400 text-sm italic">Other customer details are not shown in this prototype.</p>
+    </div>
   );
 }
 
@@ -141,7 +204,8 @@ export function VisitSlideout({ onClose, initialTab = 'Care Required', footerWar
         <div className="flex-1 overflow-y-auto bg-gray-50 p-8">
           {activeTab === 'Assigned Today' && <AssignedTodayContent />}
           {activeTab === 'Care Required' && <CareRequiredContent />}
-          {activeTab !== 'Assigned Today' && activeTab !== 'Care Required' && (
+          {activeTab === 'Customer Details' && <CustomerDetailsContent onOpenTab={onClose} />}
+          {activeTab !== 'Assigned Today' && activeTab !== 'Care Required' && activeTab !== 'Customer Details' && (
             <p className="text-gray-400 text-sm italic">Content not shown in this prototype.</p>
           )}
         </div>

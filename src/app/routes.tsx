@@ -30,6 +30,7 @@ import { EmployeesListPage } from './components/customer/EmployeesListPage';
 import { AboutMePage, AboutMeSubnav, AboutMeProvider } from './components/customer/AboutMePage';
 import { MedicalHistoryPage } from './components/customer/MedicalHistoryPage';
 import { ReasonableAdjustmentsPage } from './components/customer/ReasonableAdjustmentsPage';
+import { CustomerFilePage } from './components/customer/CustomerFilePage';
 import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './components/customer/CareBridgePage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { TagsManagementPage } from './components/office/TagsManagementPage';
@@ -164,6 +165,16 @@ function MedicalHistoryLayout() {
     <CustomerProvider>
       <AppShell infoBar={<CustomerInfo />}>
         <MedicalHistoryPage />
+      </AppShell>
+    </CustomerProvider>
+  );
+}
+
+function CustomerFileLayout() {
+  return (
+    <CustomerProvider>
+      <AppShell infoBar={<CustomerInfo />}>
+        <CustomerFilePage />
       </AppShell>
     </CustomerProvider>
   );
@@ -391,6 +402,10 @@ export const router = createBrowserRouter([
   {
     path: "/customers/:customerId/medicalhistory",
     Component: MedicalHistoryLayout,
+  },
+  {
+    path: "/customers/:customerId/customerfile",
+    Component: CustomerFileLayout,
   },
   {
     path: "/customers/:customerId/reasonableadjustments",

@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { Flag, Plus, RefreshCw, Trash2, CheckCircle2, X, Accessibility, HeartPulse, Stethoscope, Download, Globe } from 'lucide-react';
+import { Flag, Plus, RefreshCw, Trash2, CheckCircle2, X, Accessibility, HeartPulse, Stethoscope, Download } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
 import { useRafAccess, type NationalFlagState, type RafAccessLevel } from '../../data/RafAccessContext';
 import {
   CURRENT_USER,
   MAX_FREE_TEXT,
   activeItems,
-  categoryName,
   formatRafDate,
   formatRafDateTime,
   getNationalFlag,
-  getRafRecord,
   nextNationalChange,
   todayIso,
   type RafItem,
@@ -19,11 +17,11 @@ import {
   type RafSection,
 } from '../../data/reasonableAdjustments';
 import { Button } from '../buttons/Button';
+import { RafItemDetails } from './RafItemDetails';
 import { PaginationBar } from '../buttons/PaginationBar';
 import { InfoBanner } from '../banners/InfoBanner';
 import { Alert } from '../ui/alert';
 import { Skeleton } from '../ui/skeleton';
-import { Tag } from '../ui/tag';
 import {
   AddItemDialog,
   CreateFlagDialog,
@@ -67,8 +65,10 @@ type Outcome = { kind: 'success' | 'info'; text: string };
 export function ReasonableAdjustmentsPage() {
   const customer = useCustomer();
   const navigate = useNavigate();
-  const { level, nationalFlag, setNationalFlag, nationalChangeCount } = useRafAccess();
-  const [record, setRecord] = useState<RafRecord | null>(() => getRafRecord(customer.id));
+  const { level, nationalFlag, setNationalFlag, nationalChangeCount, getFlagRecord, setFlagRecord, saveOutcome, setSaveOutcome } = useRafAccess();
+  // Starts from what PASS already holds for this customer, so changes made here (and a flag imported or deleted) are still
+  // there when the tab is reopened.
+  const [record, setRecord] = useState<RafRecord | null>(() => getFlagRecord(customer.id));
   const [retrievedAt, setRetrievedAt] = useState<Date | null>(null);
   const [querying, setQuerying] = useState(true);
   const [pages, setPages] = useState<Record<RafSection, number>>({ adjustment: 1, impairment: 1, condition: 1 });
@@ -126,6 +126,12 @@ export function ReasonableAdjustmentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Tell the rest of the app what PASS now holds (the badge, the lists, the visit panel). Not while checking: an
+  // import finishes in the same step as the check, so waiting avoids the badge flickering off first.
+  useEffect(() => {
+    if (!querying) setFlagRecord(customer.id, record);
+  }, [record, querying, customer.id, setFlagRecord]);
+
   // Another organisation changed the national flag (the NHS notification service would tell PASS).
   // PASS fetches the full record and ingests it automatically, without asking.
   const lastChangeCount = useRef(nationalChangeCount);
@@ -162,7 +168,33 @@ export function ReasonableAdjustmentsPage() {
     query();
   };
 
-  const createFlag = () => {
+  // Stands in for the national flag service rejecting a change. Saved nowhere when it does, so the message says
+  // what was not done, and the dialog stays open with what was entered. One-shot: the retry then goes through.
+  // 'conflict' only bites an adjustment being added; every other save goes through unless set to 'error'.
+  const rejection = (action: 'create' | 'add-adjustment' | 'add' | 'remove' | 'delete'): string | null => {
+    if (saveOutcome === 'ok') return null;
+    if (saveOutcome === 'conflict' && action !== 'add-adjustment') return null;
+    setSaveOutcome('ok');
+    switch (action) {
+      case 'create':
+        return 'The flag was not created. PASS could not save it to the national flag, so nothing has been saved. Check the connection and try again.';
+      case 'add-adjustment':
+        if (saveOutcome === 'conflict') {
+          return 'The flag was not updated. The national flag rejected this adjustment because it conflicts with an entry already there. Close this window and select Refresh to bring in the latest national flag, resolve the conflict, then submit again.';
+        }
+        return 'The flag was not updated. PASS could not send this to the national flag, so nothing has been saved. Try again.';
+      case 'add':
+        return 'The flag was not updated. PASS could not send this to the national flag, so nothing has been saved. Try again.';
+      case 'delete':
+        return 'Nothing was changed. PASS could not delete the flag from the national flag, so it has not been deleted. Try again.';
+      default:
+        return 'Nothing was changed. PASS could not remove this from the national flag, so it has not been removed. Try again.';
+    }
+  };
+
+  const createFlag = (): string | null => {
+    const rejected = rejection('create');
+    if (rejected) return rejected;
     setRecord({ createdOn: todayIso(), createdBy: CURRENT_USER.name, lastUpdatedOn: todayIso(), items: [] });
     // Created in PASS first, then on the national flag, so the NHS now holds one too.
     setNationalFlag('found');
@@ -171,10 +203,13 @@ export function ReasonableAdjustmentsPage() {
       kind: 'success',
       text: `Reasonable Adjustment Flag created for ${customer.fullName} in PASS and on the national flag. You can now add reasonable adjustments and impairments.`,
     });
+    return null;
   };
 
-  const addItem = (section: Exclude<RafSection, 'condition'>, item: NewRafItem) => {
-    if (!record) return;
+  const addItem = (section: Exclude<RafSection, 'condition'>, item: NewRafItem): string | null => {
+    if (!record) return null;
+    const rejected = rejection(section === 'adjustment' ? 'add-adjustment' : 'add');
+    if (rejected) return rejected;
     const existing = record.items.find(i => i.section === section && !i.endedOn && i.code === item.code);
     // Adding text to something already recorded appends to it (RAU005) rather than duplicating it.
     const items = existing
@@ -203,10 +238,14 @@ export function ReasonableAdjustmentsPage() {
         ? `Details added to \u201C${item.term}\u201D in PASS and sent to the national flag.`
         : `\u201C${item.term}\u201D added to PASS and sent to the national flag.`,
     });
+    return null;
   };
 
-  const confirmRemove = (_reason: string, _comment: string, scope: RemoveScope) => {
-    if (!record || !removeTarget) return;
+  const confirmRemove = (_reason: string, _comment: string, scope: RemoveScope): string | null => {
+    if (!record || !removeTarget) return null;
+    // A PASS-only removal never touches the national flag, so there is nothing there to reject.
+    const rejected = scope === 'both' ? rejection(removeTarget.kind === 'flag' ? 'delete' : 'remove') : null;
+    if (rejected) return rejected;
     const where = scope === 'both' ? 'PASS and the national flag' : 'PASS';
     const stays = scope === 'pass' ? ' It remains on the national flag.' : '';
     if (removeTarget.kind === 'flag') {
@@ -221,6 +260,7 @@ export function ReasonableAdjustmentsPage() {
       setOutcome({ kind: 'success', text: `\u201C${item.term}\u201D removed from ${where}.${stays}` });
     }
     setRemoveTarget(null);
+    return null;
   };
 
   const activeCount = record ? record.items.filter(i => !i.endedOn).length : 0;
@@ -258,7 +298,6 @@ export function ReasonableAdjustmentsPage() {
         nationalFlag={nationalFlag}
         onRefresh={refresh}
         onCreate={() => setCreateOpen(true)}
-        onDelete={() => setRemoveTarget({ kind: 'flag', itemCount: activeCount })}
         onGoToDetails={() => navigate(`/customers/${customer.id}/details`)}
       />
 
@@ -297,12 +336,27 @@ export function ReasonableAdjustmentsPage() {
         </div>
       )}
 
+      {/* Deleting the whole flag is only offered here, at the bottom of the full record, after its contents (AC). */}
+      {record && !querying && canWrite && (
+        <section className="bg-white rounded-[10px] border border-gray-200 px-5 py-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-gray-900">Delete the flag</h3>
+            <p className="text-body text-gray-700">
+              This deletes the whole Reasonable Adjustment Flag, including everything listed above. A reason and a comment are required.
+            </p>
+          </div>
+          <Button variant="secondary-danger" icon={<Trash2 className="w-4 h-4" />} onClick={() => setRemoveTarget({ kind: 'flag', itemCount: activeCount })}>
+            Delete flag
+          </Button>
+        </section>
+      )}
+
       <CreateFlagDialog open={createOpen} onOpenChange={setCreateOpen} person={person} onCreate={createFlag} />
       <AddItemDialog
         section={addSection}
         onOpenChange={open => !open && setAddSection(null)}
         existing={record ? record.items.filter(i => !i.endedOn) : []}
-        onAdd={item => addSection && addItem(addSection, item)}
+        onAdd={item => (addSection ? addItem(addSection, item) : null)}
       />
       <RemoveDialog
         target={removeTarget}
@@ -330,7 +384,6 @@ function FlagSummary({
   nationalFlag,
   onRefresh,
   onCreate,
-  onDelete,
   onGoToDetails,
 }: {
   record: RafRecord | null;
@@ -343,7 +396,6 @@ function FlagSummary({
   nationalFlag: NationalFlagState;
   onRefresh: () => void;
   onCreate: () => void;
-  onDelete: () => void;
   onGoToDetails: () => void;
 }) {
   const retrieved = (
@@ -426,11 +478,6 @@ function FlagSummary({
           <h2 className="text-lg font-semibold text-gray-900">Reasonable Adjustment Flag recorded</h2>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {canWrite && (
-            <Button variant="secondary-danger" size="sm" icon={<Trash2 className="w-4 h-4" />} disabled={querying} onClick={onDelete}>
-              Delete flag
-            </Button>
-          )}
           {refreshButton}
         </div>
       </div>
@@ -510,25 +557,7 @@ function SectionCard({
         <ul className="divide-y divide-gray-200">
           {visible.map(item => (
             <li key={item.id} className="flex items-start justify-between gap-4 px-5 py-4">
-              <div className="min-w-0 space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-body font-semibold text-gray-900">{item.term}</p>
-                  {item.categoryCode && <Tag label={categoryName(item.categoryCode)} />}
-                </div>
-                {item.freeText && <p className="text-body text-gray-800 leading-relaxed whitespace-pre-line">{item.freeText}</p>}
-                <p className="flex items-start gap-1.5 text-sm text-gray-600">
-                  {/* A globe marks items that came from the national flag. The text beside it already says who and where, so this is a scan aid, with a tooltip and screen-reader text so it isn't the only signal. */}
-                  {item.source === 'national' && (
-                    <>
-                      <span title="From the national flag" className="mt-0.5 shrink-0">
-                        <Globe className="size-4 text-gray-600" aria-hidden="true" />
-                      </span>
-                      <span className="sr-only">From the national flag. </span>
-                    </>
-                  )}
-                  <span>Added: {formatRafDate(item.addedOn)} by {item.addedBy} at {item.organisation}</span>
-                </p>
-              </div>
+              <RafItemDetails item={item} />
               {onRemove && (
                 <Button variant="tertiary-danger" size="sm" onClick={() => onRemove(item)} aria-label={`Remove ${item.term}`}>
                   Remove

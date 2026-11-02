@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { HeartPulse, Lock, TriangleAlert } from 'lucide-react';
+import { useRafAccess } from '../../data/RafAccessContext';
+import { ReasonableAdjustmentsBadge } from './ReasonableAdjustmentsBadge';
 import { CUSTOMERS_LIST_DUMMY, STATUS_LABEL, reviewTimeOf, type ListCustomer, type ListStatus } from '../../data/customersListDummy';
 import {
   PeopleListLayout, PersonCard, TagFilterSection, CheckGroup, FilterFooter, SortGroup,
@@ -153,6 +155,7 @@ export function StatusBadge({ status }: { status: ListStatus }) {
 }
 
 function CustomerCard({ customer }: { customer: ListCustomer }) {
+  const { hasFlag } = useRafAccess();
   // Flags: the safety/legal/review information, always shown in full.
   const flags: React.ReactNode[] = [];
   if (customer.highRisk) {
@@ -185,6 +188,10 @@ function CustomerCard({ customer }: { customer: ListCustomer }) {
         Allergies
       </span>,
     );
+  }
+  // After the red flags, before the review date: shows that a Reasonable Adjustment Flag exists, never what's in it.
+  if (hasFlag(customer.id)) {
+    flags.push(<ReasonableAdjustmentsBadge key="ra" variant="flag" />);
   }
   if (customer.reviewDate) {
     flags.push(

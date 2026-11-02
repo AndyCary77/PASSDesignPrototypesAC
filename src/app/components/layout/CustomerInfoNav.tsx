@@ -8,6 +8,7 @@ import { useCustomer } from '../../data/CustomerContext';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
 import { useRafAccess } from '../../data/RafAccessContext';
 import { RafAccessSwitcher } from './RafAccessSwitcher';
+import { ReasonableAdjustmentsBadge } from '../customer/ReasonableAdjustmentsBadge';
 
 const inactiveTabClass =
   'px-4 py-3 text-body font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 transition-colors';
@@ -222,7 +223,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
   const customer = useCustomer();
   const showCareBridgeTab = useFeatureFlag('customerCareBridgeTab');
   // No Reasonable Adjustment Flag access level = no tab (AIOP-22349).
-  const { level: rafLevel } = useRafAccess();
+  const { level: rafLevel, hasFlag } = useRafAccess();
   const showReasonableAdjustmentsTab = rafLevel !== 'none';
   const base = `/customers/${customer.id}`;
 
@@ -274,7 +275,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
       ...(showReasonableAdjustmentsTab
         ? [{ key: 'reasonableadjustments', type: 'link' as const, label: 'Reasonable Adjustments', to: `${base}/reasonableadjustments` }]
         : []),
-      { key: 'customerfile', type: 'inert', label: 'Customer File' },
+      { key: 'customerfile', type: 'link', label: 'Customer File', to: `${base}/customerfile` },
     );
     return items;
   }, [base, showCareBridgeTab, showReasonableAdjustmentsTab]);
@@ -321,17 +322,20 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
             {/* Name and Badges */}
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-gray-900 font-semibold">{customer.fullName}</h2>
+              {/* Same order and styling as the Customers list: HIGH RISK first and solid, the legal flag after it in the paler red. */}
+              {customer.highRisk && (
+                <span className="bg-red-700 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                  <span>HIGH RISK</span>
+                </span>
+              )}
               {customer.dnacpr && (
                 <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded inline-flex items-center gap-1">
                   <Heart size={12} fill="currentColor" />
                   <span>DNACPR</span>
                 </span>
               )}
-              {customer.highRisk && (
-                <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                  <span>HIGH RISK</span>
-                </span>
-              )}
+              {/* Shows that a flag exists, never what's in it. Links to the tab only for users who have access to it. */}
+              {hasFlag(customer.id) && <ReasonableAdjustmentsBadge to={showReasonableAdjustmentsTab ? `${base}/reasonableadjustments` : undefined} />}
               <StatusBadge status={customer.status} label={customer.statusLabel} />
             </div>
 

@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { getRafRecord, type RafRecord } from './reasonableAdjustments';
 
 /**
  * Prototype-only review state for the Reasonable Adjustments tab: stands in for things that are
@@ -14,11 +15,24 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
  * `simulateNationalChange` stands in for another organisation changing the national flag
  * (what the NHS notification service would tell PASS about).
  *
+ * Next save: whether the next create/add/remove/delete is accepted by the national flag service.
+ *   'ok'        accepted
+ *   'error'     rejected, so nothing is saved and the dialog says so
+ *   'conflict'  an adjustment being added is rejected as conflicting with one already on the national flag
+ * One-shot: it returns to 'ok' once a save has been rejected, so the retry then succeeds.
+ *
+ * Flag records: the flag PASS holds for each customer, shared so everything that shows it (the header
+ * badge on every customer tab, the Customers list, the Customer Details status line, the visit panel's
+ * Customer Details tab) agrees with the Reasonable Adjustments tab, which is what changes it (an import
+ * from the national flag, a create, an add, a remove, a delete). Until the tab has said otherwise it's
+ * whatever the demo data holds. Kept for the session, as PASS would keep it.
+ *
  * Lives above the router so the tab bar (CustomerInfoNav), the floating switcher and the tab
  * itself read the same values.
  */
 export type RafAccessLevel = 'none' | '1' | '2' | '3';
 export type NationalFlagState = 'found' | 'none' | 'no-nhs-number';
+export type SaveOutcome = 'ok' | 'error' | 'conflict';
 
 const STORAGE_KEY = 'pass-raf-access-level';
 
@@ -40,6 +54,13 @@ interface RafAccessContextValue {
   /** Counts simulated changes by another organisation; the tab reacts whenever it goes up. */
   nationalChangeCount: number;
   simulateNationalChange: () => void;
+  saveOutcome: SaveOutcome;
+  setSaveOutcome: (outcome: SaveOutcome) => void;
+  /** The flag PASS holds for this customer, or null if it holds none. */
+  getFlagRecord: (customerId: string) => RafRecord | null;
+  setFlagRecord: (customerId: string, record: RafRecord | null) => void;
+  /** Does PASS hold a Reasonable Adjustment Flag for this customer? */
+  hasFlag: (customerId: string) => boolean;
 }
 
 // A default (rather than null + a throwing hook) so CustomerInfo still renders
@@ -51,6 +72,11 @@ const RafAccessContext = createContext<RafAccessContextValue>({
   setNationalFlag: () => {},
   nationalChangeCount: 0,
   simulateNationalChange: () => {},
+  saveOutcome: 'ok',
+  setSaveOutcome: () => {},
+  getFlagRecord: id => getRafRecord(id),
+  setFlagRecord: () => {},
+  hasFlag: id => getRafRecord(id) !== null,
 });
 
 export function RafAccessProvider({ children }: { children: ReactNode }) {
@@ -58,7 +84,15 @@ export function RafAccessProvider({ children }: { children: ReactNode }) {
   // Not persisted: it's a what-if for the current review, not a setting.
   const [nationalFlag, setNationalFlag] = useState<NationalFlagState>('found');
   const [nationalChangeCount, setNationalChangeCount] = useState(0);
+  const [saveOutcome, setSaveOutcome] = useState<SaveOutcome>('ok');
   const simulateNationalChange = useCallback(() => setNationalChangeCount(n => n + 1), []);
+  const [flagRecords, setFlagRecords] = useState<Record<string, RafRecord | null>>({});
+  const getFlagRecord = useCallback((id: string) => (id in flagRecords ? flagRecords[id] : getRafRecord(id)), [flagRecords]);
+  const hasFlag = useCallback((id: string) => getFlagRecord(id) !== null, [getFlagRecord]);
+  const setFlagRecord = useCallback(
+    (id: string, record: RafRecord | null) => setFlagRecords(prev => (prev[id] === record ? prev : { ...prev, [id]: record })),
+    [],
+  );
 
   useEffect(() => {
     try {
@@ -70,7 +104,7 @@ export function RafAccessProvider({ children }: { children: ReactNode }) {
 
   return (
     <RafAccessContext.Provider
-      value={{ level, setLevel, nationalFlag, setNationalFlag, nationalChangeCount, simulateNationalChange }}
+      value={{ level, setLevel, nationalFlag, setNationalFlag, nationalChangeCount, simulateNationalChange, saveOutcome, setSaveOutcome, getFlagRecord, setFlagRecord, hasFlag }}
     >
       {children}
     </RafAccessContext.Provider>

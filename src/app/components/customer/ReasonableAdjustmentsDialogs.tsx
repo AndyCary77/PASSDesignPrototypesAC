@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { AlertCircle, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Combobox } from '../ui/combobox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -7,6 +7,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import { Button } from '../buttons/Button';
+import { Alert } from '../ui/alert';
 import { InfoBanner } from '../banners/InfoBanner';
 import { Tag } from '../ui/tag';
 import {
@@ -101,6 +102,20 @@ function PersonSummary({ person }: { person: RafPerson }) {
   );
 }
 
+/**
+ * Shown inside the dialog when a save is rejected, so what was entered is kept and the user can try again.
+ * The message always says what did and didn't happen, and what to do next (the AC for every create, add,
+ * remove and delete). The wording here is placeholder: the spec fixes its own error text.
+ */
+function SaveError({ children }: { children: ReactNode }) {
+  return (
+    <Alert className="border-red-300 bg-red-50 text-red-900 items-start">
+      <AlertCircle aria-hidden="true" />
+      <p className="text-body font-medium">{children}</p>
+    </Alert>
+  );
+}
+
 const DIALOG_CLASS = 'sm:max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto';
 const TITLE_CLASS = 'text-2xl font-semibold text-gray-900';
 const DESCRIPTION_CLASS = 'text-body text-gray-700';
@@ -122,7 +137,8 @@ export function CreateFlagDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   person: RafPerson;
-  onCreate: () => void;
+  /** Returns an error message if the flag couldn't be created, otherwise nothing. */
+  onCreate: () => string | null;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,8 +150,9 @@ export function CreateFlagDialog({
   );
 }
 
-function CreateFlagSteps({ person, onCancel, onCreate }: { person: RafPerson; onCancel: () => void; onCreate: () => void }) {
+function CreateFlagSteps({ person, onCancel, onCreate }: { person: RafPerson; onCancel: () => void; onCreate: () => string | null }) {
   const [step, setStep] = useState<'eligibility' | 'confirm'>('eligibility');
+  const [error, setError] = useState<string | null>(null);
   const [eligible, setEligible] = useState(false);
 
   if (step === 'eligibility') {
@@ -191,9 +208,10 @@ function CreateFlagSteps({ person, onCancel, onCreate }: { person: RafPerson; on
           organisations with access will be able to see that this flag exists.
         </p>
       </div>
+      {error && <SaveError>{error}</SaveError>}
       <DialogFooter>
-        <Button variant="tertiary" onClick={() => setStep('eligibility')}>Back</Button>
-        <Button onClick={onCreate}>Create flag</Button>
+        <Button variant="tertiary" onClick={() => { setError(null); setStep('eligibility'); }}>Back</Button>
+        <Button onClick={() => setError(onCreate())}>Create flag</Button>
       </DialogFooter>
     </>
   );
@@ -224,7 +242,8 @@ export function AddItemDialog({
   section: Exclude<RafSection, 'condition'> | null;
   onOpenChange: (open: boolean) => void;
   existing: RafItem[];
-  onAdd: (item: NewRafItem) => void;
+  /** Returns an error message if the item couldn't be added, otherwise nothing. */
+  onAdd: (item: NewRafItem) => string | null;
 }) {
   return (
     <Dialog open={section !== null} onOpenChange={onOpenChange}>
@@ -244,8 +263,9 @@ function AddItemForm({
   section: Exclude<RafSection, 'condition'>;
   existing: RafItem[];
   onCancel: () => void;
-  onAdd: (item: NewRafItem) => void;
+  onAdd: (item: NewRafItem) => string | null;
 }) {
+  const [error, setError] = useState<string | null>(null);
   const isAdjustment = section === 'adjustment';
   const [categoryCode, setCategoryCode] = useState('');
   const [termCode, setTermCode] = useState('');
@@ -285,12 +305,14 @@ function AddItemForm({
 
   const submit = () => {
     if (!selected || !canAdd) return;
-    onAdd({
-      code: selected.code,
-      categoryCode: isAdjustment ? categoryCode : undefined,
-      term: selected.term,
-      freeText: preferNotToSay ? undefined : trimmed || undefined,
-    });
+    setError(
+      onAdd({
+        code: selected.code,
+        categoryCode: isAdjustment ? categoryCode : undefined,
+        term: selected.term,
+        freeText: preferNotToSay ? undefined : trimmed || undefined,
+      }),
+    );
   };
 
   return (
@@ -352,6 +374,7 @@ function AddItemForm({
         )}
       </div>
 
+      {error && <SaveError>{error}</SaveError>}
       <DialogFooter>
         <Button variant="tertiary" onClick={onCancel}>Cancel</Button>
         <Button disabled={!canAdd} onClick={submit}>Add {label}</Button>
@@ -383,7 +406,8 @@ export function RemoveDialog({
   target: RemoveTarget | null;
   onOpenChange: (open: boolean) => void;
   person: RafPerson;
-  onConfirm: (reason: string, comment: string, scope: RemoveScope) => void;
+  /** Returns an error message if nothing could be changed, otherwise nothing. */
+  onConfirm: (reason: string, comment: string, scope: RemoveScope) => string | null;
 }) {
   return (
     <Dialog open={target !== null} onOpenChange={onOpenChange}>
@@ -403,15 +427,77 @@ function RemoveForm({
   target: RemoveTarget;
   person: RafPerson;
   onCancel: () => void;
-  onConfirm: (reason: string, comment: string, scope: RemoveScope) => void;
+  onConfirm: (reason: string, comment: string, scope: RemoveScope) => string | null;
 }) {
+  // Two steps: choose and explain, then a separate "Confirm delete" before anything is removed.
+  const [step, setStep] = useState<'details' | 'confirm'>('details');
   const [reason, setReason] = useState('');
   const [comment, setComment] = useState('');
   // Asked every time rather than assumed: the user can say no (RAO009).
   const [scope, setScope] = useState<RemoveScope>('both');
+  const [error, setError] = useState<string | null>(null);
   const isFlag = target.kind === 'flag';
   const lengthError = textError(comment);
-  const canConfirm = !!reason && !!comment.trim() && !lengthError;
+  const canContinue = !!reason && !!comment.trim() && !lengthError;
+
+  // What is about to be removed: the same box on both steps.
+  const targetSummary = (
+    <div className="rounded-lg border border-gray-200 px-4 py-3 space-y-1.5">
+      {target.kind === 'item' ? (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-body font-semibold text-gray-900">{target.item.term}</p>
+            {target.item.categoryCode && <Tag label={categoryName(target.item.categoryCode)} />}
+          </div>
+          {target.item.freeText && <p className="text-body text-gray-700 whitespace-pre-line">{target.item.freeText}</p>}
+          <p className="text-sm text-gray-600">
+            Added: {formatRafDate(target.item.addedOn)} by {target.item.addedBy} at {target.item.organisation}
+          </p>
+        </>
+      ) : (
+        <p className="text-body text-gray-800">
+          The flag and its {target.itemCount} {target.itemCount === 1 ? 'item' : 'items'} will be removed.
+        </p>
+      )}
+    </div>
+  );
+
+  if (step === 'confirm') {
+    const reasonLabel = REMOVAL_REASONS.find(r => r.value === reason)?.label;
+    return (
+      <>
+        <DialogHeader>
+          <DialogTitle className={TITLE_CLASS}>Confirm delete</DialogTitle>
+          <DialogDescription className={DESCRIPTION_CLASS}>
+            {isFlag
+              ? 'Check the details below. Once confirmed, the whole flag is deleted.'
+              : 'Check the details below. Once confirmed, the item is removed. It is kept in PASS with an end date and is no longer shown.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <PersonSummary person={person} />
+          {targetSummary}
+          <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-body">
+            <dt className="text-gray-600">{isFlag ? 'Deleted from' : 'Removed from'}</dt>
+            <dd className="font-medium text-gray-900">{scope === 'both' ? 'PASS and the national flag' : 'PASS only'}</dd>
+            <dt className="text-gray-600">Reason</dt>
+            <dd className="font-medium text-gray-900">{reasonLabel}</dd>
+            <dt className="text-gray-600">Comment</dt>
+            <dd className="text-gray-900 whitespace-pre-line">{comment.trim()}</dd>
+          </dl>
+        </div>
+
+        {error && <SaveError>{error}</SaveError>}
+        <DialogFooter>
+          <Button variant="tertiary" onClick={() => { setError(null); setStep('details'); }}>Back</Button>
+          <Button variant="secondary-danger" onClick={() => setError(onConfirm(reason, comment.trim(), scope))}>
+            Confirm delete
+          </Button>
+        </DialogFooter>
+      </>
+    );
+  }
 
   return (
     <>
@@ -426,25 +512,7 @@ function RemoveForm({
 
       <div className="space-y-4">
         <PersonSummary person={person} />
-
-        <div className="rounded-lg border border-gray-200 px-4 py-3 space-y-1.5">
-          {target.kind === 'item' ? (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-body font-semibold text-gray-900">{target.item.term}</p>
-                {target.item.categoryCode && <Tag label={categoryName(target.item.categoryCode)} />}
-              </div>
-              {target.item.freeText && <p className="text-body text-gray-700 whitespace-pre-line">{target.item.freeText}</p>}
-              <p className="text-sm text-gray-600">
-                Added: {formatRafDate(target.item.addedOn)} by {target.item.addedBy} at {target.item.organisation}
-              </p>
-            </>
-          ) : (
-            <p className="text-body text-gray-800">
-              The flag and its {target.itemCount} {target.itemCount === 1 ? 'item' : 'items'} will be removed.
-            </p>
-          )}
-        </div>
+        {targetSummary}
 
         <Field label={isFlag ? 'Where to delete it' : 'Where to remove it'}>
           <RadioGroup value={scope} onValueChange={v => setScope(v as RemoveScope)} className="gap-2">
@@ -486,9 +554,7 @@ function RemoveForm({
 
       <DialogFooter>
         <Button variant="tertiary" onClick={onCancel}>Cancel</Button>
-        <Button variant="secondary-danger" disabled={!canConfirm} onClick={() => onConfirm(reason, comment.trim(), scope)}>
-          {isFlag ? 'Delete flag' : 'Remove item'}
-        </Button>
+        <Button disabled={!canContinue} onClick={() => setStep('confirm')}>Continue</Button>
       </DialogFooter>
     </>
   );
