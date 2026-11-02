@@ -916,7 +916,7 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
     <div className="screen">
       <StatusBar />
       <div className="app-header">
-        <a className="app-header-back" href="../customers/?transition=back"><ArrowLeftIcon /></a>
+        <a className="app-header-back" href="../customer-menu/?transition=back"><ArrowLeftIcon /></a>
         <span className="app-header-title">All customers</span>
         <div style={{ width: 36 }} />
       </div>
@@ -940,6 +940,12 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
           {CUSTOMER.legalChips.map(chip => (
             <span key={chip.id} className="docs-legal-chip">{chip.label}</span>
           ))}
+          {/* Not a legal decision, so purple rather than red (same chip as mobile/customer-menu's header).
+              Arthur has a Reasonable Adjustment Flag. */}
+          <span className="docs-legal-chip docs-legal-chip--adjustments">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.4 6 14 4H5v17h2v-7h5.6l.4 2h7V6z" /></svg>
+            Adjustments
+          </span>
         </div>
         {CUSTOMER.photo ? (
           <img className="docs-customer-avatar" src={CUSTOMER.photo} alt="" />
@@ -952,7 +958,7 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
 
       <div className="docs-menu-bar">
         <h1>Documents</h1>
-        <button className="docs-menu-action" type="button"><GridMenuIcon size={18} /> Menu</button>
+        <a className="docs-menu-action" href="../customer-menu/?transition=back"><GridMenuIcon size={18} /> Menu</a>
       </div>
 
       {allowance && allowance.remaining <= 0
@@ -2144,7 +2150,7 @@ function IncidentsScreen({ onClose }) {
 
 export default function App() {
   // Plays a slide-in-from-right entrance only when arriving from a tap on
-  // the Customers list (which links here with ?transition=1) — a direct
+  // the customer menu (which links here with ?transition=1) — a direct
   // visit or reload shouldn't replay it.
   const [entering] = useState(() =>
     new URLSearchParams(window.location.search).get('transition') === '1'
@@ -2256,7 +2262,7 @@ export default function App() {
 
   // Nothing left to dismiss — back out to the Customers list this screen
   // would have been reached from.
-  const systemBack = () => handleSystemBack(() => { window.location.href = '../customers/?transition=back' })
+  const systemBack = () => handleSystemBack(() => { window.location.href = '../customer-menu/?transition=back' })
 
   return (
     <OfflineContext.Provider value={offline}>

@@ -21,7 +21,7 @@ const SearchIcon = () => (
 
 // The same 3 example customers as the desktop prototype (src/app/data/customers.ts
 // CUSTOMER_LIST). Arthur is the only one with a working mobile detail screen
-// today (mobile/customer-documents) — Edith and Vera are shown for parity
+// today (mobile/customer-menu, which leads on to customer-documents) — Edith and Vera are shown for parity
 // with the desktop list, same as it, but aren't tappable yet; an honest gap
 // rather than wiring them to Arthur's own screen and misrepresenting it as
 // theirs.
@@ -29,7 +29,7 @@ const CUSTOMERS = [
   {
     id: 'arthur-barrington', name: 'Arthur Barrington', surname: 'Barrington',
     address: '91 Westwood Road, Sutton Coldfield, B73 6UJ',
-    img: arthurImg, badges: ['HIGH RISK', 'DNACPR'], href: '../customer-documents/?transition=1',
+    img: arthurImg, badges: ['HIGH RISK', 'DNACPR'], href: '../customer-menu/?transition=1',
   },
   {
     id: 'vera-bramwell', name: 'Vera Bramwell', surname: 'Bramwell',

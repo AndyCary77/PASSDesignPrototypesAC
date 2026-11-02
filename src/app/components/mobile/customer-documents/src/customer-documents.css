@@ -32,7 +32,8 @@
   font-family: Barlow, sans-serif;
   font-size: 15px;
   font-weight: 600;
-  cursor: default;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 /* ── Customer card (Level 1, purple header block) ─────────────────── */
@@ -81,6 +82,12 @@
   font-weight: 700;
   white-space: nowrap;
   box-sizing: border-box;
+}
+.docs-legal-chip--adjustments {
+  gap: 4px;
+  padding-left: 6px;
+  border-color: #cd70ff;
+  color: var(--brand-purple-3-purple-2);
 }
 /* Stays its own distinct, more urgent treatment — solid fill, smaller/sharper
    corners — unlike .docs-legal-chip's outline pill. */

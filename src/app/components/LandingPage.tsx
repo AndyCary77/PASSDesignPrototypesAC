@@ -82,6 +82,8 @@ const MOBILE = [
       { label: 'Assessment Hero — Capture from documents', to: '/src/app/components/mobile/customer-documents/' },
       { label: 'Assessment Hero — Assessment capture', to: '/src/app/components/mobile/carebridge/' },
       { label: 'Customers', to: '/src/app/components/mobile/customers/' },
+      { label: 'Customer menu (Arthur Barrington)', to: '/src/app/components/mobile/customer-menu/' },
+      { label: 'Reasonable adjustments (Arthur Barrington)', to: '/src/app/components/mobile/customer-adjustments/' },
       { label: 'Employees', to: '/src/app/components/mobile/employees/' },
       { label: 'Employee Documents (David Buckowski)', to: '/src/app/components/mobile/employee-documents/' },
       { label: 'Messaging', to: '/src/app/components/mobile/messaging/' },

@@ -63,6 +63,8 @@ export default defineConfig({
         mobileCareBridge: path.resolve(__dirname, 'src/app/components/mobile/carebridge/index.html'),
         mobileCustomerDocuments: path.resolve(__dirname, 'src/app/components/mobile/customer-documents/index.html'),
         mobileCustomers: path.resolve(__dirname, 'src/app/components/mobile/customers/index.html'),
+        mobileCustomerAdjustments: path.resolve(__dirname, 'src/app/components/mobile/customer-adjustments/index.html'),
+        mobileCustomerMenu: path.resolve(__dirname, 'src/app/components/mobile/customer-menu/index.html'),
         mobileEmployees: path.resolve(__dirname, 'src/app/components/mobile/employees/index.html'),
         mobileEmployeeDocuments: path.resolve(__dirname, 'src/app/components/mobile/employee-documents/index.html'),
         mobileMessaging: path.resolve(__dirname, 'src/app/components/mobile/messaging/index.html'),
