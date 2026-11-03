@@ -20,6 +20,7 @@ import { CareManagementProvider } from './components/customer/caremanagement/Car
 import { CareManagementSubnav } from './components/customer/caremanagement/CareManagementSubnav';
 import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage } from './components/schedule/SchedulePage';
+import { ScheduleTimeline, ScheduleSubnav } from './components/schedule/ScheduleTimeline';
 import { BookingsPage } from './components/bookings/BookingsPage';
 import { EnquiriesPage } from './components/enquiries/EnquiriesPage';
 import { EnquiryFormPage } from './components/enquiries/EnquiryFormPage';
@@ -316,6 +317,16 @@ function ScheduleLayout() {
   );
 }
 
+// The daily timeline sits inside the normal shell (side rail + top bar), with the Schedule/Runs/…
+// tab strip pinned beneath the top bar and the timeline filling the full width of the content area.
+function ScheduleTimelineLayout() {
+  return (
+    <AppShell infoBar={<ScheduleSubnav />} wide>
+      <ScheduleTimeline />
+    </AppShell>
+  );
+}
+
 function OfficeLayout() {
   return (
     <OfficeProvider>
@@ -486,6 +497,10 @@ export const router = createBrowserRouter([
   {
     path: "/schedule",
     Component: ScheduleLayout,
+  },
+  {
+    path: "/schedule/timeline",
+    Component: ScheduleTimelineLayout,
   },
   {
     path: "/office",

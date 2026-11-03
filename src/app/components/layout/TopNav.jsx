@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import passgeniusUrl from '../icons/passgenius.svg'
 import { NavModeToggle } from './NavModeToggle'
+import { HeroTeaserDialog } from '../hero/HeroTeaserDialog'
+import heroIconUrl from '../icons/assessment-hero.svg'
 import { useEdgeAwareTooltip } from '../../hooks/useEdgeAwareTooltip'
 import './styles/top-nav.css'
 
@@ -40,6 +42,7 @@ const MessagesIcon = () => (
 
 export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userName = 'Alex Morgan', userAvatar, appName = 'Office Name' }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [heroOpen, setHeroOpen] = useState(false)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -124,6 +127,14 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
         </button>
         {menuOpen && (
           <div className="top-nav-profile-menu">
+            {/* Placeholder upgrade teaser — opens a preview of the Hero features. */}
+            <button
+              className="top-nav-profile-item top-nav-profile-item--feature"
+              onClick={() => { setMenuOpen(false); setHeroOpen(true) }}
+            >
+              <img src={heroIconUrl} alt="" />
+              Explore Hero features
+            </button>
             <button
               className="top-nav-profile-item"
               onClick={() => { setMenuOpen(false); onLogout?.() }}
@@ -143,6 +154,8 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
           old single-top-bar layout without disrupting anyone happy with
           this one. */}
       <NavModeToggle variant="light" current="new" />
+
+      <HeroTeaserDialog mode="explore" open={heroOpen} onOpenChange={setHeroOpen} />
 
       {tip && createPortal(
         <div
