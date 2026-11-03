@@ -6,6 +6,11 @@ import PhoneFrame from '../../assets/PhoneFrame'
 // Same photo as the web app's Arthur Barrington and mobile/customer-documents'
 // own Arthur — all prototypes show the same person.
 import arthurImg from '../../assets/img/Customer=Arthur Barrington.jpg'
+// The same flag record and chip icons as mobile/customer-menu's profile header (and
+// customer-documents / customer-adjustments), so the list shows every badge his
+// interior pages do and the two can't drift apart.
+import { CUSTOMER as ARTHUR } from '../../customer-documents/src/customerDocumentsData'
+import { AllergiesIcon, DnacprIcon, DolsIcon, FlagChipIcon } from '../../customer-menu/src/menuIcons'
 
 const ChevronLeftIcon = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -25,11 +30,21 @@ const SearchIcon = () => (
 // with the desktop list, same as it, but aren't tappable yet; an honest gap
 // rather than wiring them to Arthur's own screen and misrepresenting it as
 // theirs.
+const CHIP_ICONS = { allergies: AllergiesIcon, dnacpr: DnacprIcon, dols: DolsIcon, adjustments: FlagChipIcon }
+
+// HIGH RISK first (its own solid treatment), then the legal flags, then Adjustments —
+// Arthur has a Reasonable Adjustment Flag. Not a legal decision, so its own purple chip.
+const ARTHUR_BADGES = [
+  ...(ARTHUR.highRisk ? [{ id: 'high-risk', label: 'HIGH RISK', kind: 'high-risk' }] : []),
+  ...ARTHUR.legalChips.map(c => ({ ...c, kind: 'legal' })),
+  { id: 'adjustments', label: 'Adjustments', kind: 'adjustments' },
+]
+
 const CUSTOMERS = [
   {
     id: 'arthur-barrington', name: 'Arthur Barrington', surname: 'Barrington',
     address: '91 Westwood Road, Sutton Coldfield, B73 6UJ',
-    img: arthurImg, badges: ['HIGH RISK', 'DNACPR'], href: '../customer-menu/?transition=1',
+    img: arthurImg, badges: ARTHUR_BADGES, href: '../customer-menu/?transition=1',
   },
   {
     id: 'vera-bramwell', name: 'Vera Bramwell', surname: 'Bramwell',
@@ -72,9 +87,14 @@ function CustomerRow({ customer }) {
         {customer.address && <div className="cust-address">{customer.address}</div>}
         {customer.badges && (
           <div className="cust-badges">
-            {customer.badges.map(b => (
-              <span key={b} className={`cust-badge ${b === 'HIGH RISK' ? 'cust-badge-high-risk' : 'cust-badge-outline'}`}>{b}</span>
-            ))}
+            {customer.badges.map(b => {
+              const BadgeIcon = CHIP_ICONS[b.id]
+              return (
+                <span key={b.id} className={`cust-badge cust-badge-${b.kind}`}>
+                  {BadgeIcon && <BadgeIcon />}{b.label}
+                </span>
+              )
+            })}
           </div>
         )}
       </div>

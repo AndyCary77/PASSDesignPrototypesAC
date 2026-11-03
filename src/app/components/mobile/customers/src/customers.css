@@ -83,6 +83,7 @@
 
 .cust-badges {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
 }
@@ -93,18 +94,28 @@
   height: 24px;
   padding: 0 9px;
   font-family: Barlow, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   box-sizing: border-box;
 }
 
-/* Legal-decision flags (DNACPR, DoLS, etc.) — matches
-   mobile/customer-documents' own .docs-legal-chip. */
-.cust-badge-outline {
+/* Legal-decision flags (Allergies, DNACPR, DoLS) — matches
+   mobile/customer-menu's own .cm-chip. */
+.cust-badge-legal,
+.cust-badge-adjustments {
+  gap: 4px;
+  padding: 0 9px 0 6px;
   border-radius: 12px;
   background: #fff;
   border: 2px solid var(--rag-red-red-overdue);
   color: var(--rag-red-red-overdue);
+}
+.cust-badge svg { width: 14px; height: 14px; }
+
+/* Reasonable Adjustment Flag — purple, as .cm-chip-adjustments. */
+.cust-badge-adjustments {
+  border-color: #cd70ff;
+  color: var(--brand-purple-3-purple-2);
 }
 
 /* HIGH RISK stays its own distinct, more urgent treatment — solid fill,
