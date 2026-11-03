@@ -38,6 +38,15 @@ interface CareManagementContextType {
   registerAdd: (label: string, fn: () => void) => void;
   clearAdd: () => void;
   /**
+   * The list view's "Edit order" toggle, surfaced in the subnav's actions row
+   * beside "Add X" — same back-channel again. `active` is whether reorder mode
+   * is currently on (the tab owns that state; the subnav just flips the label
+   * to "Done"). Only the Outcomes list registers one.
+   */
+  reorderFn: { active: boolean; fn: () => void } | null;
+  registerReorder: (active: boolean, fn: () => void) => void;
+  clearReorder: () => void;
+  /**
    * The active detail view's "Delete X" action — same back-channel as
    * addFn/registerAdd, just for the opposite view. While a detail view is
    * open, it replaces the subnav's Print/Save entirely rather than sitting
@@ -61,6 +70,18 @@ interface CareManagementContextType {
   /** Ids of drafted outcomes/tasks a reviewer has discarded this session. useCareData drops these from the lists entirely, same immutable-mock-data approach as acceptedIds. */
   discardedIds: Set<string>;
   discard: (id: string) => void;
+  /**
+   * The reviewer's chosen display order for outcomes, as a full list of ids.
+   * Empty until the first reorder, meaning "the data's own order". Ids not in
+   * the list (e.g. outcomes drafted after a reorder) fall in after the
+   * ordered ones — useCareData applies this on top of the immutable mock
+   * data, same overlay approach as acceptedIds/discardedIds.
+   */
+  outcomeOrder: string[];
+  setOutcomeOrder: (ids: string[]) => void;
+  /** Renamed outcome titles by id, overlaid onto the mock data by useCareData so every tab that shows an outcome's title (cards, task/visit badges) stays in step. */
+  outcomeTitles: Record<string, string>;
+  setOutcomeTitle: (id: string, title: string) => void;
   /**
    * Ids of outcomes/tasks whose `draftSource` has been cleared via
    * CarePlanDraftBanner's "Change recording(s)" → Replace — same idea as
@@ -146,6 +167,9 @@ const CareManagementContext = createContext<CareManagementContextType>({
   addFn: null,
   registerAdd: () => {},
   clearAdd: () => {},
+  reorderFn: null,
+  registerReorder: () => {},
+  clearReorder: () => {},
   deleteFn: null,
   registerDelete: () => {},
   clearDelete: () => {},
@@ -153,6 +177,10 @@ const CareManagementContext = createContext<CareManagementContextType>({
   accept: () => {},
   discardedIds: new Set(),
   discard: () => {},
+  outcomeOrder: [],
+  setOutcomeOrder: () => {},
+  outcomeTitles: {},
+  setOutcomeTitle: () => {},
   clearedSourceIds: new Set(),
   setClearedSourceIds: () => {},
   extraLinkedRecordingIds: [],
@@ -196,9 +224,12 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   }, [tab, customer.id, navigate]);
   const [backFn, setBackFn] = useState<{ fn: () => void } | null>(null);
   const [addFn, setAddFn] = useState<{ label: string; fn: () => void } | null>(null);
+  const [reorderFn, setReorderFn] = useState<{ active: boolean; fn: () => void } | null>(null);
   const [deleteFn, setDeleteFn] = useState<{ label: string; fn: () => void } | null>(null);
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [discardedIds, setDiscardedIds] = useState<Set<string>>(new Set());
+  const [outcomeOrder, setOutcomeOrderState] = useState<string[]>([]);
+  const [outcomeTitles, setOutcomeTitles] = useState<Record<string, string>>({});
   const [clearedSourceIds, setClearedSourceIds] = useState<Set<string>>(new Set());
   const [extraLinkedRecordingIds, setExtraLinkedRecordingIds] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -273,6 +304,8 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   const clearBack = useCallback(() => setBackFn(null), []);
   const registerAdd = useCallback((label: string, fn: () => void) => setAddFn({ label, fn }), []);
   const clearAdd = useCallback(() => setAddFn(null), []);
+  const registerReorder = useCallback((active: boolean, fn: () => void) => setReorderFn({ active, fn }), []);
+  const clearReorder = useCallback(() => setReorderFn(null), []);
   const registerDelete = useCallback((label: string, fn: () => void) => setDeleteFn({ label, fn }), []);
   const clearDelete = useCallback(() => setDeleteFn(null), []);
   const accept = useCallback((id: string) => {
@@ -282,6 +315,15 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   const discard = useCallback((id: string) => {
     setDiscardedIds(prev => new Set(prev).add(id));
     setDirty(true);
+  }, []);
+  const setOutcomeOrder = useCallback((ids: string[]) => {
+    setOutcomeOrderState(ids);
+    setDirty(true);
+  }, []);
+  // Doesn't set dirty itself — the edit form's bubbled onChange already does
+  // for every keystroke.
+  const setOutcomeTitle = useCallback((id: string, title: string) => {
+    setOutcomeTitles(prev => ({ ...prev, [id]: title }));
   }, []);
   // Callers gate this on nothing still pending, same as Documents' own
   // Publish — not enforced here too since the banner already hides the
@@ -295,7 +337,8 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
   const value = useMemo(
     () => ({
       activeTab, setActiveTab, backFn, registerBack, clearBack, addFn, registerAdd, clearAdd,
-      deleteFn, registerDelete, clearDelete, acceptedIds, accept, discardedIds, discard, dirty, setDirty,
+      reorderFn, registerReorder, clearReorder, deleteFn, registerDelete, clearDelete, acceptedIds, accept, discardedIds, discard, dirty, setDirty,
+      outcomeOrder, setOutcomeOrder, outcomeTitles, setOutcomeTitle,
       clearedSourceIds, setClearedSourceIds, extraLinkedRecordingIds, setExtraLinkedRecordingIds,
       draftStep, draftComplete, startCarePlanDraft, draftSourceDocuments, setDraftSourceDocuments,
       draftedOutcomesVisible, draftedTasksVisible,
@@ -304,7 +347,8 @@ export function CareManagementProvider({ children }: { children: React.ReactNode
     }),
     [
       activeTab, backFn, registerBack, clearBack, addFn, registerAdd, clearAdd,
-      deleteFn, registerDelete, clearDelete, acceptedIds, accept, discardedIds, discard, dirty,
+      reorderFn, registerReorder, clearReorder, deleteFn, registerDelete, clearDelete, acceptedIds, accept, discardedIds, discard, dirty,
+      outcomeOrder, setOutcomeOrder, outcomeTitles, setOutcomeTitle,
       clearedSourceIds, extraLinkedRecordingIds,
       draftStep, draftComplete, startCarePlanDraft, draftSourceDocuments, draftedOutcomesVisible, draftedTasksVisible,
       draftNoticeDismissed, dismissDraftNotice,

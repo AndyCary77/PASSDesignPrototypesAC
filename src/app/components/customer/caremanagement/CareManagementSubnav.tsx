@@ -1,4 +1,4 @@
-import { ArrowLeft, Plus, Printer } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, Check, Plus, Printer } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import { SubnavTabs } from '../../tabs/SubnavTabs';
 import { DeleteButton } from './shared';
@@ -9,7 +9,7 @@ import { useScrolled } from '../../../hooks/useScrolled';
 type Tab = 'outcomes' | 'tasks' | 'visits' | 'caregroups';
 
 export function CareManagementSubnav() {
-  const { activeTab, setActiveTab, backFn, addFn, deleteFn, dirty, setDirty, planPublished } = useCareManagement();
+  const { activeTab, setActiveTab, backFn, addFn, reorderFn, deleteFn, dirty, setDirty, planPublished } = useCareManagement();
   const { pending } = useCareData();
   const scrolled = useScrolled();
 
@@ -72,9 +72,21 @@ export function CareManagementSubnav() {
                     (e.g. Edith/Vera, pre-Publish) — same distinction as
                     CarePlanDocumentSubnav's Save/Save Draft. Disabled until
                     something's actually changed. */}
-                <Button disabled={!dirty} onClick={() => setDirty(false)}>
+                <Button variant="secondary" disabled={!dirty} onClick={() => setDirty(false)}>
                   {planPublished ? 'Update' : 'Save Draft'}
                 </Button>
+                {reorderFn && (
+                  // Secondary, not primary: it's a mode toggle rather than the
+                  // row's main action. Flips to "Done" while reorder mode is on.
+                  <Button
+                    variant="secondary"
+                    icon={reorderFn.active ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
+                    onClick={reorderFn.fn}
+                    aria-pressed={reorderFn.active}
+                  >
+                    {reorderFn.active ? 'Done' : 'Edit order'}
+                  </Button>
+                )}
                 {addFn && (
                   <Button icon={<Plus className="w-4 h-4" />} onClick={addFn.fn}>
                     {addFn.label}

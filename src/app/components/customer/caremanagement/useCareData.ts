@@ -51,7 +51,7 @@ export function useCareData() {
   const customer = useCustomer();
   const {
     acceptedIds, discardedIds, draftedOutcomesVisible, draftedTasksVisible, draftSourceDocuments,
-    clearedSourceIds, setClearedSourceIds, extraLinkedRecordingIds, setExtraLinkedRecordingIds,
+    outcomeOrder, outcomeTitles, clearedSourceIds, setClearedSourceIds, extraLinkedRecordingIds, setExtraLinkedRecordingIds,
   } = useCareManagement();
   const data = CARE_DATA[customer.id] ?? EMPTY;
   // What CareBridge would draft from this customer's recordings, if anything.
@@ -101,10 +101,24 @@ export function useCareData() {
         ? items
         : items.map(item => (clearedSourceIds.has(item.id) ? { ...item, draftSource: undefined } : item));
 
-    const outcomes = clearSource(notDiscarded(applyAccepted([
+    const applyTitles = <T extends { id: string; title: string }>(items: T[]): T[] =>
+      items.map(item => (outcomeTitles[item.id] ? { ...item, title: outcomeTitles[item.id] } : item));
+
+    // Reviewer's chosen order first; anything not in it (never reordered, or
+    // drafted after the last reorder) keeps its natural order after those.
+    const applyOrder = <T extends { id: string }>(items: T[]): T[] => {
+      if (outcomeOrder.length === 0) return items;
+      const rank = (id: string) => { const i = outcomeOrder.indexOf(id); return i === -1 ? Infinity : i; };
+      return [...items].sort((a, b) => {
+        const ra = rank(a.id), rb = rank(b.id);
+        return ra === rb ? 0 : ra < rb ? -1 : 1;
+      });
+    };
+
+    const outcomes = applyOrder(applyTitles(clearSource(notDiscarded(applyAccepted([
       ...data.outcomes,
       ...(draft && draftedOutcomesVisible ? draft.outcomes : []),
-    ])));
+    ])))));
     const tasks = clearSource(notDiscarded(applyAccepted([
       ...data.tasks,
       ...(draft && draftedTasksVisible ? draft.tasks : []),
@@ -160,6 +174,6 @@ export function useCareData() {
     };
   }, [
     data, draft, completedAssessments, draftedOutcomesVisible, draftedTasksVisible, draftSourceDocuments,
-    acceptedIds, discardedIds, clearedSourceIds, extraLinkedRecordingIds, customer.id, handleChangeRecordings,
+    acceptedIds, discardedIds, outcomeOrder, outcomeTitles, clearedSourceIds, extraLinkedRecordingIds, customer.id, handleChangeRecordings,
   ]);
 }
