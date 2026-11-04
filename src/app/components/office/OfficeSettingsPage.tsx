@@ -43,6 +43,9 @@ const INPUT_CLASS = 'w-28 px-3 py-3 border border-gray-300 rounded-md text-body 
  * Held in context so every card, row and helper line on the page switches together.
  */
 const CompactContext = createContext(false);
+
+/** The Standard / 4 columns switch is hidden for now (the page opens in the compact layout). Flip to bring it back. */
+const SHOW_LAYOUT_TOGGLE = false;
 const useCompact = () => useContext(CompactContext);
 
 function SettingsCard({
@@ -586,19 +589,21 @@ export function OfficeSettingsPage() {
   return (
     <CompactContext.Provider value={compact}>
       {/* Layout options for review: the standard 3-column cards, or 4 columns with smaller cards and type. */}
-      <div className="flex items-center justify-end gap-3 mb-6">
-        <span className="text-body font-medium text-gray-700">Layout</span>
-        <SegmentedToggle
-          variant="track"
-          neutral
-          offFirst
-          value={compact}
-          onChange={setCompact}
-          offLabel="Standard"
-          onLabel="4 columns, compact"
-          ariaLabel="Settings layout"
-        />
-      </div>
+      {SHOW_LAYOUT_TOGGLE && (
+        <div className="flex items-center justify-end gap-3 mb-6">
+          <span className="text-body font-medium text-gray-700">Layout</span>
+          <SegmentedToggle
+            variant="track"
+            neutral
+            offFirst
+            value={compact}
+            onChange={setCompact}
+            offLabel="Standard"
+            onLabel="4 columns, compact"
+            ariaLabel="Settings layout"
+          />
+        </div>
+      )}
 
       {/* Cards flow down left-aligned columns of equal width (as many as fit at ~26rem each), so every card's
           left and top edges line up with its neighbours and a short card never leaves a hole beside a tall one.
@@ -607,7 +612,7 @@ export function OfficeSettingsPage() {
       <div
         className={`[&>section]:break-inside-avoid ${
           compact
-            ? 'columns-1 md:columns-2 lg:columns-4 gap-5 [&>section]:mb-5'
+            ? 'columns-1 md:columns-2 lg:columns-3 2xl:columns-4 gap-5 [&>section]:mb-5'
             : 'columns-[26rem] gap-6 [&>section]:mb-6'
         }`}
       >
