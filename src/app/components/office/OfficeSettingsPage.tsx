@@ -1,7 +1,8 @@
-import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { CalendarClock, FileText, ScanLine, Search, Timer, UserCheck, UserCog } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { SettingSwitch } from '../buttons/SettingSwitch';
+import { SegmentedToggle } from '../buttons/SegmentedToggle';
 import { InfoBanner } from '../banners/InfoBanner';
 import { EditSlideout } from '../layout/EditSlideout';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
@@ -37,6 +38,13 @@ const INPUT_CLASS = 'w-28 px-3 py-3 border border-gray-300 rounded-md text-body 
 
 // ─── Read view ───────────────────────────────────────────────────────────────
 
+/**
+ * Compact layout: four columns with smaller cards and type, closer to the live app's density.
+ * Held in context so every card, row and helper line on the page switches together.
+ */
+const CompactContext = createContext(false);
+const useCompact = () => useContext(CompactContext);
+
 function SettingsCard({
   title,
   Icon,
@@ -48,12 +56,13 @@ function SettingsCard({
   onEdit: () => void;
   children: ReactNode;
 }) {
+  const compact = useCompact();
   return (
-    <section className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-6">
-      <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-gray-200">
-        <div className="flex items-center gap-3 min-w-0">
-          <Icon className="w-6 h-6 text-gray-800 shrink-0" />
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+    <section className={`bg-white rounded-[10px] border border-gray-200 shadow-sm ${compact ? 'p-4' : 'p-6'}`}>
+      <div className={`flex items-center justify-between gap-3 border-b border-gray-200 ${compact ? 'pb-3 mb-3' : 'pb-4 mb-4'}`}>
+        <div className={`flex items-center min-w-0 ${compact ? 'gap-2.5' : 'gap-3'}`}>
+          <Icon className={`text-gray-800 shrink-0 ${compact ? 'w-5 h-5' : 'w-6 h-6'}`} />
+          <h3 className={`font-semibold text-gray-900 ${compact ? 'text-base' : 'text-lg'}`}>{title}</h3>
         </div>
         <Button variant="tertiary" size="sm" iconOnly aria-label={`Edit ${title}`} onClick={onEdit}>
           <PencilSolidIcon className="w-4 h-4" />
@@ -66,17 +75,20 @@ function SettingsCard({
 
 /** A label on the left and its value on the right, both bold — as on the live screen. */
 function ValueRow({ label, value }: { label: string; value: string }) {
+  const compact = useCompact();
+  const text = compact ? 'text-sm' : 'text-body';
   return (
-    <div className="flex items-baseline justify-between gap-4 py-1.5">
-      <dt className="text-body font-semibold text-gray-900">{label}</dt>
-      <dd className="text-body font-semibold text-gray-900 whitespace-nowrap">{value}</dd>
+    <div className={`flex items-baseline justify-between gap-4 ${compact ? 'py-1' : 'py-1.5'}`}>
+      <dt className={`${text} font-semibold text-gray-900`}>{label}</dt>
+      <dd className={`${text} font-semibold text-gray-900 whitespace-nowrap`}>{value}</dd>
     </div>
   );
 }
 
-const Helper = ({ children }: { children: ReactNode }) => (
-  <p className="text-body text-gray-700 leading-relaxed my-2">{children}</p>
-);
+const Helper = ({ children }: { children: ReactNode }) => {
+  const compact = useCompact();
+  return <p className={`${compact ? 'text-sm' : 'text-body'} text-gray-700 leading-relaxed my-2`}>{children}</p>;
+};
 
 const atLeast = (n: number, unit: string) => `≥ ${n}${unit}`;
 
@@ -568,15 +580,37 @@ function VoiceSlideout({ onClose }: { onClose: () => void }) {
 export function OfficeSettingsPage() {
   const { settings: s } = useOffice();
   const [editing, setEditing] = useState<CardKey | null>(null);
+  const [compact, setCompact] = useState(true);
   const close = () => setEditing(null);
 
   return (
-    <>
+    <CompactContext.Provider value={compact}>
+      {/* Layout options for review: the standard 3-column cards, or 4 columns with smaller cards and type. */}
+      <div className="flex items-center justify-end gap-3 mb-6">
+        <span className="text-body font-medium text-gray-700">Layout</span>
+        <SegmentedToggle
+          variant="track"
+          neutral
+          offFirst
+          value={compact}
+          onChange={setCompact}
+          offLabel="Standard"
+          onLabel="4 columns, compact"
+          ariaLabel="Settings layout"
+        />
+      </div>
+
       {/* Cards flow down left-aligned columns of equal width (as many as fit at ~26rem each), so every card's
           left and top edges line up with its neighbours and a short card never leaves a hole beside a tall one.
           Each card keeps its own height. The previous grid left a gap under every card sharing a row with the
           tall Journal categories card, and a centred last row that didn't line up with the columns above it. */}
-      <div className="columns-[26rem] gap-6 [&>section]:break-inside-avoid [&>section]:mb-6">
+      <div
+        className={`[&>section]:break-inside-avoid ${
+          compact
+            ? 'columns-1 md:columns-2 lg:columns-4 gap-5 [&>section]:mb-5'
+            : 'columns-[26rem] gap-6 [&>section]:mb-6'
+        }`}
+      >
         <SettingsCard title="Overdue and missed visits" Icon={Timer} onEdit={() => setEditing('overdue')}>
           <dl>
             <ValueRow label="Overdue visits threshold" value={atLeast(s.overdueVisitsThresholdPct, '%')} />
@@ -593,8 +627,8 @@ export function OfficeSettingsPage() {
 
         <SettingsCard title="Permanent allocation" Icon={UserCheck} onEdit={() => setEditing('allocation')}>
           <Helper>Options for the permanent allocation Heatmap</Helper>
-          <p className="text-body font-semibold text-gray-900 mt-5">Heatmap link options</p>
-          <p className="text-body text-gray-700 mt-2">
+          <p className={`${compact ? 'text-sm mt-3' : 'text-body mt-5'} font-semibold text-gray-900`}>Heatmap link options</p>
+          <p className={`${compact ? 'text-sm' : 'text-body'} text-gray-700 mt-2`}>
             Heatmap links to {s.heatmapLink === 'customer' ? 'customer' : 'employee'} schedule
           </p>
         </SettingsCard>
@@ -657,6 +691,6 @@ export function OfficeSettingsPage() {
       {editing === 'journal' && <JournalSlideout onClose={close} />}
       {editing === 'permissions' && <PermissionsSlideout onClose={close} />}
       {editing === 'voice' && <VoiceSlideout onClose={close} />}
-    </>
+    </CompactContext.Provider>
   );
 }
