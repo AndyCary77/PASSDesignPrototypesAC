@@ -2,11 +2,16 @@
 
 .ahf {
   position: relative;
-  height: 116px;
+  /* Fills the frame it's placed in (a flex item that stretches), so it matches the Schedule Hero visual's height. */
+  flex: 1 1 auto;
+  min-height: 116px;
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid #f0e4fa;
   background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);
+  /* The strip itself fades in from the card at the left edge and back out at the right (the mic sits mid-strip, unaffected). */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%);
   --ahf-centre: 50%;
   --ahf-speed: 30s; /* one loop; ~48px/s at the default 1440px loop */
 }
@@ -19,14 +24,14 @@
 .ahf-layer--in {
   clip-path: inset(0 calc(100% - var(--ahf-centre)) 0 0);
   /* Fades in at the left edge, and is fully faded out before it reaches the mascot (about 70px either side of centre, just inside the pill's edge). */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 calc(50% - 210px), transparent calc(50% - 72px));
-  mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 calc(50% - 210px), transparent calc(50% - 72px));
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12%, #000 18%, transparent calc(50% - 72px));
+  mask-image: linear-gradient(90deg, transparent 0, #000 12%, #000 18%, transparent calc(50% - 72px));
 }
 .ahf-layer--out {
   clip-path: inset(0 0 0 var(--ahf-centre));
   /* Fades up out of the mascot rather than popping out from behind it, and fades away at the right edge. */
-  -webkit-mask-image: linear-gradient(90deg, transparent calc(50% + 72px), #000 calc(50% + 190px), #000 80%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent calc(50% + 72px), #000 calc(50% + 190px), #000 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent calc(50% + 72px), #000 calc(50% + 72px + 14%), #000 84%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent calc(50% + 72px), #000 calc(50% + 72px + 14%), #000 84%, transparent 100%);
 }
 
 /* Everything on both layers travels left → right and wraps after exactly one loop. */

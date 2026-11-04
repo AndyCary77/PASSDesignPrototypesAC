@@ -36,7 +36,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { Button } from '../buttons/Button';
-import heroIconUrl from '../icons/assessment-hero.svg';
+import scheduleHeroIconUrl from '../icons/schedule-hero.svg';
 import { HeroTeaserDialog } from '../hero/HeroTeaserDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -386,7 +386,7 @@ function PageHeader({ metricsOpen, onToggleMetrics }: { metricsOpen: boolean; on
               onSelect={() => setHeroTeaserOpen(true)}
               className="my-0.5 gap-3 rounded-lg border border-purple-300 bg-[#f3e8fb] px-3 py-2 text-body font-medium text-[rgb(154,38,214)] cursor-pointer focus:bg-[#ead7f7] focus:text-[rgb(154,38,214)]"
             >
-              <img src={heroIconUrl} alt="" className="size-5" />
+              <img src={scheduleHeroIconUrl} alt="" className="size-5" />
               Schedule Hero
               {/* Upgrade teaser: this account doesn't have the feature, so the item opens a preview instead. */}
               <span className="ml-auto rounded-full bg-[rgb(154,38,214)] px-2 py-px text-sm font-semibold text-white">Upgrade</span>

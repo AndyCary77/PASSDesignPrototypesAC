@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan teaser demo</title>
+<style>
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:#2A183866; font-family:system-ui, sans-serif; }
+  .modal { width:min(563px, calc(100vw - 32px)); background:#fff; border-radius:16px; padding:24px; box-sizing:border-box; box-shadow:0 20px 50px rgba(0,0,0,.2); }
+  .modal plan-teaser { border-radius:10px; cursor:pointer; }
+  h2 { margin:20px 0 6px; font-size:20px; color:#2A1838; }
+  p { margin:0 0 16px; color:#6b5f73; line-height:1.4; }
+  button { background:#4A2685; color:#fff; border:0; border-radius:10px; padding:10px 18px; font-weight:600; font-size:15px; cursor:pointer; }
+</style>
+</head>
+<body>
+  <div class="modal">
+    <plan-teaser></plan-teaser>
+    <h2>Meet suggested plans</h2>
+    <p>Hover the preview to replay it.</p>
+    <button onclick="document.querySelector('plan-teaser').play()">Replay</button>
+  </div>
+  <script src="plan-teaser.js"></script>
+</body>
+</html>

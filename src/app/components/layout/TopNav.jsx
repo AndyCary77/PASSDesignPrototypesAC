@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import passgeniusUrl from '../icons/passgenius.svg'
+import { Crown } from 'lucide-react'
 import { NavModeToggle } from './NavModeToggle'
 import { HeroTeaserDialog } from '../hero/HeroTeaserDialog'
 import heroIconUrl from '../icons/assessment-hero.svg'
@@ -124,6 +125,8 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
           {userAvatar
             ? <img className="top-nav-avatar" src={userAvatar} alt="" />
             : <span className="top-nav-avatar">{initials(userName)}</span>}
+          {/* Marks that there are upgrade features to explore in this menu (Explore Hero features). */}
+          <span className="top-nav-crown" aria-hidden="true"><Crown size={10} strokeWidth={2.5} /></span>
         </button>
         {menuOpen && (
           <div className="top-nav-profile-menu">

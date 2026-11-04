@@ -148,6 +148,25 @@
 .top-nav-profile-btn:hover .top-nav-avatar,
 .top-nav-profile-btn.active .top-nav-avatar { box-shadow: 0 0 0 2px #e5e7eb; }
 
+/* Crown bubble at the avatar's top-right: a premium marker for the upgrade teasers in the profile menu. */
+.top-nav-crown {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgb(154, 38, 214);
+  color: #fff;
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.top-nav-icon-btn .top-nav-crown svg { width: 10px; height: 10px; }
+
 .top-nav-badge {
   position: absolute;
   top: 2px;

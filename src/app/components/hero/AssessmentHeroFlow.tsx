@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
 import heroIconUrl from '../icons/assessment-hero.svg';
 import './assessment-hero-flow.css';
@@ -32,9 +33,78 @@ const WAVE = [
 
 const loopPx = FLOW.length * SLOT;
 
-export function AssessmentHeroFlow() {
+// Playback: runs for a couple of seconds when the teaser opens, eases to a stop, then plays again
+// (easing up to speed) while `active` is true (the parent card is hovered) and eases back to a stop after.
+const INTRO_MS = 2500;
+const EASE_UP_MS = 220; // time constant when speeding up
+const EASE_DOWN_MS = 650; // time constant when slowing down
+
+export function AssessmentHeroFlow({ active = false }: { active?: boolean }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const targetRate = useRef(1);
+  const rate = useRef(1);
+  const frame = useRef<number | null>(null);
+  const lastTime = useRef(0);
+  const introDone = useRef(false);
+  const activeRef = useRef(active);
+
+  // The motion itself is CSS keyframes; this only changes how fast those animations are running, so a stop
+  // is a smooth slow-down and a restart picks up exactly where it paused.
+  const applyRate = (r: number) => {
+    rootRef.current?.getAnimations({ subtree: true }).forEach((a) => a.updatePlaybackRate(r));
+  };
+
+  const tick = (now: number) => {
+    const dt = Math.min(64, now - lastTime.current);
+    lastTime.current = now;
+    const tau = targetRate.current > rate.current ? EASE_UP_MS : EASE_DOWN_MS;
+    rate.current += (targetRate.current - rate.current) * (1 - Math.exp(-dt / tau));
+    if (Math.abs(targetRate.current - rate.current) < 0.01) {
+      rate.current = targetRate.current;
+      applyRate(rate.current);
+      frame.current = null;
+      return;
+    }
+    applyRate(rate.current);
+    frame.current = requestAnimationFrame(tick);
+  };
+
+  const setTarget = (value: number) => {
+    targetRate.current = value;
+    if (frame.current == null) {
+      lastTime.current = performance.now();
+      frame.current = requestAnimationFrame(tick);
+    }
+  };
+
+  // Hover changes only take effect once the opening run has finished, so hovering early never cuts it short.
+  useEffect(() => {
+    activeRef.current = active;
+    if (!introDone.current) return;
+    setTarget(active ? 1 : 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      introDone.current = true;
+      setTarget(activeRef.current ? 1 : 0);
+    }, INTRO_MS);
+    return () => {
+      window.clearTimeout(timer);
+      if (frame.current != null) cancelAnimationFrame(frame.current);
+      frame.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="ahf" aria-hidden="true" style={{ ['--ahf-loop' as string]: `${loopPx}px` }}>
+    <div
+      ref={rootRef}
+      className="ahf"
+      aria-hidden="true"
+      style={{ ['--ahf-loop' as string]: `${loopPx}px` }}
+    >
       {/* Quotes: visible left of the centre line */}
       <div className="ahf-layer ahf-layer--in">
         <div className="ahf-track">
