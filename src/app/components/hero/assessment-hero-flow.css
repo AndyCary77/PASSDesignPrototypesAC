@@ -1,0 +1,153 @@
+/* Assessment Hero teaser animation — see AssessmentHeroFlow.tsx */
+
+.ahf {
+  position: relative;
+  height: 116px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #f0e4fa;
+  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);
+  --ahf-centre: 50%;
+  --ahf-speed: 30s; /* one loop; ~48px/s at the default 1440px loop */
+}
+
+.ahf-layer {
+  position: absolute;
+  inset: 0;
+}
+/* Quotes only show left of the centre line, cards only to its right. */
+.ahf-layer--in {
+  clip-path: inset(0 calc(100% - var(--ahf-centre)) 0 0);
+  /* Fades in at the left edge, and is fully faded out before it reaches the mascot (about 70px either side of centre, just inside the pill's edge). */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 calc(50% - 210px), transparent calc(50% - 72px));
+  mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 calc(50% - 210px), transparent calc(50% - 72px));
+}
+.ahf-layer--out {
+  clip-path: inset(0 0 0 var(--ahf-centre));
+  /* Fades up out of the mascot rather than popping out from behind it, and fades away at the right edge. */
+  -webkit-mask-image: linear-gradient(90deg, transparent calc(50% + 72px), #000 calc(50% + 190px), #000 80%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent calc(50% + 72px), #000 calc(50% + 190px), #000 80%, transparent 100%);
+}
+
+/* Everything on both layers travels left → right and wraps after exactly one loop. */
+.ahf-track {
+  position: absolute;
+  inset: 0;
+  animation: ahf-run var(--ahf-speed) linear infinite;
+}
+@keyframes ahf-run {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--ahf-loop)); }
+}
+
+.ahf-say {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  line-height: 20px;
+  font-style: italic;
+  color: #4b3a5a;
+}
+
+.ahf-card {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e5d3f5;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.ahf-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111827;
+}
+.ahf-card-head b { font-weight: 600; }
+.ahf-tick {
+  width: 16px;
+  height: 16px;
+  padding: 2px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: rgb(154, 38, 214);
+  color: #fff;
+}
+.ahf-card-text {
+  font-size: 14px;
+  line-height: 19px;
+  color: #374151;
+}
+
+/* Mic: a lavender pill with a scrolling waveform and the mascot tipped onto its top-right corner. */
+.ahf-mic {
+  position: absolute;
+  top: 50%;
+  left: var(--ahf-centre);
+  transform: translate(-50%, -50%);
+  width: 156px;
+  height: 64px;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border: 3px solid #8f63dc;
+  background: #faf7ff;
+  box-shadow: 0 6px 18px rgba(143, 99, 220, 0.28);
+  pointer-events: none;
+}
+.ahf-wave {
+  position: absolute;
+  inset: 7px 16px;
+  overflow: hidden;
+  /* Outer bars sit lighter, as if tapering off, rather than vanishing. */
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0, #000 24%, #000 76%, rgba(0, 0, 0, 0.22) 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0, #000 24%, #000 76%, rgba(0, 0, 0, 0.22) 100%);
+}
+.ahf-wave-strip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding-right: 3px; /* so half the strip is exactly one copy + gap, and the loop doesn't jump */
+  animation: ahf-wave 10s linear infinite reverse;
+}
+.ahf-wave-strip i {
+  display: block;
+  width: 3px;
+  border-radius: 2px;
+  background: #5b2d8a;
+}
+@keyframes ahf-wave {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ahf-mascot {
+  position: absolute;
+  top: -24px;
+  right: -22px;
+  width: 46px;
+  height: 46px;
+  transform: rotate(12deg);
+  filter: drop-shadow(0 2px 4px rgba(59, 27, 70, 0.25));
+}
+.ahf-mascot img { display: block; width: 100%; height: 100%; }
+
+/* Decorative motion only: hold still for anyone who has asked for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .ahf-track,
+  .ahf-wave-strip { animation: none; }
+  .ahf-track { transform: translateX(240px); }
+}

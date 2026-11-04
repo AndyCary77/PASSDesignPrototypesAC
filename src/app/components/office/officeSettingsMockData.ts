@@ -17,6 +17,9 @@ export interface RosterPermissions {
 /** Which person Assessment Hero drafts in. */
 export type DraftVoice = 'first' | 'third';
 
+/** Which connections the care app may use to upload an Assessment Hero recording. */
+export type RecordingUploadNetwork = 'wifi' | 'wifi-and-mobile';
+
 /** One voice per kind of output, since each is read by someone different. */
 export interface AssessmentHeroVoice {
   /** Assessment documents — read by the customer, office and reviewers. */
@@ -51,6 +54,9 @@ export interface OfficeSettings {
 
   // Assessment Hero drafting voice
   assessmentHeroVoice: AssessmentHeroVoice;
+
+  // Assessment Hero recording uploads
+  recordingUploadNetwork: RecordingUploadNetwork;
 }
 
 export const JOURNAL_CATEGORIES = [
@@ -107,4 +113,6 @@ export const DEFAULT_OFFICE_SETTINGS: OfficeSettings = {
   // Documents and outcomes stay in the customer's own voice; tasks are
   // instructions to the carer, so they default to third person.
   assessmentHeroVoice: { documents: 'first', outcomes: 'first', tasks: 'third' },
+
+  recordingUploadNetwork: 'wifi-and-mobile',
 };

@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import heroIconUrl from '../icons/assessment-hero.svg';
 import scheduleHeroTeaserUrl from './sh-teaser.jpg';
+import { AssessmentHeroFlow } from './AssessmentHeroFlow';
 
 // Placeholder upgrade teasers for the "Hero" features. All copy here is placeholder wording for the
 // prototype, not agreed marketing text, and nothing is wired up: the buttons just close the dialog.
@@ -13,6 +15,8 @@ type HeroFeature = {
   points: string[];
   /** Optional banner shown across the top of the feature's card. */
   image?: { src: string; alt: string };
+  /** Optional animated banner, used instead of an image. */
+  renderMedia?: () => ReactNode;
 };
 
 const SCHEDULE_HERO: HeroFeature = {
@@ -30,6 +34,7 @@ const SCHEDULE_HERO: HeroFeature = {
 };
 
 const ASSESSMENT_HERO: HeroFeature = {
+  renderMedia: () => <AssessmentHeroFlow />,
   name: 'Assessment Hero',
   tagline: 'Turn assessment recordings into draft care documents.',
   points: [
@@ -51,10 +56,11 @@ function UpgradePill() {
 
 function FeatureCard({ feature, showImage = true }: { feature: HeroFeature; showImage?: boolean }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-3">
       {showImage && feature.image && (
-        <img src={feature.image.src} alt={feature.image.alt} className="mb-4 w-full h-auto rounded-lg border border-gray-100" />
+        <img src={feature.image.src} alt={feature.image.alt} className="mb-3 w-full h-auto rounded-lg border border-gray-100" />
       )}
+      {showImage && feature.renderMedia && <div className="mb-3">{feature.renderMedia()}</div>}
       <div className="flex items-center gap-3">
         <img src={heroIconUrl} alt="" className="size-8" />
         <h3 className="text-base font-semibold text-gray-900">{feature.name}</h3>
@@ -87,7 +93,7 @@ export function HeroTeaserDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Wider than a normal dialog: the Schedule Hero banner is a wide screenshot and its text needs room. */}
-      <DialogContent overlayClassName="z-[100]" className={`z-[101] ${single ? 'sm:max-w-3xl' : 'sm:max-w-2xl'} max-h-[calc(100vh-2rem)] overflow-y-auto gap-5 p-8`}>
+      <DialogContent overlayClassName="z-[100]" className={`z-[101] ${single ? 'sm:max-w-3xl' : 'sm:max-w-2xl'} max-h-[calc(100vh-1rem)] overflow-y-auto gap-4 p-6`}>
         <DialogHeader>
           <DialogTitle className="text-xl leading-tight">
             {single ? 'Meet Schedule Hero' : 'Explore Hero features'}

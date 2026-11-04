@@ -1,10 +1,11 @@
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
-import { CalendarClock, FileText, Search, Sparkles, Timer, UserCheck, UserCog } from 'lucide-react';
+import { CalendarClock, FileText, ScanLine, Search, Timer, UserCheck, UserCog } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { SettingSwitch } from '../buttons/SettingSwitch';
 import { InfoBanner } from '../banners/InfoBanner';
 import { EditSlideout } from '../layout/EditSlideout';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
+import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 import { useOffice } from './OfficeContext';
 import {
   JOURNAL_CATEGORIES,
@@ -12,6 +13,7 @@ import {
   type AssessmentHeroVoice,
   type DraftVoice,
   type OfficeSettings,
+  type RecordingUploadNetwork,
   type RosterPermissions,
 } from './officeSettingsMockData';
 
@@ -25,6 +27,11 @@ import {
 // <p>/<span> falls back to 16px in this repo even inside a text-sm wrapper.
 
 type CardKey = 'overdue' | 'allocation' | 'punctuality' | 'journal' | 'permissions' | 'voice';
+
+/** The Assessment Hero mark, in the same slot as the other cards' line icons. */
+function AssessmentHeroIcon({ className }: { className?: string }) {
+  return <img src={assessmentHeroIconUrl} alt="" className={className} />;
+}
 
 const INPUT_CLASS = 'w-28 px-3 py-3 border border-gray-300 rounded-md text-body bg-white';
 
@@ -405,6 +412,15 @@ function PermissionsSlideout({ onClose }: { onClose: () => void }) {
 
 const VOICE_LABEL: Record<DraftVoice, string> = { first: 'First person', third: 'Third person' };
 
+const NETWORK_LABEL: Record<RecordingUploadNetwork, string> = {
+  wifi: 'Wi-Fi only',
+  'wifi-and-mobile': 'Wi-Fi and mobile data',
+};
+const NETWORK_HELP: Record<RecordingUploadNetwork, string> = {
+  wifi: 'Recordings wait until the phone is on Wi-Fi, so no mobile data is used.',
+  'wifi-and-mobile': 'Recordings upload as soon as there is any connection, using mobile data if there is no Wi-Fi.',
+};
+
 /**
  * One row per kind of output Assessment Hero drafts. `audience` is why the
  * choice matters — each output has a different reader — and the examples show
@@ -448,20 +464,55 @@ const VOICE_OUTPUTS: {
 function VoiceSlideout({ onClose }: { onClose: () => void }) {
   const { settings, saveSettings } = useOffice();
   const [draft, setDraft] = useState<AssessmentHeroVoice>(settings.assessmentHeroVoice);
-  const dirty = VOICE_OUTPUTS.some((o) => draft[o.key] !== settings.assessmentHeroVoice[o.key]);
+  const [network, setNetwork] = useState<RecordingUploadNetwork>(settings.recordingUploadNetwork);
+  const dirty =
+    network !== settings.recordingUploadNetwork ||
+    VOICE_OUTPUTS.some((o) => draft[o.key] !== settings.assessmentHeroVoice[o.key]);
 
   return (
     <EditSlideout
-      title="Edit Assessment Hero drafting"
+      title="Edit Assessment Hero"
       size="large"
       onClose={onClose}
       saveDisabled={!dirty}
       onSave={(close) => {
-        saveSettings({ assessmentHeroVoice: draft });
+        saveSettings({ assessmentHeroVoice: draft, recordingUploadNetwork: network });
         close();
       }}
     >
       <div className="space-y-6">
+        <SlideoutSection title="Recording upload network">
+          <p className="text-body text-gray-800 -mt-2">Choose which networks the app can upload Assessment Hero recordings over.</p>
+          <fieldset>
+            <legend className="sr-only">Recording upload network</legend>
+            <div className="space-y-3">
+              {(['wifi-and-mobile', 'wifi'] as const).map((n) => {
+                const selected = network === n;
+                return (
+                  <label
+                    key={n}
+                    className={`flex items-start gap-3 rounded-md border p-4 cursor-pointer transition-colors ${
+                      selected ? 'border-[rgb(154,38,214)] bg-[rgba(154,38,214,0.04)]' : 'border-gray-300 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="recording-upload-network"
+                      checked={selected}
+                      onChange={() => setNetwork(n)}
+                      className="h-6 w-6 mt-0.5 accent-[rgb(154,38,214)] cursor-pointer shrink-0"
+                    />
+                    <span>
+                      <span className="block text-base font-semibold text-gray-900">{NETWORK_LABEL[n]}</span>
+                      <span className="block text-body text-gray-800 mt-1">{NETWORK_HELP[n]}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        </SlideoutSection>
+
         <InfoBanner size="md">
           Choose who Assessment Hero writes as, separately for each kind of draft. This only changes drafts created from now on —
           anything already drafted or accepted stays as it is.
@@ -521,8 +572,11 @@ export function OfficeSettingsPage() {
 
   return (
     <>
-      {/* items-start: cards keep their own height instead of stretching to the tallest in the row. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+      {/* Cards flow down left-aligned columns of equal width (as many as fit at ~26rem each), so every card's
+          left and top edges line up with its neighbours and a short card never leaves a hole beside a tall one.
+          Each card keeps its own height. The previous grid left a gap under every card sharing a row with the
+          tall Journal categories card, and a centred last row that didn't line up with the columns above it. */}
+      <div className="columns-[26rem] gap-6 [&>section]:break-inside-avoid [&>section]:mb-6">
         <SettingsCard title="Overdue and missed visits" Icon={Timer} onEdit={() => setEditing('overdue')}>
           <dl>
             <ValueRow label="Overdue visits threshold" value={atLeast(s.overdueVisitsThresholdPct, '%')} />
@@ -575,7 +629,19 @@ export function OfficeSettingsPage() {
           </dl>
         </SettingsCard>
 
-        <SettingsCard title="Assessment Hero" Icon={Sparkles} onEdit={() => setEditing('voice')}>
+        {/* Not editable yet in this prototype: the pencil is there to match the live card, but opens nothing. */}
+        <SettingsCard title="Tag in/out method" Icon={ScanLine} onEdit={() => {}}>
+          <Helper>Set the methods you expect employees to use to tag in and out of visits</Helper>
+          <dl className="mt-4 pt-3 border-t border-gray-200">
+            <ValueRow label="Preferred methods" value="NFC tag" />
+          </dl>
+        </SettingsCard>
+
+        <SettingsCard title="Assessment Hero" Icon={AssessmentHeroIcon} onEdit={() => setEditing('voice')}>
+          <Helper>Choose which networks the app can upload Assessment Hero recordings over</Helper>
+          <dl className="mt-4 pt-3 border-t border-gray-200">
+            <ValueRow label="Recording upload network" value={NETWORK_LABEL[s.recordingUploadNetwork]} />
+          </dl>
           <Helper>Who Assessment Hero writes as when it drafts from a recording</Helper>
           <dl className="mt-4 pt-3 border-t border-gray-200">
             {VOICE_OUTPUTS.map((o) => (
