@@ -19,7 +19,7 @@ import { CareManagementPage } from './components/customer/caremanagement/CareMan
 import { CareManagementProvider } from './components/customer/caremanagement/CareManagementContext';
 import { CareManagementSubnav } from './components/customer/caremanagement/CareManagementSubnav';
 import { MARChart } from './components/customer/mar/MARChart';
-import { SchedulePage } from './components/schedule/SchedulePage';
+import { SchedulePage, type ScheduleScenario } from './components/schedule/SchedulePage';
 import { ScheduleTimeline, ScheduleSubnav } from './components/schedule/ScheduleTimeline';
 import { BookingsPage } from './components/bookings/BookingsPage';
 import { EnquiriesPage } from './components/enquiries/EnquiriesPage';
@@ -309,10 +309,10 @@ function CareBridgeLayout() {
   );
 }
 
-function ScheduleLayout() {
+function ScheduleLayout({ scenario }: { scenario?: ScheduleScenario }) {
   return (
     <AppShell>
-      <SchedulePage />
+      <SchedulePage scenario={scenario} />
     </AppShell>
   );
 }
@@ -502,6 +502,14 @@ export const router = createBrowserRouter([
     path: "/schedule/timeline",
     Component: ScheduleTimelineLayout,
   },
+  {
+    // Friendlier alias for the same page
+    path: "/schedule/calendar",
+    Component: () => <Navigate to="/schedule/timeline" replace />,
+  },
+  { path: "/schedule/care-requirements", Component: () => <ScheduleLayout scenario="care-requirements" /> },
+  { path: "/schedule/conflict-warning", Component: () => <ScheduleLayout scenario="conflict-warning" /> },
+  { path: "/schedule/assigned-warning", Component: () => <ScheduleLayout scenario="assigned-warning" /> },
   {
     path: "/office",
     Component: () => <Navigate to="/office/tags" replace />,

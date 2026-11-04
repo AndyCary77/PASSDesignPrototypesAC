@@ -39,8 +39,8 @@
 .stage { position:absolute; left:0; top:0; width:${W}px; height:${H}px; transform-origin:0 0;
   --ground:#F7F5FB; --main:#4A2685; --second:#2A1838; --accent:#9966E3;
   color:var(--second); font-family:'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif; }
-/* CHANGED from the original (overflow:hidden): the scene is still clipped at left and right, but is allowed to run past the top and bottom edges so the mascot and the card's lower edge aren't cut off. */
-.ground { position:absolute; inset:0; background:var(--ground); overflow:visible; clip-path:inset(-90px 0 -90px 0) }
+/* CHANGED from the original (overflow:hidden): the scene is no longer clipped at its own edges. Parts of it (the Personal care card, the outer panel, the mascot) run past the stage, so whoever places the element should leave margin around it and do the clipping themselves. */
+.ground { position:absolute; inset:0; background:var(--ground); overflow:visible }
 .words { display:flex; flex-direction:column; gap:8px } .words > * { margin:0 }
 .sp-panel { position:absolute; left:110px; top:64px; width:1500px; height:560px; border:2px solid color-mix(in srgb, var(--accent) 16%, var(--ground)); border-radius:40px; background:color-mix(in srgb, var(--ground) 55%, #fff) }
 .sp-faint { color:color-mix(in srgb, var(--second) 30%, var(--ground)); font-size:26px; font-weight:500 }

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Calendar,
   CalendarDays,
@@ -560,6 +560,8 @@ function Segmented({ items, showLabels }: { items: Array<{ icon?: ReactNode; lab
 
 function Scheduler() {
   const scroller = useRef<HTMLDivElement>(null);
+  // One Schedule Hero teaser for the whole grid, opened from any carer row's menu (the same dialog the Actions menu opens).
+  const [heroTeaserOpen, setHeroTeaserOpen] = useState(false);
 
   // Scroll so the 07:00 window is in view; the full 24h axis stays rendered either side of it.
   useLayoutEffect(() => {
@@ -594,10 +596,11 @@ function Scheduler() {
           </div>
           <CarersHeader />
           {CARERS.map((carer, i) => (
-            <CarerRow key={carer.name} carer={carer} first={i === 0} />
+            <CarerRow key={carer.name} carer={carer} first={i === 0} onScheduleHero={() => setHeroTeaserOpen(true)} />
           ))}
         </div>
       </div>
+      <HeroTeaserDialog mode="schedule-hero" open={heroTeaserOpen} onOpenChange={setHeroTeaserOpen} />
     </div>
   );
 }
@@ -682,7 +685,7 @@ function CarersHeader() {
 
 const ROW_MENU_ITEMS = ['Reassign Visits', 'Unassign all', 'Mark as absent', 'Add availability'];
 
-function CarerRow({ carer, first }: { carer: Carer; first: boolean }) {
+function CarerRow({ carer, first, onScheduleHero }: { carer: Carer; first: boolean; onScheduleHero: () => void }) {
   const area = AREAS[carer.area];
   const contract = CONTRACT[carer.contract];
   const restriction = carer.restriction;
@@ -748,10 +751,24 @@ function CarerRow({ carer, first }: { carer: Carer; first: boolean }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={6} className="min-w-[180px] rounded-lg border-gray-200 bg-white p-1.5 shadow-lg">
             {ROW_MENU_ITEMS.map((label) => (
-              // Static prototype: the items are live-looking but don't do anything yet.
-              <DropdownMenuItem key={label} className="rounded-md px-2.5 py-1.5 text-body font-semibold text-gray-900 cursor-pointer focus:bg-gray-100 focus:text-gray-900">
-                {label}
-              </DropdownMenuItem>
+              <Fragment key={label}>
+                {/* Static prototype: the items are live-looking but don't do anything yet. */}
+                <DropdownMenuItem className="rounded-md px-2.5 py-1.5 text-body font-semibold text-gray-900 cursor-pointer focus:bg-gray-100 focus:text-gray-900">
+                  {label}
+                </DropdownMenuItem>
+                {/* Promoted Schedule Hero link, directly under "Mark as absent": a gap in the roster is exactly
+                    when its suggested plans help. Opens the same teaser dialog as the Actions menu. No Upgrade
+                    pill here, to keep the menu narrow; the purple highlight carries the promotion. */}
+                {label === 'Mark as absent' && (
+                  <DropdownMenuItem
+                    onSelect={onScheduleHero}
+                    className="my-0.5 gap-2.5 rounded-md border border-purple-300 bg-[#f3e8fb] px-2.5 py-1.5 text-body font-semibold text-[rgb(154,38,214)] cursor-pointer focus:bg-[#ead7f7] focus:text-[rgb(154,38,214)]"
+                  >
+                    <img src={scheduleHeroIconUrl} alt="" className="size-5" />
+                    Schedule Hero
+                  </DropdownMenuItem>
+                )}
+              </Fragment>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>

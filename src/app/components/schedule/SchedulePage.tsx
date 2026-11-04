@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
 import { ClipboardList, AlertTriangle, Users, CalendarClock, X } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { VisitSlideout } from './VisitSlideout';
 
-export function SchedulePage() {
-  const [slideoutOpen, setSlideoutOpen] = useState(false);
-  const [slideoutTab, setSlideoutTab] = useState('Care Required');
-  const [slideoutFooterWarning, setSlideoutFooterWarning] = useState<string | undefined>();
-  const [slideoutFooterConflicts, setSlideoutFooterConflicts] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const navigate = useNavigate();
+// Each scenario has its own URL, so it can be linked to directly (and survives a refresh).
+// /schedule is the picker; the others open the scenario straight away. Closing returns to the picker.
+export type ScheduleScenario = 'care-requirements' | 'conflict-warning' | 'assigned-warning';
 
-  const openSlideout = (tab: string, options?: { footerWarning?: string; footerConflicts?: boolean }) => {
-    setSlideoutTab(tab);
-    setSlideoutFooterWarning(options?.footerWarning);
-    setSlideoutFooterConflicts(options?.footerConflicts ?? false);
-    setSlideoutOpen(true);
-  };
+const SLIDEOUT_SCENARIOS: Record<string, { tab: string; footerConflicts?: boolean }> = {
+  'care-requirements': { tab: 'Care Required' },
+  'assigned-warning': { tab: 'Assigned Today', footerConflicts: true },
+};
+
+export function SchedulePage({ scenario }: { scenario?: ScheduleScenario }) {
+  const navigate = useNavigate();
+  const slideout = scenario ? SLIDEOUT_SCENARIOS[scenario] : undefined;
+  const modalOpen = scenario === 'conflict-warning';
+  const closeScenario = () => navigate('/schedule');
 
   return (
     <>
-      <div className={`space-y-6 ${slideoutOpen || modalOpen ? 'invisible' : ''}`}>
+      <div className={`space-y-6 ${slideout || modalOpen ? 'invisible' : ''}`}>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Morning Visit — Arthur Barrington</h2>
           <p className="text-body text-gray-500">Select a scenario to preview</p>
@@ -33,7 +33,7 @@ export function SchedulePage() {
             iconBg="bg-purple-100"
             title="Care & Visit Requirements"
             description="View the care requirements and visit tasks for this appointment, including medications, preferred employees, and environment details."
-            onClick={() => openSlideout('Care Required')}
+            to="/schedule/care-requirements"
           />
           <ScenarioTile
             icon={<AlertTriangle className="w-8 h-8" />}
@@ -41,7 +41,7 @@ export function SchedulePage() {
             iconBg="bg-red-100"
             title="Assignment Conflict Warning"
             description="Preview a blocking conflict modal showing why an assignment cannot be completed due to contract and availability issues."
-            onClick={() => setModalOpen(true)}
+            to="/schedule/conflict-warning"
           />
           <ScenarioTile
             icon={<Users className="w-8 h-8" />}
@@ -49,7 +49,7 @@ export function SchedulePage() {
             iconBg="bg-amber-100"
             title="Assigned Today with Warning"
             description="View the employees assigned to this visit with conflicts flagged in the footer."
-            onClick={() => openSlideout('Assigned Today', { footerConflicts: true })}
+            to="/schedule/assigned-warning"
           />
           <ScenarioTile
             icon={<CalendarClock className="w-8 h-8" />}
@@ -57,39 +57,38 @@ export function SchedulePage() {
             iconBg="bg-amber-100"
             title="Timeline — Carer Restriction Warnings"
             description="Preview the daily timeline schedule with warning icons flagged against carer rows for employees who have restrictions added."
-            onClick={() => navigate('/schedule/timeline')}
+            to="/schedule/timeline"
           />
         </div>
       </div>
 
-      {slideoutOpen && (
+      {slideout && (
         <VisitSlideout
-          onClose={() => setSlideoutOpen(false)}
-          initialTab={slideoutTab}
-          footerWarning={slideoutFooterWarning}
-          footerConflicts={slideoutFooterConflicts}
+          onClose={closeScenario}
+          initialTab={slideout.tab}
+          footerConflicts={slideout.footerConflicts ?? false}
         />
       )}
 
-      {modalOpen && <AssignmentWarningModal onClose={() => setModalOpen(false)} />}
+      {modalOpen && <AssignmentWarningModal onClose={closeScenario} />}
     </>
   );
 }
 
 function ScenarioTile({
-  icon, iconColor, iconBg, title, description, onClick,
+  icon, iconColor, iconBg, title, description, to,
 }: {
   icon: React.ReactNode;
   iconColor: string;
   iconBg: string;
   title: string;
   description: string;
-  onClick: () => void;
+  to: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className="bg-white rounded-lg border border-gray-200 p-6 text-left hover:border-purple-300 hover:shadow-md transition-all group cursor-pointer"
+    <Link
+      to={to}
+      className="bg-white rounded-lg border border-gray-200 p-6 text-left hover:border-purple-300 hover:shadow-md transition-all group cursor-pointer block"
     >
       <div className={`w-14 h-14 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-4`}>
         {icon}
@@ -97,7 +96,7 @@ function ScenarioTile({
       <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
       <p className="text-body text-gray-500 leading-relaxed">{description}</p>
       <div className="mt-4 text-body font-semibold text-[rgb(154,38,214)] group-hover:underline">Open →</div>
-    </button>
+    </Link>
   );
 }
 

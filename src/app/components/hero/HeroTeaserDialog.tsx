@@ -7,16 +7,17 @@ import scheduleHeroIconUrl from '../icons/schedule-hero.svg';
 import { AssessmentHeroFlow } from './AssessmentHeroFlow';
 import { PlanTeaserVisual } from './PlanTeaserVisual';
 
-// Lives in /public (served as-is), so the spaces in its name need encoding. ~22 MB, so it is only requested
-// once someone clicks See more, not when the dialog opens.
+// The explainer videos live in /public (served as-is), so the spaces in their names need encoding. Each is
+// ~20 MB, so it is only requested once someone clicks See more, not when the dialog opens.
 const SCHEDULE_HERO_VIDEO = encodeURI('/Schedule Hero workflow explainer v2.mp4');
+const ASSESSMENT_HERO_VIDEO = encodeURI('/AH Walkthrough explainer.mp4');
 
 /**
  * The explainer video. It starts as soon as it appears, with sound if the video has an audio track: the click on
  * See more counts as the user's go-ahead, which is what browsers require for unmuted autoplay. If a browser
  * refuses anyway, it starts muted instead, so it still plays, and the player's controls let people unmute.
  */
-function ExplainerVideo({ src }: { src: string }) {
+function ExplainerVideo({ src, label }: { src: string; label: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const video = ref.current;
@@ -34,7 +35,7 @@ function ExplainerVideo({ src }: { src: string }) {
       controls
       playsInline
       preload="auto"
-      aria-label="Schedule Hero walkthrough"
+      aria-label={label}
     />
   );
 }
@@ -50,12 +51,15 @@ type HeroFeature = {
   points: string[];
   /** Optional banner shown across the top of the feature's card. */
   image?: { src: string; alt: string };
+  /** The explainer video opened by See more. */
+  video: string;
   /** Optional animated banner, used instead of an image. */
   renderMedia?: (hovered: boolean) => ReactNode;
 };
 
 const SCHEDULE_HERO: HeroFeature = {
   icon: scheduleHeroIconUrl,
+  video: SCHEDULE_HERO_VIDEO,
   renderMedia: (hovered) => <PlanTeaserVisual active={hovered} />,
   name: 'Schedule Hero',
   tagline: 'Fill your roster faster, with fewer conflicts.',
@@ -68,6 +72,7 @@ const SCHEDULE_HERO: HeroFeature = {
 
 const ASSESSMENT_HERO: HeroFeature = {
   icon: assessmentHeroIconUrl,
+  video: ASSESSMENT_HERO_VIDEO,
   renderMedia: (hovered) => <AssessmentHeroFlow active={hovered} />,
   name: 'Assessment Hero',
   tagline: 'Turn assessment recordings into draft care documents.',
@@ -150,12 +155,12 @@ export function HeroTeaserDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const single = mode === 'schedule-hero';
-  // 'overview' is the feature cards; 'video' is the Schedule Hero explainer, reached from its See more button.
-  const [view, setView] = useState<'overview' | 'video'>('overview');
+  // null shows the overview (the feature cards); a feature shows its explainer video, reached from its See more button.
+  const [videoOf, setVideoOf] = useState<HeroFeature | null>(null);
   useEffect(() => {
-    if (!open) setView('overview');
+    if (!open) setVideoOf(null);
   }, [open]);
-  const video = view === 'video';
+  const video = videoOf !== null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -179,18 +184,18 @@ export function HeroTeaserDialog({
           <div key="video" className="grid gap-4 animate-in fade-in-0 zoom-in-[0.98] duration-300">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3 text-xl leading-tight">
-                <img src={scheduleHeroIconUrl} alt="" className="size-8" />
-                Schedule Hero
+                <img src={videoOf?.icon} alt="" className="size-8" />
+                {videoOf?.name}
               </DialogTitle>
               <DialogDescription className="text-body text-gray-600">Watch a short walkthrough of how it works.</DialogDescription>
             </DialogHeader>
 
             <div className="aspect-video overflow-hidden rounded-xl bg-black">
-              <ExplainerVideo src={SCHEDULE_HERO_VIDEO} />
+              <ExplainerVideo src={videoOf!.video} label={`${videoOf!.name} walkthrough`} />
             </div>
 
             <DialogFooter className="sm:justify-between sm:items-center">
-              <Button variant="tertiary" icon={<ArrowLeft className="size-4" />} onClick={() => setView('overview')}>
+              <Button variant="tertiary" icon={<ArrowLeft className="size-4" />} onClick={() => setVideoOf(null)}>
                 Back
               </Button>
               {/* The next step after watching. Not wired up yet: it just closes the dialog for now. */}
@@ -211,12 +216,12 @@ export function HeroTeaserDialog({
             </DialogHeader>
 
             {single ? (
-              <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setView('video')} />
+              <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setVideoOf(SCHEDULE_HERO)} />
             ) : (
               // Two columns side by side (stacked on narrow screens); the cards stretch to the same height.
               <div className="grid gap-4 md:grid-cols-2">
-                <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setView('video')} />
-                <FeatureCard feature={ASSESSMENT_HERO} />
+                <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setVideoOf(SCHEDULE_HERO)} />
+                <FeatureCard feature={ASSESSMENT_HERO} onSeeMore={() => setVideoOf(ASSESSMENT_HERO)} />
               </div>
             )}
 

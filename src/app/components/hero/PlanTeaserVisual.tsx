@@ -46,7 +46,9 @@ export function PlanTeaserVisual({ active = false }: { active?: boolean }) {
 
   return (
     // The teaser keeps its own fixed proportions, so it sits centred in a taller frame, on its own background colour.
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F7F5FB' }}>
+    // The side padding gives the parts of the scene that run past its edge (the Personal care card and the outer
+    // panel on the right) room to show in full instead of being cut off.
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#F7F5FB', padding: '0 30px' }}>
       <plan-teaser
         ref={ref as React.Ref<HTMLElement>}
         autoplay="true"

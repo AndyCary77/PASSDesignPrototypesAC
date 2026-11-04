@@ -60,7 +60,11 @@ const SCREENS = [
   {
     title: 'Schedule',
     items: [
-      { label: 'Schedule', to: '/schedule' },
+      { label: 'Schedule — Scenario picker', to: '/schedule' },
+      { label: 'Schedule — Daily timeline (carer restriction warnings)', to: '/schedule/timeline' },
+      { label: 'Schedule — Care & Visit Requirements slide-out', to: '/schedule/care-requirements' },
+      { label: 'Schedule — Assignment Conflict Warning', to: '/schedule/conflict-warning' },
+      { label: 'Schedule — Assigned Today with Warning', to: '/schedule/assigned-warning' },
     ],
   },
   {
