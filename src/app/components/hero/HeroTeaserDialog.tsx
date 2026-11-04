@@ -1,11 +1,43 @@
-import { useState, type ReactNode } from 'react';
-import { ArrowRight, Check } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 import scheduleHeroIconUrl from '../icons/schedule-hero.svg';
 import { AssessmentHeroFlow } from './AssessmentHeroFlow';
 import { PlanTeaserVisual } from './PlanTeaserVisual';
+
+// Lives in /public (served as-is), so the spaces in its name need encoding. ~22 MB, so it is only requested
+// once someone clicks See more, not when the dialog opens.
+const SCHEDULE_HERO_VIDEO = encodeURI('/Schedule Hero workflow explainer v2.mp4');
+
+/**
+ * The explainer video. It starts as soon as it appears, with sound if the video has an audio track: the click on
+ * See more counts as the user's go-ahead, which is what browsers require for unmuted autoplay. If a browser
+ * refuses anyway, it starts muted instead, so it still plays, and the player's controls let people unmute.
+ */
+function ExplainerVideo({ src }: { src: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    video.play().catch(() => {
+      video.muted = true;
+      video.play().catch(() => {});
+    });
+  }, []);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      className="h-full w-full"
+      controls
+      playsInline
+      preload="auto"
+      aria-label="Schedule Hero walkthrough"
+    />
+  );
+}
 
 // Placeholder upgrade teasers for the "Hero" features. All copy here is placeholder wording for the
 // prototype, not agreed marketing text, and nothing is wired up: the buttons just close the dialog.
@@ -56,7 +88,7 @@ function UpgradePill() {
   );
 }
 
-function FeatureCard({ feature, showImage = true }: { feature: HeroFeature; showImage?: boolean }) {
+function FeatureCard({ feature, showImage = true, onSeeMore }: { feature: HeroFeature; showImage?: boolean; onSeeMore?: () => void }) {
   // A card with an animated banner is "live": hovering anywhere on the card plays the animation and
   // highlights the card's border.
   const [hovered, setHovered] = useState(false);
@@ -82,7 +114,7 @@ function FeatureCard({ feature, showImage = true }: { feature: HeroFeature; show
           {/* Always-visible strip with its own background, holding the CTA. Not wired up yet: what it opens is
               still to be decided. */}
           <div className="flex items-center justify-end border-t border-purple-200 bg-[#f3e8fb] px-3 py-2">
-            <Button variant="secondary" size="sm" icon={<ArrowRight className="size-4" />} className="flex-row-reverse">
+            <Button variant="secondary" size="sm" icon={<ArrowRight className="size-4" />} className="flex-row-reverse" onClick={onSeeMore}>
               See more
             </Button>
           </div>
@@ -118,6 +150,12 @@ export function HeroTeaserDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const single = mode === 'schedule-hero';
+  // 'overview' is the feature cards; 'video' is the Schedule Hero explainer, reached from its See more button.
+  const [view, setView] = useState<'overview' | 'video'>('overview');
+  useEffect(() => {
+    if (!open) setView('overview');
+  }, [open]);
+  const video = view === 'video';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -129,32 +167,65 @@ export function HeroTeaserDialog({
         onOpenAutoFocus={(e) => {
           e.preventDefault();
           (e.currentTarget as HTMLElement).focus();
-        }} className={`z-[101] ${single ? 'sm:max-w-3xl' : 'sm:max-w-6xl'} max-h-[calc(100vh-1rem)] overflow-y-auto gap-4 p-6`}>
-        <DialogHeader>
-          <DialogTitle className="text-xl leading-tight">
-            {single ? 'Meet Schedule Hero' : 'Explore Hero features'}
-          </DialogTitle>
-          <DialogDescription className="text-body text-gray-600">
-            {single
-              ? 'Schedule Hero is not part of your current plan. This is a preview of what it would add.'
-              : 'Hero features are not part of your current plan. Here is what they would add.'}
-          </DialogDescription>
-        </DialogHeader>
+        }}
+        // The dialog narrows smoothly (max-width is animated) as it switches between the two-column overview and
+        // the video view, while the content inside cross-fades in.
+        className={`z-[101] transition-[max-width] duration-300 ease-out ${
+          single ? 'sm:max-w-3xl' : video ? 'sm:max-w-4xl' : 'sm:max-w-6xl'
+        } max-h-[calc(100vh-1rem)] overflow-y-auto gap-4 p-6`}
+      >
+        {video ? (
+          // Keyed so each view mounts fresh and plays its fade-in.
+          <div key="video" className="grid gap-4 animate-in fade-in-0 zoom-in-[0.98] duration-300">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-xl leading-tight">
+                <img src={scheduleHeroIconUrl} alt="" className="size-8" />
+                Schedule Hero
+              </DialogTitle>
+              <DialogDescription className="text-body text-gray-600">Watch a short walkthrough of how it works.</DialogDescription>
+            </DialogHeader>
 
-        {single ? (
-          <FeatureCard feature={SCHEDULE_HERO} />
+            <div className="aspect-video overflow-hidden rounded-xl bg-black">
+              <ExplainerVideo src={SCHEDULE_HERO_VIDEO} />
+            </div>
+
+            <DialogFooter className="sm:justify-between sm:items-center">
+              <Button variant="tertiary" icon={<ArrowLeft className="size-4" />} onClick={() => setView('overview')}>
+                Back
+              </Button>
+              {/* The next step after watching. Not wired up yet: it just closes the dialog for now. */}
+              <Button variant="primary" onClick={() => onOpenChange(false)}>Contact us</Button>
+            </DialogFooter>
+          </div>
         ) : (
-          // Two columns side by side (stacked on narrow screens); the cards stretch to the same height.
-          <div className="grid gap-4 md:grid-cols-2">
-            <FeatureCard feature={SCHEDULE_HERO} />
-            <FeatureCard feature={ASSESSMENT_HERO} />
+          <div key="overview" className="grid gap-4 animate-in fade-in-0 duration-300">
+            <DialogHeader>
+              <DialogTitle className="text-xl leading-tight">
+                {single ? 'Meet Schedule Hero' : 'Explore Hero features'}
+              </DialogTitle>
+              <DialogDescription className="text-body text-gray-600">
+                {single
+                  ? 'Schedule Hero is not part of your current plan. This is a preview of what it would add.'
+                  : 'Hero features are not part of your current plan. Here is what they would add.'}
+              </DialogDescription>
+            </DialogHeader>
+
+            {single ? (
+              <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setView('video')} />
+            ) : (
+              // Two columns side by side (stacked on narrow screens); the cards stretch to the same height.
+              <div className="grid gap-4 md:grid-cols-2">
+                <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setView('video')} />
+                <FeatureCard feature={ASSESSMENT_HERO} />
+              </div>
+            )}
+
+            <DialogFooter className="sm:justify-between sm:items-center">
+              <Button variant="tertiary" onClick={() => onOpenChange(false)}>Not now</Button>
+              <Button variant="primary" onClick={() => onOpenChange(false)}>Talk to us about upgrading</Button>
+            </DialogFooter>
           </div>
         )}
-
-        <DialogFooter className="sm:justify-between sm:items-center">
-          <Button variant="tertiary" onClick={() => onOpenChange(false)}>Not now</Button>
-          <Button variant="primary" onClick={() => onOpenChange(false)}>Talk to us about upgrading</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
