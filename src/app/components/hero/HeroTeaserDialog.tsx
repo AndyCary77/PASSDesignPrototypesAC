@@ -86,61 +86,71 @@ const ASSESSMENT_HERO: HeroFeature = {
 export type HeroTeaserMode = 'schedule-hero' | 'explore';
 
 function UpgradePill() {
+  // A static status label, deliberately lighter than the See more button beside it (thin border, no arrow, smaller)
+  // so the two read as "what this is" and "what to do", not as two competing buttons.
   return (
-    <span className="inline-flex items-center rounded-full bg-[#f3e8fb] border border-purple-300 px-2.5 py-0.5 text-sm font-medium text-[rgb(154,38,214)]">
+    <span className="inline-flex items-center rounded-full bg-white border border-purple-300 px-2.5 py-0.5 text-sm font-medium text-[rgb(154,38,214)]">
       Upgrade
     </span>
   );
 }
 
 function FeatureCard({ feature, showImage = true, onSeeMore }: { feature: HeroFeature; showImage?: boolean; onSeeMore?: () => void }) {
-  // A card with an animated banner is "live": hovering anywhere on the card plays the animation and
-  // highlights the card's border.
+  // The whole card opens the teaser video, and hovering anywhere on it highlights the border; a card with an
+  // animated banner also plays that animation.
   const [hovered, setHovered] = useState(false);
-  const live = !!feature.renderMedia;
+  const clickable = !!onSeeMore;
   return (
     <div
-      className={`h-full rounded-xl border bg-white p-3 transition-[border-color,box-shadow] duration-200 ${
-        live && hovered
-          ? 'border-[rgb(154,38,214)] shadow-md'
-          : 'border-gray-200'
+      className={`group relative flex h-full flex-col overflow-hidden rounded-xl border bg-white transition-[border-color,box-shadow] duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[rgb(154,38,214)]/50 ${
+        clickable && hovered ? 'border-[rgb(154,38,214)] shadow-md' : 'border-gray-200'
       }`}
-      onMouseEnter={live ? () => setHovered(true) : undefined}
-      onMouseLeave={live ? () => setHovered(false) : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {showImage && feature.image && (
-        <img src={feature.image.src} alt={feature.image.alt} className="mb-3 w-full h-auto rounded-lg border border-gray-100" />
+        <img src={feature.image.src} alt={feature.image.alt} className="w-full h-auto" />
       )}
       {showImage && feature.renderMedia && (
-        <div className="mb-3 overflow-hidden rounded-lg">
-          {/* The frame is taller than the visuals themselves (about 25% more), which sit centred in it with room
-              around them. It scales with the card's width. */}
-          <div className="relative flex aspect-[515/228] overflow-hidden">{feature.renderMedia(hovered)}</div>
-          {/* Always-visible strip with its own background, holding the CTA. Not wired up yet: what it opens is
-              still to be decided. */}
-          <div className="flex items-center justify-end border-t border-purple-200 bg-[#f3e8fb] px-3 py-2">
-            <Button variant="secondary" size="sm" icon={<ArrowRight className="size-4" />} className="flex-row-reverse" onClick={onSeeMore}>
-              See more
-            </Button>
-          </div>
-        </div>
+        // The frame is taller than the visuals themselves (about 25% more), which sit centred in it with room
+        // around them. It scales with the card's width.
+        <div className="relative flex aspect-[515/228] overflow-hidden">{feature.renderMedia(hovered)}</div>
       )}
-      <div className="flex items-center gap-3">
-        <img src={feature.icon} alt="" className="size-8" />
-        <h3 className="text-base font-semibold text-gray-900">{feature.name}</h3>
-        <UpgradePill />
+
+      {/* Title strip: the card's header. It sits directly on top of the description, so the name, its Upgrade label and
+          the CTA all read as belonging to the content below, with the banner above as the preview. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-y border-purple-200 bg-[#f3e8fb] px-4 py-3">
+        <div className="flex items-center gap-3">
+          <img src={feature.icon} alt="" className="size-10" />
+          <h3 className="text-xl font-bold text-gray-900">{feature.name}</h3>
+          <UpgradePill />
+        </div>
+        {/* The one real control. Its ::after stretches over the whole card (which is `relative`), so a click anywhere
+            on the card presses it: one focusable element, no nested interactives. The card's hover also styles it. */}
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />}
+          className="flex-row-reverse after:absolute after:inset-0 after:z-10 group-hover:bg-[rgb(250,244,253)]"
+          onClick={onSeeMore}
+        >
+          See more
+        </Button>
       </div>
-      <p className="mt-2 text-body text-gray-700">{feature.tagline}</p>
-      <ul className="mt-3 space-y-1.5">
-        {feature.points.map((point) => (
-          <li key={point} className="flex items-start gap-2 text-body text-gray-700">
-            <span className="mt-0.5 flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-[rgb(154,38,214)]" aria-hidden="true">
-              <Check className="size-3 text-white" strokeWidth={3} />
-            </span>
-            {point}
-          </li>
-        ))}
-      </ul>
+
+      <div className="flex-1 p-4">
+        <p className="text-body font-medium text-gray-900">{feature.tagline}</p>
+        <ul className="mt-3 space-y-1.5">
+          {feature.points.map((point) => (
+            <li key={point} className="flex items-start gap-2 text-body text-gray-700">
+              <span className="mt-0.5 flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-[rgb(154,38,214)]" aria-hidden="true">
+                <Check className="size-3 text-white" strokeWidth={3} />
+              </span>
+              {point}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
