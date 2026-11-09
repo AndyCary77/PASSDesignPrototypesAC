@@ -7,7 +7,7 @@ import { RAF_WRITE_ENABLED, getRafRecord, type RafRecord } from './reasonableAdj
  *
  * Access level (audit page R10): Level 1 sees the adjustments only, Level 2 sees all content,
  * Level 3 can also create/add/remove/delete (parked for phase 1, see RAF_WRITE_ENABLED).
- * 'admin' is an internal EveryLife admin user (design call, Nov 2026): the starting position is that they can't see the
+ * 'admin' is an internal EveryLife admin user (call on the open questions, Nov 2026): the starting position is that they can't see the
  * details, as with GP Connect, so the tab is hidden. They still see that a flag exists (the badge, the lists, the
  * Details status line, the alert) but never what is in it. Every place that shows detail must check `canSeeRafDetail`.
  *

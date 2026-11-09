@@ -10,7 +10,7 @@ import { AllergiesIcon, DnacprIcon, DolsIcon, FlagChipIcon } from '../../custome
 // (src/app/components/customer/ReasonableAdjustmentsPage.tsx), so the two never disagree.
 import { activeItems, categoryName, formatRafDate, formatRafDateTime, getRafRecord } from '../../../../data/reasonableAdjustments'
 
-// Offline keeps showing the flag and its details from the last sync, with the last-synced time (design call, Nov 2026).
+// Offline keeps showing the flag and its details from the last sync, with the last-synced time (call on the open questions, Nov 2026).
 // Read-only, per the ticket (AIOP-25290, apps): Level 1 users see Reasonable Adjustments only, Level 2 users
 // see all three sections. Nothing on the app creates, adds, removes or deletes; that happens in PASS.
 // Level 3 users are Level 2 here.

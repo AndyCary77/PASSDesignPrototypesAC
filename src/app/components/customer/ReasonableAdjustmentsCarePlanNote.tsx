@@ -16,7 +16,7 @@ import { RafItemDetails } from './RafItemDetails';
  *  - An internal admin only learns that a flag is recorded. No adjustments, no link, as everywhere else detail is hidden.
  *  - Nothing shows when there is no flag. Read-only: it reads PASS's own copy, it doesn't call the national flag.
  *
- * Which of these places should show detail rather than just the flag is still an open question from the design call;
+ * Which of these places should show detail rather than just the flag is still an open question from the call on the open questions;
  * this is the "adjustments only" answer, so it can be reviewed.
  */
 export function ReasonableAdjustmentsCarePlanNote() {
