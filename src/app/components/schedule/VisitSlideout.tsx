@@ -5,7 +5,7 @@ import { Tag } from '../ui/tag';
 import { VisitNoteIcon } from '../icons/VisitNoteIcon';
 import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Button } from '../buttons/Button';
-import { useRafAccess } from '../../data/RafAccessContext';
+import { canSeeRafDetail, useRafAccess } from '../../data/RafAccessContext';
 import { activeItems, formatRafDate } from '../../data/reasonableAdjustments';
 import { RafItemDetails } from '../customer/RafItemDetails';
 import davidPhoto from '../../imports/david_b.jpg';
@@ -47,14 +47,14 @@ const VISIT_CUSTOMER_ID = 'arthur-barrington';
  * The visit's Customer Details tab. For a customer with a Reasonable Adjustment Flag it shows their
  * Reasonable Adjustments, so whoever is planning or assigning the visit can see what the person needs. Only the
  * adjustments, as the audit page's Level 1 view: never impairments or underlying conditions, and no controls to
- * change anything (that all lives on the Reasonable Adjustments tab). Shown to users with any RA access level.
+ * change anything (that all lives on the Reasonable Adjustments tab). Hidden from internal admins (detail).
  * It reads PASS's own stored copy rather than calling the national flag, so opening the panel is instant.
  */
 function CustomerDetailsContent({ onOpenTab }: { onOpenTab: () => void }) {
   const navigate = useNavigate();
   const { level, getFlagRecord } = useRafAccess();
   const record = getFlagRecord(VISIT_CUSTOMER_ID);
-  const showAdjustments = level !== 'none' && record !== null;
+  const showAdjustments = canSeeRafDetail(level) && record !== null;
   const adjustments = record ? activeItems(record, 'adjustment') : [];
 
   return (

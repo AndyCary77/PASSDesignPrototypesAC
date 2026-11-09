@@ -89,6 +89,10 @@
   border-color: #cd70ff;
   color: var(--brand-purple-3-purple-2);
 }
+/* Opens the Reasonable adjustments screen; invisible border widens the 24px tap area. */
+.docs-legal-chip--link { position: relative; text-decoration: none; cursor: pointer; }
+.docs-legal-chip--link::before { content: ''; position: absolute; inset: -10px -6px; }
+.docs-legal-chip--link:active { background: #f4e6ff; }
 /* Stays its own distinct, more urgent treatment — solid fill, smaller/sharper
    corners — unlike .docs-legal-chip's outline pill. */
 .docs-high-risk-badge {

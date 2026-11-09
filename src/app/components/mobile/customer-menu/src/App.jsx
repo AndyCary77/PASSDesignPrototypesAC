@@ -94,7 +94,7 @@ export default function App() {
                 })}
                 {/* Not a legal decision, so its own purple treatment rather than the red chips; the same
                     flag as the desktop ADJUSTMENTS badge. Arthur has a Reasonable Adjustment Flag. */}
-                <span className="cm-chip cm-chip-adjustments"><FlagChipIcon />Adjustments</span>
+                <a className="cm-chip cm-chip-adjustments cm-chip-link" href="../customer-adjustments/?transition=1" aria-label="Reasonable adjustments flag recorded. Open reasonable adjustments."><FlagChipIcon />Adjustments</a>
               </div>
               <img className="cm-avatar" src={CUSTOMER.photo} alt="" />
               {CUSTOMER.highRisk && <span className="cm-high-risk">HIGH RISK</span>}

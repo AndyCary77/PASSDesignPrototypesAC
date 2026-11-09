@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useCustomer } from '../../data/CustomerContext';
-import { useRafAccess } from '../../data/RafAccessContext';
+import { canSeeRafDetail, useRafAccess } from '../../data/RafAccessContext';
 import { activeItems, categoryName, formatRafDate, todayIso, type RafItem } from '../../data/reasonableAdjustments';
 import { Button } from '../buttons/Button';
 import { SegmentedControl } from '../buttons/SegmentedControl';
@@ -89,7 +89,7 @@ export function CustomerFilePage() {
 
   // The Reasonable Adjustments on the header page: only the adjustments (the audit page's Level 1 view, never impairments
   // or conditions), for a customer who has a flag, shown to users with any RA access level. The printout matches the screen.
-  const record = level !== 'none' ? getFlagRecord(customer.id) : null;
+  const record = canSeeRafDetail(level) ? getFlagRecord(customer.id) : null;
   const adjustments = record ? activeItems(record, 'adjustment') : [];
   const { onCover, continued } = splitForCover(adjustments);
 

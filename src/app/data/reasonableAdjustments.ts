@@ -7,6 +7,14 @@
 
 import { ADJUSTMENT_CATEGORIES } from './nhsRafValuesets';
 
+/**
+ * Phase 1 is read-only: adding, editing and deleting reasonable adjustments is deferred to a later phase.
+ * While this is false the web tab shows no Create flag / Add / Remove / Delete flag controls, there is no
+ * Level 3 (write) tier, and the "Next save" demo control is hidden. The dialogs and handlers are kept
+ * (unreachable) so the later phase can switch this back on.
+ */
+export const RAF_WRITE_ENABLED = false;
+
 export { ADJUSTMENT_CATEGORIES, IMPAIRMENT_VALUES, type RafValue, type RafAdjustmentCategory } from './nhsRafValuesets';
 
 export type RafSection = 'adjustment' | 'impairment' | 'condition';

@@ -1,17 +1,19 @@
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
-import { useRafAccess, type NationalFlagState, type RafAccessLevel, type SaveOutcome } from '../../data/RafAccessContext';
+import { useRafAccess, type NationalFlagState, type RafAccessLevel, type NhsRequestState, type SaveOutcome } from '../../data/RafAccessContext';
+import { RAF_WRITE_ENABLED } from '../../data/reasonableAdjustments';
 import { SegmentedControl } from '../buttons/SegmentedControl';
 import { Button } from '../buttons/Button';
 
 /**
  * Prototype-only review controls for the Reasonable Adjustments tab, kept out of the page content:
  *
- *  - "View as": the signed-in user's Reasonable Adjustment Flag access level, so each level (and the
- *    tab being hidden entirely) can be reviewed. On every customer tab, including the ones where
- *    the tab itself is hidden, which is the only way back from "No access".
+ *  - "View as": who is signed in, so each level can be reviewed. "Admin" is an internal EveryLife admin user, who
+ *    sees that a flag exists but not its details, so the tab is hidden. On every customer tab, including the ones where
+ *    the tab itself is hidden, which is the only way back from "Admin".
  *  - "National flag" (on the Reasonable Adjustments tab only): what the NHS holds for the customer,
  *    and a button standing in for another organisation changing it.
+ *  - "NHS request" (same tab): whether the live request to the NHS gets an answer, to review the error state.
  *  - "Next save" (same tab): whether the national flag service accepts the next change, to review the
  *    error messages. One-shot, so the retry succeeds.
  *
@@ -19,7 +21,7 @@ import { Button } from '../buttons/Button';
  * bottom-left; portalled to the body so no ancestor's sticky/transform can move it.
  */
 export function RafAccessSwitcher() {
-  const { level, setLevel, nationalFlag, setNationalFlag, simulateNationalChange, saveOutcome, setSaveOutcome } = useRafAccess();
+  const { level, setLevel, nationalFlag, setNationalFlag, simulateNationalChange, saveOutcome, setSaveOutcome, nhsRequest, setNhsRequest } = useRafAccess();
   const onRaTab = useLocation().pathname.endsWith('/reasonableadjustments');
 
   return createPortal(
@@ -31,10 +33,11 @@ export function RafAccessSwitcher() {
         value={level}
         onChange={setLevel}
         options={[
-          { value: 'none', label: 'No access' },
+          { value: 'admin', label: 'Admin' },
           { value: '1', label: 'Level 1' },
           { value: '2', label: 'Level 2' },
-          { value: '3', label: 'Level 3' },
+          // Level 3 only differs by being able to write, which is parked for phase 1.
+          ...(RAF_WRITE_ENABLED ? [{ value: '3' as const, label: 'Level 3' }] : []),
         ]}
       />
 
@@ -56,18 +59,34 @@ export function RafAccessSwitcher() {
             NHS update
           </Button>
 
-          <span className="mt-1 text-sm font-medium text-gray-700 text-center">Next save</span>
-          <SegmentedControl<SaveOutcome>
-            ariaLabel="Whether the national flag accepts the next save"
+          <span className="mt-1 text-sm font-medium text-gray-700 text-center">NHS request</span>
+          <SegmentedControl<NhsRequestState>
+            ariaLabel="Whether the NHS answers the request the tab makes when it opens"
             orientation="vertical"
-            value={saveOutcome}
-            onChange={setSaveOutcome}
+            value={nhsRequest}
+            onChange={setNhsRequest}
             options={[
-              { value: 'ok', label: 'Works' },
+              { value: 'ok', label: 'Answers' },
               { value: 'error', label: 'Fails' },
-              { value: 'conflict', label: 'Conflict' },
             ]}
           />
+
+          {RAF_WRITE_ENABLED && (
+            <>
+              <span className="mt-1 text-sm font-medium text-gray-700 text-center">Next save</span>
+              <SegmentedControl<SaveOutcome>
+                ariaLabel="Whether the national flag accepts the next save"
+                orientation="vertical"
+                value={saveOutcome}
+                onChange={setSaveOutcome}
+                options={[
+                  { value: 'ok', label: 'Works' },
+                  { value: 'error', label: 'Fails' },
+                  { value: 'conflict', label: 'Conflict' },
+                ]}
+              />
+            </>
+          )}
         </>
       )}
     </div>,

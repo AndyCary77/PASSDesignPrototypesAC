@@ -56,6 +56,11 @@
   color: var(--brand-purple-3-purple-2);
 }
 .cm-chip svg { width: 14px; height: 14px; }
+/* The Adjustments chip opens the Reasonable adjustments screen. The pill is only 24px tall, so an invisible
+   border widens the tap area towards the 44px a thumb needs. */
+.cm-chip-link { position: relative; text-decoration: none; cursor: pointer; }
+.cm-chip-link::before { content: ''; position: absolute; inset: -10px -6px; }
+.cm-chip-link:active { background: #f4e6ff; }
 .cm-avatar {
   position: absolute;
   top: 16px;

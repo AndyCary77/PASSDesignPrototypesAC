@@ -942,10 +942,10 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
           ))}
           {/* Not a legal decision, so purple rather than red (same chip as mobile/customer-menu's header).
               Arthur has a Reasonable Adjustment Flag. */}
-          <span className="docs-legal-chip docs-legal-chip--adjustments">
+          <a className="docs-legal-chip docs-legal-chip--adjustments docs-legal-chip--link" href="../customer-adjustments/?transition=1" aria-label="Reasonable adjustments flag recorded. Open reasonable adjustments.">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.4 6 14 4H5v17h2v-7h5.6l.4 2h7V6z" /></svg>
             Adjustments
-          </span>
+          </a>
         </div>
         {CUSTOMER.photo ? (
           <img className="docs-customer-avatar" src={CUSTOMER.photo} alt="" />

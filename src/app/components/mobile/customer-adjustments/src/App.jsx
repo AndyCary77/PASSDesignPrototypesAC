@@ -10,6 +10,7 @@ import { AllergiesIcon, DnacprIcon, DolsIcon, FlagChipIcon } from '../../custome
 // (src/app/components/customer/ReasonableAdjustmentsPage.tsx), so the two never disagree.
 import { activeItems, categoryName, formatRafDate, formatRafDateTime, getRafRecord } from '../../../../data/reasonableAdjustments'
 
+// Offline keeps showing the flag and its details from the last sync, with the last-synced time (design call, Nov 2026).
 // Read-only, per the ticket (AIOP-25290, apps): Level 1 users see Reasonable Adjustments only, Level 2 users
 // see all three sections. Nothing on the app creates, adds, removes or deletes; that happens in PASS.
 // Level 3 users are Level 2 here.
@@ -135,8 +136,10 @@ export default function App() {
     cardRef.current?.style.setProperty('--p', p.toFixed(3))
     cardRef.current?.querySelector('.cm-key')?.setAttribute('aria-hidden', p > 0.9 ? 'true' : 'false')
   }
-  // When this device last heard from the national flag; shown as the spec's "last retrieved" time.
+  // When this device last heard from the national flag; shown as the spec's "last retrieved" time. Offline, the
+  // device keeps showing what it held from its last sync, so this is the time it is labelled with instead.
   const [retrievedAt] = useState(() => new Date())
+  const [lastSyncedAt] = useState(() => new Date(Date.now() - (2 * 60 + 37) * 60_000))
   const record = getRafRecord(CUSTOMER.recordId)
   const back = () => { window.location.href = '../customer-menu/?transition=back' }
   const systemBack = () => handleSystemBack(back)
@@ -167,7 +170,7 @@ export default function App() {
             {offline && (
               <div className="ra-offline-banner" role="status">
                 <CloudOffIcon size={20} />
-                <span>Visit last refreshed 02:37 ago</span>
+                <span>You’re offline. Showing the last sync, <span style={{ whiteSpace: 'nowrap' }}>{formatRafDateTime(lastSyncedAt)}</span>.</span>
               </div>
             )}
 
@@ -193,18 +196,10 @@ export default function App() {
             </div>
 
             <div className="ra-body" onScroll={handleScroll}>
-              {offline ? (
-                // Offline shows the last-known badge only (AIOP-25290): the content itself is never kept on the device.
-                <div className="ra-offline-card">
-                  <span className="ra-chip"><FlagIcon size={14} />Adjustments</span>
-                  <p className="ra-offline-title">Reasonable adjustments can’t be shown offline</p>
-                  <p className="ra-text">
-                    The last time this device was online, {CUSTOMER.name} had a Reasonable Adjustment Flag. Connect to see what it says.
-                  </p>
-                </div>
-              ) : !record ? (
+              {!record ? (
                 <div className="ra-status">
                   <p className="ra-status-title">No current recorded need for adjustments to care</p>
+                  {offline && <p className="ra-status-sync">Last synced: {formatRafDateTime(lastSyncedAt)}</p>}
                 </div>
               ) : (
                 <>
@@ -216,13 +211,23 @@ export default function App() {
                     <dl className="ra-flag-body">
                       <dt>Last updated on:</dt>
                       <dd>{formatRafDate(record.lastUpdatedOn)}</dd>
-                      <dt>Last retrieved from the national flag:</dt>
-                      <dd>{formatRafDateTime(retrievedAt)}</dd>
+                      {offline ? (
+                        <>
+                          <dt>Last synced:</dt>
+                          <dd>{formatRafDateTime(lastSyncedAt)}</dd>
+                        </>
+                      ) : (
+                        <>
+                          <dt>Last retrieved from the national flag:</dt>
+                          <dd>{formatRafDateTime(retrievedAt)}</dd>
+                        </>
+                      )}
                     </dl>
                     <p className="ra-flag-note">
                       {level === '1'
                         ? 'You can see Reasonable Adjustments only. Changes are made in PASS.'
                         : 'This is a view only. Changes are made in PASS.'}
+                      {offline && ' This is from the last sync and will update when you’re back online.'}
                     </p>
                   </section>
                   {sections.map(def => <Section key={def.section} def={def} items={activeItems(record, def.section)} />)}

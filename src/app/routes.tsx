@@ -22,6 +22,7 @@ import { MARChart } from './components/customer/mar/MARChart';
 import { SchedulePage, type ScheduleScenario } from './components/schedule/SchedulePage';
 import { ScheduleTimeline, ScheduleSubnav } from './components/schedule/ScheduleTimeline';
 import { BookingsPage } from './components/bookings/BookingsPage';
+import { AlertsPage } from './components/alerts/AlertsPage';
 import { EnquiriesPage } from './components/enquiries/EnquiriesPage';
 import { EnquiryFormPage } from './components/enquiries/EnquiryFormPage';
 import { LandingPage } from './components/LandingPage';
@@ -485,6 +486,10 @@ export const router = createBrowserRouter([
   {
     path: "/bookings",
     Component: () => <AppShell><BookingsPage /></AppShell>,
+  },
+  {
+    path: "/alerts",
+    Component: () => <AppShell wide><AlertsPage /></AppShell>,
   },
   {
     path: "/enquiries",

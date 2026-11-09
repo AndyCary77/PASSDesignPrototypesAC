@@ -68,6 +68,10 @@ const SCREENS = [
     ],
   },
   {
+    title: 'Alerts',
+    items: [{ label: 'Alerts — Office-wide, with Reasonable adjustments alert', to: '/alerts' }],
+  },
+  {
     title: 'Office',
     items: [
       { label: 'Office — Tags', to: '/office/tags' },

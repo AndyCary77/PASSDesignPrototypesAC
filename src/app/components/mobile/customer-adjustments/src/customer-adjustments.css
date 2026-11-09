@@ -154,7 +154,7 @@
 }
 
 /* ── Flag summary: amber header band, white body, as on the web tab ── */
-.ra-flag, .ra-section, .ra-offline-card, .ra-status {
+.ra-flag, .ra-section, .ra-status {
   margin: 16px 16px 0;
   background: #fff;
   border-radius: 12px;
@@ -284,26 +284,11 @@
 }
 .ra-more-sub { font-size: 14px; font-weight: 400; color: var(--greyscale-4-grey-40); }
 
-/* ── Offline / no flag ───────────────────────────────────────────── */
-.ra-offline-card, .ra-status { padding: 16px; border: 1px solid var(--greyscale-13-grey-90); }
-.ra-offline-title, .ra-status-title { margin: 12px 0 6px; font-family: Barlow, sans-serif; font-size: 17px; font-weight: 600; color: #111; }
+/* ── No flag ───────────────────────────────────────────── */
+.ra-status { padding: 16px; border: 1px solid var(--greyscale-13-grey-90); }
+.ra-status-sync { margin: 0; font-family: Barlow, sans-serif; font-size: 15px; color: var(--greyscale-4-grey-40); }
+.ra-status-title { margin: 12px 0 6px; font-family: Barlow, sans-serif; font-size: 17px; font-weight: 600; color: #111; }
 .ra-status-title { margin-top: 0; }
-.ra-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 24px;
-  padding: 0 9px 0 6px;
-  border-radius: 12px;
-  background: #fff;
-  border: 2px solid #cd70ff;
-  color: var(--brand-purple-3-purple-2);
-  font-family: Barlow, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  box-sizing: border-box;
-}
-
 /* ── Demo switches (outside the phone) ───────────────────────────── */
 .ra-demo {
   position: fixed;

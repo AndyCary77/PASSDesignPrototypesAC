@@ -4,7 +4,7 @@ import { PencilSolidIcon } from '../icons/PencilSolidIcon';
 import { Tag } from '../ui/tag';
 import customerPhoto from '../../imports/david_f.jpg';
 import { useCustomer } from '../../data/CustomerContext';
-import { useRafAccess } from '../../data/RafAccessContext';
+import { canSeeRafDetail, useRafAccess } from '../../data/RafAccessContext';
 import { TabEmptyState } from './TabEmptyState';
 
 export function CustomerDetailsPage() {
@@ -482,8 +482,9 @@ export function CustomerDetailsPage() {
 
         {/* Reasonable Adjustment Flag: a read-only status line next to the other flags (DNACPR, DoLS, High risk).
             It says whether a flag is recorded and links to the tab, and never shows its content or any create/add/remove/delete
-            controls: that all lives on the Reasonable Adjustments tab. Not shown to users with no access level. */}
-        {rafLevel !== 'none' && (
+            controls: that all lives on the Reasonable Adjustments tab. An internal admin only sees that a flag is recorded (like
+            the badge), with no link to a tab they don't have, and no "no current need" claim since that would be detail. */}
+        {(canSeeRafDetail(rafLevel) || hasFlag(customer.id)) && (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h4 className="font-semibold text-gray-900 mb-4">Reasonable Adjustments</h4>
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -491,12 +492,14 @@ export function CustomerDetailsPage() {
                 {hasFlag(customer.id) && <Flag className="w-4 h-4 text-purple-900 flex-shrink-0" fill="currentColor" aria-hidden="true" />}
                 <span>{hasFlag(customer.id) ? 'A Reasonable Adjustment Flag is recorded' : 'No current recorded need for adjustments to care'}</span>
               </p>
-              <Link
-                to={`/customers/${customer.id}/reasonableadjustments`}
-                className="text-body text-[rgb(154,38,214)] hover:underline flex items-center gap-1"
-              >
-                Open Reasonable Adjustments <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              {canSeeRafDetail(rafLevel) && (
+                <Link
+                  to={`/customers/${customer.id}/reasonableadjustments`}
+                  className="text-body text-[rgb(154,38,214)] hover:underline flex items-center gap-1"
+                >
+                  Open Reasonable Adjustments <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
             </div>
           </div>
         )}

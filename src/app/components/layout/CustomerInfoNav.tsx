@@ -6,7 +6,7 @@ import { useScrolled } from '../../hooks/useScrolled';
 import { useOverflowNav } from '../../hooks/useOverflowNav';
 import { useCustomer } from '../../data/CustomerContext';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
-import { useRafAccess } from '../../data/RafAccessContext';
+import { canSeeRafDetail, useRafAccess } from '../../data/RafAccessContext';
 import { RafAccessSwitcher } from './RafAccessSwitcher';
 import { ReasonableAdjustmentsBadge } from '../customer/ReasonableAdjustmentsBadge';
 
@@ -222,9 +222,9 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
   const scrolled = useScrolled();
   const customer = useCustomer();
   const showCareBridgeTab = useFeatureFlag('customerCareBridgeTab');
-  // No Reasonable Adjustment Flag access level = no tab (AIOP-22349).
+  // Internal admins don't get the tab (AIOP-22349; same as GP Connect), but still see the badge, without a link.
   const { level: rafLevel, hasFlag } = useRafAccess();
-  const showReasonableAdjustmentsTab = rafLevel !== 'none';
+  const showReasonableAdjustmentsTab = canSeeRafDetail(rafLevel);
   const base = `/customers/${customer.id}`;
 
   const contactBits = [

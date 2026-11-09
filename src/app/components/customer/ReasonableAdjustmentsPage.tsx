@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { Flag, Plus, RefreshCw, Trash2, CheckCircle2, X, Accessibility, HeartPulse, Stethoscope, Download } from 'lucide-react';
+import { AlertCircle, Flag, Plus, RefreshCw, Trash2, CheckCircle2, X, Accessibility, HeartPulse, Stethoscope, Download } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
-import { useRafAccess, type NationalFlagState, type RafAccessLevel } from '../../data/RafAccessContext';
+import { canSeeRafDetail, useRafAccess, type NationalFlagState, type RafAccessLevel } from '../../data/RafAccessContext';
 import {
   CURRENT_USER,
   MAX_FREE_TEXT,
+  RAF_WRITE_ENABLED,
   activeItems,
   formatRafDate,
   formatRafDateTime,
@@ -65,12 +66,14 @@ type Outcome = { kind: 'success' | 'info'; text: string };
 export function ReasonableAdjustmentsPage() {
   const customer = useCustomer();
   const navigate = useNavigate();
-  const { level, nationalFlag, setNationalFlag, nationalChangeCount, getFlagRecord, setFlagRecord, saveOutcome, setSaveOutcome } = useRafAccess();
+  const { level, nationalFlag, setNationalFlag, nationalChangeCount, nhsRequest, getFlagRecord, setFlagRecord, saveOutcome, setSaveOutcome } = useRafAccess();
   // Starts from what PASS already holds for this customer, so changes made here (and a flag imported or deleted) are still
   // there when the tab is reopened.
   const [record, setRecord] = useState<RafRecord | null>(() => getFlagRecord(customer.id));
   const [retrievedAt, setRetrievedAt] = useState<Date | null>(null);
   const [querying, setQuerying] = useState(true);
+  // The live request to the NHS got no answer. Nothing is shown from before: it can't be confirmed as current.
+  const [queryFailed, setQueryFailed] = useState(false);
   const [pages, setPages] = useState<Record<RafSection, number>>({ adjustment: 1, impairment: 1, condition: 1 });
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -83,12 +86,15 @@ export function ReasonableAdjustmentsPage() {
   recordRef.current = record;
   const nationalFlagRef = useRef<NationalFlagState>(nationalFlag);
   nationalFlagRef.current = nationalFlag;
+  const nhsRequestRef = useRef(nhsRequest);
+  nhsRequestRef.current = nhsRequest;
   // What the NHS still holds after a flag is deleted from PASS only: exactly what PASS had, so
   // importing it again brings back the same flag, not the demo's starting one.
   const keptNational = useRef<RafRecord | null>(null);
 
   const person = { name: customer.fullName, dob: customer.dob, nhs: customer.nhs };
-  const canWrite = level === '3';
+  // Parked for phase 1 (read-only): see RAF_WRITE_ENABLED.
+  const canWrite = RAF_WRITE_ENABLED && level === '3';
   const canSeeAll = level === '2' || level === '3';
 
   const touch = (r: RafRecord, items: RafItem[]): RafRecord => ({ ...r, items, lastUpdatedOn: todayIso() });
@@ -108,8 +114,16 @@ export function ReasonableAdjustmentsPage() {
   // again, and says when it last did (RAR004). It's also the moment a national flag is pulled in.
   const query = (onDone?: () => void) => {
     setQuerying(true);
+    setQueryFailed(false);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
+      // Every visit asks the NHS live, even when PASS already holds a flag. If it doesn't answer, nothing below
+      // happens: no "last retrieved" time, no import, no changes brought in.
+      if (nhsRequestRef.current === 'error') {
+        setQueryFailed(true);
+        setQuerying(false);
+        return;
+      }
       // Without a verified NHS number PASS can't ask the NHS anything (R20), so there is nothing to retrieve.
       if (nationalFlagRef.current !== 'no-nhs-number') {
         setRetrievedAt(new Date());
@@ -265,10 +279,10 @@ export function ReasonableAdjustmentsPage() {
 
   const activeCount = record ? record.items.filter(i => !i.endedOn).length : 0;
 
-  // No Reasonable Adjustment access level: this tab isn't available, so send the user to Details
+  // Internal admin: this tab isn't available, so send the user to Details
   // (where the status line will live) rather than leave them on a page they can't use. Also covers
   // arriving here directly by URL.
-  if (level === 'none') return <Navigate to={`/customers/${customer.id}/details`} replace />;
+  if (!canSeeRafDetail(level)) return <Navigate to={`/customers/${customer.id}/details`} replace />;
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
@@ -287,7 +301,9 @@ export function ReasonableAdjustmentsPage() {
         <InfoBanner size="md" onDismiss={() => setOutcome(null)}>{outcome.text}</InfoBanner>
       )}
 
-      <FlagSummary
+      {queryFailed && !querying && <NhsRequestError onRetry={refresh} />}
+
+      {!queryFailed && <FlagSummary
         record={record}
         customerName={customer.fullName}
         itemCount={activeCount}
@@ -299,13 +315,13 @@ export function ReasonableAdjustmentsPage() {
         onRefresh={refresh}
         onCreate={() => setCreateOpen(true)}
         onGoToDetails={() => navigate(`/customers/${customer.id}/details`)}
-      />
+      />}
 
-      {level === '1' && record && (
+      {level === '1' && record && !queryFailed && (
         <InfoBanner>Your access level shows reasonable adjustments only. Impairments and underlying conditions are not shown.</InfoBanner>
       )}
 
-      {record && querying && (
+      {record && querying && !queryFailed && (
         <div className="space-y-4" aria-busy="true" aria-label="Checking the national flag">
           {SECTIONS.filter(s => canSeeAll || s.section === 'adjustment').map(s => (
             <Skeleton key={s.section} className="h-32 w-full rounded-[10px]" />
@@ -313,7 +329,7 @@ export function ReasonableAdjustmentsPage() {
         </div>
       )}
 
-      {record && !querying && (
+      {record && !querying && !queryFailed && (
         <div className="space-y-4">
           {SECTIONS.filter(s => canSeeAll || s.section === 'adjustment').map(s => {
             const items = activeItems(record, s.section);
@@ -337,7 +353,7 @@ export function ReasonableAdjustmentsPage() {
       )}
 
       {/* Deleting the whole flag is only offered here, at the bottom of the full record, after its contents (AC). */}
-      {record && !querying && canWrite && (
+      {record && !querying && !queryFailed && canWrite && (
         <section className="bg-white rounded-[10px] border border-gray-200 px-5 py-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="space-y-1">
             <h3 className="text-base font-semibold text-gray-900">Delete the flag</h3>
@@ -365,6 +381,31 @@ export function ReasonableAdjustmentsPage() {
         onConfirm={confirmRemove}
       />
     </div>
+  );
+}
+
+/**
+ * The live request to the NHS got no answer. Shown in place of the flag and its sections: whatever PASS held
+ * from before can't be confirmed as current, so none of it is shown, and the message doesn't say it was empty.
+ * (The mobile app differs on purpose: it keeps showing the last sync while offline.) Wording is placeholder.
+ */
+function NhsRequestError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Alert className="border-red-300 bg-red-50 text-red-900 items-start px-5 py-4">
+      <AlertCircle aria-hidden="true" />
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="space-y-1">
+          <p className="text-lg font-semibold">Reasonable adjustments couldn't be retrieved from the national flag</p>
+          <p className="text-body">
+            PASS asks the NHS for the latest each time this tab opens, and it didn't answer. Nothing is shown because it can't be confirmed as
+            up to date. Try again in a moment. If it keeps happening, contact support.
+          </p>
+        </div>
+        <Button variant="secondary" icon={<RefreshCw className="w-4 h-4" />} onClick={onRetry}>
+          Try again
+        </Button>
+      </div>
+    </Alert>
   );
 }
 
@@ -451,7 +492,7 @@ function FlagSummary({
             {querying ? 'Checking the national flag\u2026' : 'No current recorded need for adjustments to care'}
           </p>
           {!querying && retrievedAt && retrieved}
-          {!canWrite && level !== 'none' && !querying && (
+          {RAF_WRITE_ENABLED && !canWrite && canSeeRafDetail(level) && !querying && (
             <p className="text-body text-gray-700">Your access level doesn't allow creating a flag for {customerName}.</p>
           )}
         </div>
@@ -500,7 +541,9 @@ function FlagSummary({
           </dd>
         </dl>
         <p className="border-t border-gray-200 pt-3 text-body text-gray-700">
-          Changes made here are sent to the national flag. Changes made there are brought into PASS.
+          {RAF_WRITE_ENABLED
+            ? 'Changes made here are sent to the national flag. Changes made there are brought into PASS.'
+            : 'This is a view only. Changes made on the national flag are brought into PASS.'}
         </p>
       </div>
     </section>

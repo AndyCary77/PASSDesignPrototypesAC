@@ -37,7 +37,7 @@ const CHIP_ICONS = { allergies: AllergiesIcon, dnacpr: DnacprIcon, dols: DolsIco
 const ARTHUR_BADGES = [
   ...(ARTHUR.highRisk ? [{ id: 'high-risk', label: 'HIGH RISK', kind: 'high-risk' }] : []),
   ...ARTHUR.legalChips.map(c => ({ ...c, kind: 'legal' })),
-  { id: 'adjustments', label: 'Adjustments', kind: 'adjustments' },
+  { id: 'adjustments', label: 'Adjustments', kind: 'adjustments', href: '../customer-adjustments/?transition=1' },
 ]
 
 const CUSTOMERS = [
@@ -73,32 +73,43 @@ function groupBySurname(list) {
   return groups
 }
 
+// The row opens the customer's menu through a "stretched" link on the name (its ::after covers the whole row), so the
+// Adjustments badge can be a link of its own without nesting one link inside another.
 function CustomerRow({ customer }) {
-  const Tag = customer.href ? 'a' : 'div'
   return (
-    <Tag className={`cust-row${customer.href ? ' cust-row-tap' : ''}`} href={customer.href}>
+    <div className={`cust-row${customer.href ? ' cust-row-tap' : ''}`}>
       <div className="cust-avatar">
         {customer.img
           ? <img src={customer.img} alt="" />
           : <span className={`cust-avatar-initials cust-avatar-${customer.color}`}>{customer.initials}</span>}
       </div>
       <div className="cust-info">
-        <div className="cust-name">{customer.name}</div>
+        <div className="cust-name">
+          {customer.href ? <a className="cust-row-link" href={customer.href}>{customer.name}</a> : customer.name}
+        </div>
         {customer.address && <div className="cust-address">{customer.address}</div>}
         {customer.badges && (
           <div className="cust-badges">
             {customer.badges.map(b => {
               const BadgeIcon = CHIP_ICONS[b.id]
-              return (
-                <span key={b.id} className={`cust-badge cust-badge-${b.kind}`}>
-                  {BadgeIcon && <BadgeIcon />}{b.label}
-                </span>
-              )
+              const content = <>{BadgeIcon && <BadgeIcon />}{b.label}</>
+              return b.href
+                ? (
+                  <a
+                    key={b.id}
+                    href={b.href}
+                    className={`cust-badge cust-badge-${b.kind} cust-badge-link`}
+                    aria-label="Reasonable adjustments flag recorded. Open reasonable adjustments."
+                  >
+                    {content}
+                  </a>
+                )
+                : <span key={b.id} className={`cust-badge cust-badge-${b.kind}`}>{content}</span>
             })}
           </div>
         )}
       </div>
-    </Tag>
+    </div>
   )
 }
 
