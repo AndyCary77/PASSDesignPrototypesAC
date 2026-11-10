@@ -129,6 +129,12 @@ export function ReasonableAdjustmentsPage() {
         setRetrievedAt(new Date());
         if (!recordRef.current && nationalFlagRef.current === 'found') importNational();
       }
+      // A flag PASS only holds because it imported it mirrors the national flag. If the NHS no longer holds one (or
+      // PASS can't ask for one at all), it goes too. A flag recorded in PASS itself (the demo's Arthur and Edith) stays.
+      if (nationalFlagRef.current !== 'found' && recordRef.current?.source === 'national') {
+        setRecord(null);
+        keptNational.current = null;
+      }
       onDone?.();
       setQuerying(false);
     }, QUERY_DELAY_MS);
@@ -139,6 +145,19 @@ export function ReasonableAdjustmentsPage() {
     return () => window.clearTimeout(timer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The review controls take effect straight away: changing what the NHS holds, or whether it answers, re-asks it, as
+  // if the tab had just been opened. Without this they only bit on the next Refresh or visit, and after the first
+  // import (write is parked, so a flag can't be deleted to start again) they bit not at all.
+  const lastControls = useRef({ nationalFlag, nhsRequest });
+  useEffect(() => {
+    const last = lastControls.current;
+    if (last.nationalFlag === nationalFlag && last.nhsRequest === nhsRequest) return;
+    lastControls.current = { nationalFlag, nhsRequest };
+    setOutcome(null);
+    query();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nationalFlag, nhsRequest]);
 
   // Tell the rest of the app what PASS now holds (the badge, the lists, the visit panel). Not while checking: an
   // import finishes in the same step as the check, so waiting avoids the badge flickering off first.
