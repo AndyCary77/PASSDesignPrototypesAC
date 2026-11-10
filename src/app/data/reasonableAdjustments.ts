@@ -15,6 +15,13 @@ import { ADJUSTMENT_CATEGORIES } from './nhsRafValuesets';
  */
 export const RAF_WRITE_ENABLED = false;
 
+/**
+ * The "<Name> has a Reasonable Adjustment Flag" note at the top of Care Management (Outcomes/Tasks/Visits).
+ * Hidden: the PO felt it duplicated the flag badge already in the customer header (design call, 2026-11-10).
+ * The component is kept; set this to true to bring it back.
+ */
+export const SHOW_CARE_PLAN_RA_NOTE = false;
+
 export { ADJUSTMENT_CATEGORIES, IMPAIRMENT_VALUES, type RafValue, type RafAdjustmentCategory } from './nhsRafValuesets';
 
 export type RafSection = 'adjustment' | 'impairment' | 'condition';
