@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { useScrolled } from '../../hooks/useScrolled';
 import { useOverflowNav } from '../../hooks/useOverflowNav';
+import { useNavMode } from './NavModeContext';
 import { useCustomer } from '../../data/CustomerContext';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
 import { canSeeRafDetail, useRafAccess } from '../../data/RafAccessContext';
@@ -16,12 +17,40 @@ const inactiveTabClass =
 const activeTabClass =
   'px-4 py-3 text-body font-medium whitespace-nowrap border-b-2 bg-purple-50 text-[rgb(154,38,214)] border-[rgb(154,38,214)]';
 
-function tabClass(pathname: string, path: string) {
+// With the old nav bar in use, this tab bar sits on dark purple (#2f035b) with white text. Same padding, border width
+// and weight as the new styling so tab widths (and so the "More" collapse) don't change between the two.
+const legacyInactiveTabClass =
+  'px-4 py-3 text-body font-medium text-white hover:bg-white/10 whitespace-nowrap border-b-2 border-transparent hover:border-white/50 transition-colors';
+
+const legacyActiveTabClass =
+  'px-4 py-3 text-body font-medium whitespace-nowrap border-b-2 bg-white/15 text-white border-white';
+
+/** Tab styling for the current nav mode. The bar's own background is set where the bar is rendered. */
+export function navTabClasses(legacy: boolean) {
+  return legacy
+    ? { active: legacyActiveTabClass, inactive: legacyInactiveTabClass }
+    : { active: activeTabClass, inactive: inactiveTabClass };
+}
+
+/** Background for the bar of tabs: dark purple with the old nav bar, as it always was with the new one. */
+export const LEGACY_SUBNAV_BG = 'bg-[#2f035b]';
+
+/**
+ * Text colours for the customer/employee info panel above the tabs. With the old nav bar the whole panel is on the same
+ * dark purple as the tab bar, so its text goes white. (Status badges keep their own colours: they're coloured pills.)
+ */
+export function infoPanelText(legacy: boolean) {
+  return legacy
+    ? { name: 'text-white', label: 'text-white/80', value: 'text-white', dot: 'text-white/60' }
+    : { name: 'text-gray-900', label: 'text-gray-500', value: 'text-gray-700', dot: 'text-gray-300' };
+}
+
+function tabClass(pathname: string, path: string, classes: ReturnType<typeof navTabClasses>) {
   // Match sub-routes too (e.g. Documents' click-throughs at /documents/care-plan
   // and /documents/recording/:id) so the tab stays highlighted there, not just
   // on the tab's own exact path.
   const active = pathname === path || pathname.startsWith(`${path}/`);
-  return active ? activeTabClass : inactiveTabClass;
+  return active ? classes.active : classes.inactive;
 }
 
 // ─── Nav item model ────────────────────────────────────────────────────────────
@@ -57,14 +86,14 @@ function isItemActive(item: NavItem, pathname: string): boolean {
 
 // ─── Dropdown tab (top-level "Care Records"-style tab) ──────────────────────────
 
-function DropdownTab({ label, items, active }: { label: string; items: DropdownItem[]; active: boolean }) {
+function DropdownTab({ label, items, active, classes }: { label: string; items: DropdownItem[]; active: boolean; classes: ReturnType<typeof navTabClasses> }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
   return (
     <DropdownMenuPrimitive.Root>
       <DropdownMenuPrimitive.Trigger asChild>
-        <button className={`${active ? activeTabClass : inactiveTabClass} inline-flex items-center gap-1 cursor-pointer`}>
+        <button className={`${active ? classes.active : classes.inactive} inline-flex items-center gap-1 cursor-pointer`}>
           {label}
           <ChevronDown className="w-3.5 h-3.5 opacity-80" />
         </button>
@@ -98,19 +127,19 @@ function DropdownTab({ label, items, active }: { label: string; items: DropdownI
 }
 
 /** A single visible tab — real navigation elements, exactly as the bar looked before collapse existed. */
-function renderTab(item: NavItem, pathname: string) {
+function renderTab(item: NavItem, pathname: string, classes: ReturnType<typeof navTabClasses>) {
   switch (item.type) {
     case 'inert':
       return (
-        <a key={item.key} href="#" className={inactiveTabClass}>
+        <a key={item.key} href="#" className={classes.inactive}>
           {item.label}
         </a>
       );
     case 'dropdown':
-      return <DropdownTab key={item.key} label={item.label} items={item.items} active={isItemActive(item, pathname)} />;
+      return <DropdownTab key={item.key} label={item.label} items={item.items} active={isItemActive(item, pathname)} classes={classes} />;
     case 'link':
       return (
-        <Link key={item.key} to={item.to} className={item.exact ? (pathname === item.to ? activeTabClass : inactiveTabClass) : tabClass(pathname, item.to)}>
+        <Link key={item.key} to={item.to} className={item.exact ? (pathname === item.to ? classes.active : classes.inactive) : tabClass(pathname, item.to, classes)}>
           {item.label}
         </Link>
       );
@@ -126,19 +155,19 @@ function renderTab(item: NavItem, pathname: string) {
  * safely render everything in its plain/inactive shape regardless of the
  * real active tab.
  */
-function MeasuringTab({ item }: { item: NavItem }) {
+function MeasuringTab({ item, classes }: { item: NavItem; classes: ReturnType<typeof navTabClasses> }) {
   if (item.type === 'dropdown') {
     return (
-      <span className={`${inactiveTabClass} inline-flex items-center gap-1`}>
+      <span className={`${classes.inactive} inline-flex items-center gap-1`}>
         {item.label}
         <ChevronDown className="w-3.5 h-3.5 opacity-80" />
       </span>
     );
   }
-  return <span className={inactiveTabClass}>{item.label}</span>;
+  return <span className={classes.inactive}>{item.label}</span>;
 }
 
-const MORE_BUTTON_CLASS = `${inactiveTabClass} inline-flex items-center gap-1 cursor-pointer`;
+const moreButtonClass = (classes: ReturnType<typeof navTabClasses>) => `${classes.inactive} inline-flex items-center gap-1 cursor-pointer`;
 
 /** The collapsed items, as a dropdown menu — plain entries for links/inert tabs, a nested submenu for "Care Records" so its own 3 destinations stay reachable rather than being flattened or dropped. */
 function MoreMenuItem({ item, pathname, navigate }: { item: NavItem; pathname: string; navigate: ReturnType<typeof useNavigate> }) {
@@ -220,6 +249,11 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const scrolled = useScrolled();
+  const { mode } = useNavMode();
+  const legacy = mode === 'legacy';
+  const tabClasses = navTabClasses(legacy);
+  const panelText = infoPanelText(legacy);
+  const MORE_BUTTON_CLASS = moreButtonClass(tabClasses);
   const customer = useCustomer();
   const showCareBridgeTab = useFeatureFlag('customerCareBridgeTab');
   // Internal admins don't get the tab (AIOP-22349; same as GP Connect), but still see the badge, without a link.
@@ -296,7 +330,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
   const hiddenItems = navItems.filter((_, i) => !visibleSet.has(i));
 
   return (
-    <div className={`bg-white border-b border-gray-200 transition-[margin] duration-300 ${scrolled && withSlideOffset ? '-mt-12' : 'mt-0'}`}>
+    <div className={`${legacy ? LEGACY_SUBNAV_BG : 'bg-white border-b border-gray-200'} transition-[margin] duration-300 ${scrolled && withSlideOffset ? '-mt-12' : 'mt-0'}`}>
       <div className="px-6">
         <div className={`flex gap-4 transition-all duration-300 ${scrolled ? 'py-1.5 items-center' : 'py-4 items-start'}`}>
           {/* Avatar */}
@@ -321,7 +355,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
           <div className="flex-1 min-w-0 font-weight-fixed">
             {/* Name and Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-gray-900 font-semibold">{customer.fullName}</h2>
+              <h2 className={`${panelText.name} font-semibold`}>{customer.fullName}</h2>
               {/* Same order and styling as the Customers list: HIGH RISK first and solid, the legal flag after it in the paler red. */}
               {customer.highRisk && (
                 <span className="bg-red-700 text-white text-xs font-semibold px-2 py-0.5 rounded">
@@ -341,22 +375,22 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
 
             {/* Full details — shown when not scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0 opacity-0 mt-0' : 'max-h-32 opacity-100 mt-1'}`}>
-              <div className="text-body font-medium text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+              <div className={`text-body font-medium ${legacy ? 'text-white' : 'text-gray-600'} flex flex-wrap items-center gap-x-3 gap-y-1 mb-1`}>
                 {contactBits.map((bit, i) => (
                   <span key={bit.label} className="flex items-center gap-3">
-                    {i > 0 && <span className="text-gray-300">•</span>}
-                    <span><span className="text-gray-500">{bit.label}:</span> <span className="text-gray-700">{bit.value}</span></span>
+                    {i > 0 && <span className={panelText.dot}>•</span>}
+                    <span><span className={panelText.label}>{bit.label}:</span> <span className={panelText.value}>{bit.value}</span></span>
                   </span>
                 ))}
               </div>
-              <div className="text-gray-700 text-[15px] font-medium">
+              <div className={`${panelText.value} text-[15px] font-medium`}>
                 {customer.addressOneLine}
               </div>
             </div>
 
             {/* Condensed single line — shown when scrolled */}
             <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-10 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'}`}>
-              <p className="text-body font-medium text-gray-600 truncate">{condensed}</p>
+              <p className={`text-body font-medium ${legacy ? 'text-white' : 'text-gray-600'} truncate`}>{condensed}</p>
             </div>
           </div>
         </div>
@@ -364,9 +398,9 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
         {/* Navigation Tabs — progressively collapse into "More" rather than
             scrolling sideways once they don't all fit; see useOverflowNav
             and the Nav item model note above for how. */}
-        <div className="border-t border-gray-200 -mx-6 px-6">
+        <div className={`-mx-6 px-6 ${legacy ? `${LEGACY_SUBNAV_BG} border-t border-white/20` : 'border-t border-gray-200'}`}>
           <nav ref={containerRef as React.RefObject<HTMLElement>} className="relative flex gap-1 flex-nowrap overflow-hidden">
-            {visibleIndices.map(i => renderTab(navItems[i], pathname))}
+            {visibleIndices.map(i => renderTab(navItems[i], pathname, tabClasses))}
 
             {hasOverflow && (
               <DropdownMenuPrimitive.Root>
@@ -406,7 +440,7 @@ export function CustomerInfo({ withSlideOffset = false }: { withSlideOffset?: bo
             <div aria-hidden="true" className="absolute top-0 left-0 flex gap-1 invisible pointer-events-none">
               {navItems.map((item, i) => (
                 <span key={item.key} ref={el => { itemRefs.current[i] = el; }}>
-                  <MeasuringTab item={item} />
+                  <MeasuringTab item={item} classes={tabClasses} />
                 </span>
               ))}
               <span ref={el => { moreRef.current = el; }} className={MORE_BUTTON_CLASS}>
