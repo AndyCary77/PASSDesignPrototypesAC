@@ -141,7 +141,7 @@ export default function App() {
           </div>
           <AppNav
             activeTab="customers"
-            links={{ employees: '../employees/', notifications: '../notifications/', account: '../account/' }}
+            links={{ bookings: '../bookings/', employees: '../employees/', notifications: '../notifications/', account: '../account/' }}
           />
         </div>
       </PhoneFrame>

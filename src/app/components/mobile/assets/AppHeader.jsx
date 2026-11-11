@@ -7,6 +7,10 @@ const ArrowLeftIcon = () => (
 )
 
 /**
+ * `left` replaces the back button with any other leading control (e.g. Bookings'
+ * filter button); it takes the place of `onBack`, and an app that passes neither
+ * gets the balancing spacer as before.
+ *
  * iOS centres the nav-bar title, balancing it with an empty 36px spacer
  * opposite the back button. Material's top app bar left-aligns the title
  * right after the back arrow instead — so on Android the trailing spacer
@@ -14,14 +18,16 @@ const ArrowLeftIcon = () => (
  * android.css handles the alignment. One of the most recognisable
  * platform tells, and it costs almost nothing.
  */
-export default function AppHeader({ title, onBack, right, className = '' }) {
+export default function AppHeader({ title, onBack, left, right, className = '' }) {
   const [platform] = usePlatform()
   const android = platform === 'android'
   return (
     <div className={`app-header${className ? ' ' + className : ''}`}>
-      {onBack
-        ? <button className="app-header-back" onClick={onBack}><ArrowLeftIcon /></button>
-        : !android ? <div style={{ width: 36 }} /> : null
+      {left !== undefined
+        ? left
+        : onBack
+          ? <button className="app-header-back" onClick={onBack}><ArrowLeftIcon /></button>
+          : !android ? <div style={{ width: 36 }} /> : null
       }
       <span className="app-header-title">{title}</span>
       {right !== undefined

@@ -141,7 +141,13 @@ export default function App() {
   const [retrievedAt] = useState(() => new Date())
   const [lastSyncedAt] = useState(() => new Date(Date.now() - (2 * 60 + 37) * 60_000))
   const record = getRafRecord(CUSTOMER.recordId)
-  const back = () => { window.location.href = '../customer-menu/?transition=back' }
+  // Back goes to wherever you came from: a screen can pass `back` (a relative '../…' URL — Bookings and its visit
+  // do) and otherwise it's the customer menu.
+  const requestedBack = new URLSearchParams(window.location.search).get('back')
+  const backHref = requestedBack && requestedBack.startsWith('../') && !requestedBack.includes('//')
+    ? requestedBack
+    : '../customer-menu/?transition=back'
+  const back = () => { window.location.href = backHref }
   const systemBack = () => handleSystemBack(back)
   const sections = level === '1' ? SECTIONS.slice(0, 1) : SECTIONS
 
@@ -163,7 +169,7 @@ export default function App() {
           <div className="screen">
             <StatusBar />
             <div className="app-header">
-              <a className="app-header-back" href="../customer-menu/?transition=back"><ArrowLeftIcon /></a>
+              <a className="app-header-back" href={backHref}><ArrowLeftIcon /></a>
               <span className="app-header-title">All customers</span>
               <div style={{ width: 36 }} />
             </div>

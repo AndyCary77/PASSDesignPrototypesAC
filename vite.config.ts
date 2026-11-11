@@ -60,6 +60,7 @@ export default defineConfig({
         // production. `pnpm dev` serves any file path directly, so this gap
         // only shows up after a real build/deploy.
         mobileAccount: path.resolve(__dirname, 'src/app/components/mobile/account/index.html'),
+        mobileBookings: path.resolve(__dirname, 'src/app/components/mobile/bookings/index.html'),
         mobileCareBridge: path.resolve(__dirname, 'src/app/components/mobile/carebridge/index.html'),
         mobileCustomerDocuments: path.resolve(__dirname, 'src/app/components/mobile/customer-documents/index.html'),
         mobileCustomers: path.resolve(__dirname, 'src/app/components/mobile/customers/index.html'),

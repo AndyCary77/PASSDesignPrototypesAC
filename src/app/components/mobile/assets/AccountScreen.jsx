@@ -207,7 +207,7 @@ export default function AccountScreen({ onGoToMessages, onGoToMileage, messagesU
         <div className="account-version">Version 3.6.0</div>
       </div>
       {!hideNav && (
-        <AppNav activeTab="account" messagesUnread={messagesUnread} links={{ customers: '../customers/', employees: '../employees/', notifications: '../notifications/' }} />
+        <AppNav activeTab="account" messagesUnread={messagesUnread} links={{ bookings: '../bookings/', customers: '../customers/', employees: '../employees/', notifications: '../notifications/' }} />
       )}
     </>
   )

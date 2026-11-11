@@ -603,7 +603,7 @@ export default function App() {
           activeTab="notifications"
           notifCount={badgeCount}
           messagesUnread={messagesUnread}
-          links={{ customers: '../customers/', employees: '../employees/', account: '../account/' }}
+          links={{ bookings: '../bookings/', customers: '../customers/', employees: '../employees/', account: '../account/' }}
         />
       </div>
     </div>

@@ -89,6 +89,7 @@ const MOBILE = [
       { label: 'Account', to: '/src/app/components/mobile/account/' },
       { label: 'Assessment Hero — Capture from documents', to: '/src/app/components/mobile/customer-documents/' },
       { label: 'Assessment Hero — Assessment capture', to: '/src/app/components/mobile/carebridge/' },
+      { label: 'Bookings', to: '/src/app/components/mobile/bookings/' },
       { label: 'Customers', to: '/src/app/components/mobile/customers/' },
       { label: 'Customer menu (Arthur Barrington)', to: '/src/app/components/mobile/customer-menu/' },
       { label: 'Reasonable adjustments (Arthur Barrington)', to: '/src/app/components/mobile/customer-adjustments/' },
