@@ -1,0 +1,11 @@
+/* ── Adjustments sheet (AdjustmentsSheet.jsx) ─────────────────────
+   The content's own styles are adjustments-content.css; this is just the scroller around it and the footer. */
+.as-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 0 24px; background: var(--greyscale-15-grey-97); }
+.as-body::-webkit-scrollbar { display: none; }
+.as-footer { flex-shrink: 0; padding: 12px 16px 24px; background: #fff; border-top: 1px solid var(--greyscale-13-grey-90); }
+[data-platform="android"] .as-footer { padding-bottom: 16px; }
+.as-full {
+  display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 6px; text-decoration: none;
+  background: var(--brand-purple-3-purple-2); color: #fff; font-family: Barlow, sans-serif; font-size: 17px; font-weight: 500;
+}
+.as-full:active { filter: brightness(0.92); }

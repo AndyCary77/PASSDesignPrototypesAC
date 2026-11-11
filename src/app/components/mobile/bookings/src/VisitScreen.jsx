@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import useDragScroll from '../../assets/useDragScroll'
 import { buildFlagChips } from '../../assets/CustomerFlags'
+import AdjustmentsSheet from '../../assets/AdjustmentsSheet'
 import VisitHeader from './VisitHeader'
 import TaskRow from './TaskRow'
 import { TASKS, TASK_DETAILS } from './visitData'
@@ -17,6 +18,8 @@ export default function VisitScreen({ booking, customer, visit, onBack, onTagIn,
   const started = visit?.status === 'inProgress'
   const complete = visit?.status === 'complete'
   const [collapsed, setCollapsed] = useState(false)
+  // Mid-visit the Adjustments chip opens a sheet over the visit rather than leaving it; the sheet links on to the full screen.
+  const [adjOpen, setAdjOpen] = useState(false)
   const scrollRef = useRef(null)
   useDragScroll(scrollRef)
   const elapsed = useElapsed(started ? visit.startedAt : null)
@@ -26,7 +29,7 @@ export default function VisitScreen({ booking, customer, visit, onBack, onTagIn,
   const chips = buildFlagChips({
     legalChips: customer.legalChips,
     hasAdjustments: hasAdjustmentsFlag(customer),
-    adjustmentsHref: adjustmentsHref(booking.id, 'visit'),
+    onAdjustments: () => setAdjOpen(true),
   })
 
   return (
@@ -66,6 +69,13 @@ export default function VisitScreen({ booking, customer, visit, onBack, onTagIn,
           <button type="button" className="m-btn m-btn--soft"><EditNoteIcon />Add notes</button>
           {!locked && <button type="button" className="m-btn m-btn--danger" onClick={onCancel}><CloseIcon size={20} />Cancel visit</button>}
         </div>
+      )}
+      {adjOpen && (
+        <AdjustmentsSheet
+          recordId={customer.recordId}
+          fullHref={adjustmentsHref(booking.id, 'visit')}
+          onClose={() => setAdjOpen(false)}
+        />
       )}
     </div>
   )

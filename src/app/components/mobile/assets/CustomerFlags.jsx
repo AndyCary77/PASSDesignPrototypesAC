@@ -20,31 +20,35 @@ export function HighRiskBadge({ className = '' }) {
 /**
  * The standard chip set for a customer, in the order every screen uses: their legal chips,
  * then Adjustments when they have a Reasonable Adjustment Flag. `adjustmentsHref` makes that
- * chip a link into the Reasonable adjustments screen; leave it off for a plain, inert chip.
+ * chip a link into the Reasonable adjustments screen; `onAdjustments` makes it a button instead (to
+ * open a sheet without leaving the screen); leave both off for a plain, inert chip.
  */
-export function buildFlagChips({ legalChips = [], hasAdjustments = false, adjustmentsHref } = {}) {
+export function buildFlagChips({ legalChips = [], hasAdjustments = false, adjustmentsHref, onAdjustments } = {}) {
   return [
     ...legalChips.map(c => ({ id: c.id, label: c.label })),
     ...(hasAdjustments
       ? [{
         id: 'adjustments',
         label: 'Adjustments',
-        href: adjustmentsHref,
+        href: onAdjustments ? undefined : adjustmentsHref,
+        onClick: onAdjustments,
         ariaLabel: 'Reasonable adjustments flag recorded. Open reasonable adjustments.',
       }]
       : []),
   ]
 }
 
-/** A row of chips. Each is `{ id, label, href?, ariaLabel? }`; `id` picks the icon and, for `adjustments`, the purple style. */
+/** A row of chips. Each is `{ id, label, href?, onClick?, ariaLabel? }`; `id` picks the icon and, for `adjustments`, the purple style. */
 export function FlagChips({ chips, className = '' }) {
   if (!chips || chips.length === 0) return null
   return (
     <div className={`flag-chips${className ? ' ' + className : ''}`}>
       {chips.map(chip => {
         const Icon = CHIP_ICONS[chip.id]
-        const cls = `flag-chip${chip.id === 'adjustments' ? ' flag-chip--adjustments' : ''}${chip.href ? ' flag-chip--link' : ''}`
+        const interactive = chip.href || chip.onClick
+        const cls = `flag-chip${chip.id === 'adjustments' ? ' flag-chip--adjustments' : ''}${interactive ? ' flag-chip--link' : ''}`
         const content = <>{Icon && <Icon />}{chip.label}</>
+        if (chip.onClick) return <button key={chip.id} type="button" className={cls} aria-label={chip.ariaLabel} aria-haspopup="dialog" onClick={chip.onClick}>{content}</button>
         return chip.href
           ? <a key={chip.id} href={chip.href} className={cls} aria-label={chip.ariaLabel}>{content}</a>
           : <span key={chip.id} className={cls}>{content}</span>

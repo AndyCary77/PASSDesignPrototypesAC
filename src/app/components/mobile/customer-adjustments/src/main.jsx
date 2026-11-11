@@ -5,6 +5,7 @@ import { applyPlatform } from '../../assets/platform'
 import '../../assets/colors.css'
 import '../../assets/main.css'
 import '../../assets/mobile.css'
+import '../../assets/adjustments-content.css'
 import './customer-adjustments.css'
 // Last, so it can override the app's own styles — this is the platform
 // override layer, and several of its rules are single-class.

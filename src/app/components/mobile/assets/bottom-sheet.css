@@ -1,0 +1,18 @@
+/* ── Bottom sheet (BottomSheet.jsx) ──────────────────────────── */
+.sheet-scrim { position: absolute; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.4); animation: sheetFade 0.2s ease-out both; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column;
+  background: #f0eff5; border-radius: 22px 22px 0 0; overflow: hidden;
+  animation: sheetUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) both; font-family: Barlow, sans-serif;
+}
+.sheet--full { top: 16px; }
+.sheet--auto { max-height: calc(100% - 56px); }
+.sheet-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--brand-purple-3-purple-2); color: #fff; }
+.sheet-title { font-size: 17px; font-weight: 600; }
+.sheet-close, .sheet-close-spacer { width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; }
+.sheet-close {
+  display: flex; align-items: center; justify-content: center; border: none; padding: 0; cursor: pointer; color: #fff;
+  background: rgba(30, 0, 50, 0.32); box-shadow: 0 2px 8px rgba(30, 0, 50, 0.35);
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetFade { from { opacity: 0; } to { opacity: 1; } }
