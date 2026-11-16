@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════════════
+   Messaging — iOS 26 "Liquid Glass" skin
+
+   Scoped to [data-platform="ios"]; loaded after assets/ios-liquid-glass.css.
+   Covers Messaging's inbox, thread, compose, attachment viewer, menus and
+   the embedded Account screen. The purple status/header bars are
+   untouched (the shared layer already turns their controls into glass).
+   Message bubbles, thread rows and form fields are CONTENT and stay opaque.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Account screen (embedded) ───────────────────────────────────
+   The floating tab bar overlays the foot of the screen, so the scroll
+   body pads past it (the last row, "Version", sits ~32px of its own). */
+[data-platform="ios"] .account-body {
+  padding-bottom: calc(var(--ios-tabbar-clearance) - 32px);
+}
+[data-platform="ios"] .logout-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: var(--lg-tint);
+}
+/* iOS 26 switch: a wide capsule thumb that reads as a lens. */
+[data-platform="ios"] .tog {
+  width: 58px;
+  height: 32px;
+  border-radius: 999px;
+}
+[data-platform="ios"] .tog-thumb {
+  width: 40px;
+  height: 28px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+[data-platform="ios"] .tog-on .tog-thumb { transform: translateX(14px); }
+/* The pale off-state track is ~1.2:1 against the white row; give it a visible edge. */
+[data-platform="ios"] .tog:not(.tog-on) { box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.3); }
+
+/* ── Inbox ───────────────────────────────────────────────────────
+   Search is a glass capsule; Messages/Archived is a segmented control
+   (glass track, tinted selected segment) instead of an underlined tab
+   strip. The white band behind both stays so the controls float on it. */
+[data-platform="ios"] .inbox-search {
+  border-bottom: none;
+  padding: 12px 16px 6px;
+}
+[data-platform="ios"] .inbox-search .search-bar {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+[data-platform="ios"] .inbox-search .search-bar:focus-within {
+  border-color: var(--lg-tint);
+  box-shadow: var(--lg-rim), 0 0 0 2px rgba(109, 27, 152, 0.3);
+}
+[data-platform="ios"] .inbox-tabs {
+  position: relative;
+  background: #fff;
+  padding: 8px 20px 12px;
+}
+[data-platform="ios"] .inbox-tabs::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 4px;
+  bottom: 8px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+[data-platform="ios"] .inbox-tab {
+  position: relative;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  color: var(--lg-label);
+}
+[data-platform="ios"] .inbox-tab.active {
+  border: none;
+  color: var(--lg-tint);
+  background: var(--lg-tint-fill);
+  box-shadow: inset 0 0 0 1px rgba(109, 27, 152, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+/* List scrolls under the floating tab bar. */
+[data-platform="ios"] .thread-list {
+  padding-bottom: var(--ios-tabbar-clearance);
+}
+
+/* ── Thread & compose screens: bottom bars ───────────────────────
+   Messaging keeps its tab bar on every screen, so the compose bar (or the
+   read-only broadcast notice) must sit ABOVE the floating tab bar, not
+   behind it. The screen reserves the tab bar's footprint; the compose bar
+   is then three separate glass controls (add, field, send) floating on the
+   lavender background instead of a flush white strip. */
+[data-platform="ios"] .screen:has(> .compose-bar),
+[data-platform="ios"] .screen:has(> .broadcast-notice) {
+  padding-bottom: 92px;
+  /* Match the message list so no white seam shows behind the floating bar. */
+  background: var(--ui-purple-7-lightest-lavendar);
+}
+[data-platform="ios"] .messages-area {
+  padding-bottom: 16px;
+}
+[data-platform="ios"] .compose-bar {
+  background: transparent;
+  border-top: none;
+  padding: 8px 12px;
+  gap: 8px;
+}
+[data-platform="ios"] .compose-input-wrap {
+  height: 48px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), 0 0 0 1px rgba(60, 60, 67, 0.2), var(--lg-shadow-small);
+}
+[data-platform="ios"] .compose-input-wrap:focus-within {
+  box-shadow: var(--lg-rim), 0 0 0 2px var(--lg-tint), var(--lg-shadow-small);
+}
+/* The pale grape-grey placeholder is ~2.9:1 on white; a floating field needs a readable hint. */
+[data-platform="ios"] .compose-input::placeholder,
+[data-platform="ios"] .form-input-mobile::placeholder,
+[data-platform="ios"] .message-textarea::placeholder { color: #6b6678; }
+[data-platform="ios"] .compose-icon-btn {
+  width: 48px;
+  height: 48px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), 0 0 0 1px rgba(60, 60, 67, 0.2), var(--lg-shadow-small);
+  color: var(--lg-label);
+}
+[data-platform="ios"] .compose-icon-btn:hover { background: var(--lg-fill-dense); color: var(--lg-tint); }
+/* Send = the prominent action: tinted glass circle. */
+[data-platform="ios"] .send-btn {
+  width: 48px;
+  height: 48px;
+  background: var(--brand-purple-6-purple-4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(154, 38, 214, 0.35);
+}
+[data-platform="ios"] .send-btn:hover { background: var(--brand-purple-5-purple-3); }
+
+/* Reply / edit context strip and attachment picker: floating glass cards
+   stacked above the compose bar, replacing the full-bleed white rows. */
+[data-platform="ios"] .context-strip,
+[data-platform="ios"] .attach-picker {
+  margin: 0 12px 4px;
+  border-top: none;
+  border-radius: 28px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), 0 0 0 1px rgba(60, 60, 67, 0.16), var(--lg-shadow);
+}
+[data-platform="ios"] .context-strip { padding: 8px 8px 8px 20px; }
+/* Strip text sits on glass now: amber (~2.4:1) and mid-grey (~3.9:1) both fall short of AA. */
+[data-platform="ios"] .edit-strip .context-strip-label { color: #8a5a00; }
+[data-platform="ios"] .context-strip-preview { color: #55555c; }
+[data-platform="ios"] .context-strip-close {
+  width: 40px;
+  height: 40px;
+}
+[data-platform="ios"] .attach-picker { padding: 10px; }
+[data-platform="ios"] .attach-option {
+  min-height: 56px;
+  border-radius: 20px;
+  background: rgba(60, 60, 67, 0.07);
+}
+[data-platform="ios"] .attach-option:hover { background: rgba(60, 60, 67, 0.12); }
+/* Read-only notice stays a message, not a control: opaque capsule card. */
+[data-platform="ios"] .broadcast-notice {
+  margin: 0 12px 8px;
+  padding: 14px 20px;
+  border-top: none;
+  border-radius: 28px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), 0 0 0 1px rgba(60, 60, 67, 0.16), var(--lg-shadow-small);
+  color: #55555c;
+}
+[data-platform="ios"] .broadcast-notice span { color: #55555c; font-weight: 600; }
+
+/* ── Menus (thread "more" menu and per-message actions) ──────────
+   iOS 26 context menus: dense glass, large radius, inset rounded rows. */
+[data-platform="ios"] .phone-frame-overlay { background: rgba(0, 0, 0, 0.3); }
+[data-platform="ios"] .actions-menu {
+  width: 232px;
+  padding: 6px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+}
+[data-platform="ios"] .actions-menu button {
+  min-height: 52px;
+  border-bottom: none;
+  border-radius: 20px;
+}
+[data-platform="ios"] .actions-menu button:hover { background: rgba(60, 60, 67, 0.08); }
+
+/* ── Attachment viewer ───────────────────────────────────────────
+   A full-screen dark viewer. Its Save / Share / Forward toolbar becomes a
+   floating glass capsule, lifted clear of the tab bar that stays visible. */
+[data-platform="ios"] .attachment-preview-overlay { z-index: 70; }
+[data-platform="ios"] .attachment-preview-footer {
+  margin: 0 16px 100px;
+  padding: 8px 4px;
+  border-top: none;
+  border-radius: 999px;
+  background: rgba(58, 58, 60, 0.72);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+}
+[data-platform="ios"] .attachment-preview-action {
+  min-height: 56px;
+}
+
+/* ── Compose (new message) ───────────────────────────────────────
+   Form scrolls under the tab bar; Send is a floating tinted capsule that
+   stays above it. Fields get device-concentric radii. */
+[data-platform="ios"] .compose-form {
+  padding-bottom: var(--ios-tabbar-clearance);
+}
+/* With the extra clearance the form overflows; stop the flex column squashing its groups
+   (which would otherwise slide the sticky Send over the attachment buttons). */
+[data-platform="ios"] .compose-form > * { flex-shrink: 0; }
+[data-platform="ios"] .form-input-mobile,
+[data-platform="ios"] .message-textarea {
+  border-radius: 18px;
+}
+[data-platform="ios"] .attachment-btn {
+  min-height: 64px;
+  border-radius: 20px;
+}
+[data-platform="ios"] .compose-send-btn {
+  position: sticky;
+  /* Sticky offsets measure from the scroller's padding edge, which already includes the
+     tab-bar clearance, so 0 here floats Send ~16px above the tab bar. */
+  bottom: 0;
+  z-index: 5;
+  min-height: 52px;
+  border-radius: 999px;
+  background: var(--brand-purple-6-purple-4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(154, 38, 214, 0.35);
+}
+[data-platform="ios"] .compose-send-btn:hover:not(.disabled) {
+  background: var(--brand-purple-6-purple-4);
+}
+/* Disabled = the same capsule, dimmed (pale tint, dark-enough label), not a different control. */
+[data-platform="ios"] .compose-send-btn.disabled {
+  background: #e6deef;
+  color: #55456b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(109, 27, 152, 0.22), var(--lg-shadow-small);
+}
+
+/* ── Customer picker sheet (currently hidden in the UI) ──────────
+   Inset partial sheet with device-concentric corners, glass Done button. */
+[data-platform="ios"] .picker-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 24px 8px 8px;
+  box-sizing: border-box;
+}
+[data-platform="ios"] .picker-sheet {
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.25);
+}
+/* A sheet covers the tab bar (it's inside the screen's stacking context, so drop the bar beneath it). */
+[data-platform="ios"] .phone-frame:has(.picker-overlay) .app-nav { z-index: -1; }
+[data-platform="ios"] .picker-header { padding: 14px 20px 12px 24px; }
+[data-platform="ios"] .picker-done-btn {
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--brand-purple-6-purple-4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(154, 38, 214, 0.35);
+}
+[data-platform="ios"] .picker-search-bar {
+  min-height: 46px;
+  border-radius: 999px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background: var(--lg-fill-dense);
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────────*/
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .logout-btn,
+  [data-platform="ios"] .inbox-search .search-bar,
+  [data-platform="ios"] .inbox-tabs::before,
+  [data-platform="ios"] .compose-input-wrap,
+  [data-platform="ios"] .compose-icon-btn,
+  [data-platform="ios"] .context-strip,
+  [data-platform="ios"] .attach-picker,
+  [data-platform="ios"] .broadcast-notice,
+  [data-platform="ios"] .actions-menu,
+  [data-platform="ios"] .attachment-preview-footer {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-platform="ios"] .actions-menu { background: #fff; }
+  [data-platform="ios"] .attachment-preview-footer { background: #2c2c2e; }
+  [data-platform="ios"] .inbox-search .search-bar,
+  [data-platform="ios"] .inbox-tabs::before,
+  [data-platform="ios"] .compose-input-wrap,
+  [data-platform="ios"] .compose-icon-btn,
+  [data-platform="ios"] .context-strip,
+  [data-platform="ios"] .attach-picker {
+    border-color: rgba(60, 60, 67, 0.5);
+  }
+}

@@ -27,38 +27,38 @@ const BellNavIcon = () => (
   </svg>
 )
 
-function NavItem({ id, activeTab, href, children }) {
+// Every tab carries a label in the markup. Android (and the pre-iOS-26 look) only shows the
+// active tab's, so the idle labels are hidden by default and shown by ios-liquid-glass.css —
+// iOS 26's tab bar labels all of its items.
+function NavItem({ id, activeTab, href, label, children }) {
   const isActive = activeTab === id
   const className = `nav-item${isActive ? ' active' : ''}`
+  const text = <span className={`nav-label${isActive ? '' : ' nav-label--idle'}`}>{label}</span>
   if (href && !isActive) {
-    return <a className={className} href={href}>{children}</a>
+    return <a className={className} href={href}>{children}{text}</a>
   }
-  return <button className={className}>{children}</button>
+  return <button className={className} aria-current={isActive ? 'page' : undefined}>{children}{text}</button>
 }
 
 export default function AppNav({ activeTab = null, messagesUnread = 0, notifCount = 0, links = {} }) {
   return (
     <div className="app-nav">
-      <NavItem id="bookings" activeTab={activeTab} href={links.bookings}>
+      <NavItem id="bookings" label="Bookings" activeTab={activeTab} href={links.bookings}>
         <BookingsNavIcon />
-        {activeTab === 'bookings' && <span className="nav-label">Bookings</span>}
       </NavItem>
-      <NavItem id="customers" activeTab={activeTab} href={links.customers}>
+      <NavItem id="customers" label="Customers" activeTab={activeTab} href={links.customers}>
         <CustomersNavIcon />
-        {activeTab === 'customers' && <span className="nav-label">Customers</span>}
       </NavItem>
-      <NavItem id="employees" activeTab={activeTab} href={links.employees}>
+      <NavItem id="employees" label="Employees" activeTab={activeTab} href={links.employees}>
         <EmployeesNavIcon />
-        {activeTab === 'employees' && <span className="nav-label">Employees</span>}
       </NavItem>
-      <NavItem id="notifications" activeTab={activeTab} href={links.notifications}>
+      <NavItem id="notifications" label="Notifications" activeTab={activeTab} href={links.notifications}>
         <div className="nav-messages-wrap">
           <BellNavIcon />
           {notifCount > 0 && <span className="nav-badge">{notifCount}</span>}
         </div>
-        {activeTab === 'notifications' && <span className="nav-label">Notifications</span>}
       </NavItem>
-      <NavItem id="account" activeTab={activeTab} href={links.account}>
+      <NavItem id="account" label="Account" activeTab={activeTab} href={links.account}>
         <div className="nav-messages-wrap">
           <div className="nav-avatar">AJ</div>
           {messagesUnread > 0 && <span className="nav-badge">{messagesUnread}</span>}

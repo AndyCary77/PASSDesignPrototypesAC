@@ -1,0 +1,51 @@
+/* ═══════════════════════════════════════════════════════════════
+   Notifications — iOS 26 "Liquid Glass" skin
+
+   Scoped to [data-platform="ios"]; loaded after assets/ios-liquid-glass.css.
+   Notification rows and the booking-detail sheet of facts are content and
+   stay opaque. The purple header stays; its "Mark all as read" control
+   becomes a glass capsule like every other bar control, and both scrolling
+   screens pad past the floating tab bar.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* "Mark all as read": a text action on the purple bar. Same recipe as the
+   shared .app-header-action-text (white-tinted lens, white label), keeping
+   the existing 13px size but bolder and at least 40px tall. */
+[data-platform="ios"] .notif-header-action {
+  min-height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--lg-on-brand-fill);
+  -webkit-backdrop-filter: var(--lg-on-brand-blur);
+  backdrop-filter: var(--lg-on-brand-blur);
+  box-shadow: var(--lg-on-brand-rim);
+  color: #fff;
+}
+[data-platform="ios"] .notif-header-action:active { background: rgba(255, 255, 255, 0.3); }
+
+/* Both scrolling screens run underneath the floating tab bar. */
+[data-platform="ios"] .notif-list,
+[data-platform="ios"] .booking-detail-scroll {
+  padding-bottom: var(--ios-tabbar-clearance);
+}
+
+/* The (currently disabled) filter pills, if restored: capsule chips with the
+   selected one tinted. */
+[data-platform="ios"] .notif-filter-pill {
+  min-height: 40px;
+  border-radius: 999px;
+}
+[data-platform="ios"] .notif-filter-pill.active {
+  background: var(--lg-tint);
+  color: #fff;
+}
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────────*/
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .notif-header-action {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.28);
+  }
+}

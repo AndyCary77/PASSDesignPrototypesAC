@@ -1,0 +1,159 @@
+/* ── Bookings: iOS 26 Liquid Glass ───────────────────────────────
+   Skin/anatomy only, scoped to iOS. Builds on assets/ios-liquid-glass.css
+   (tokens, tab bar, header controls, sheets, .primary-btn). The purple
+   bars stay; glass is the floating functional layer: the in-progress
+   banner, visit bar buttons, the task "Was this completed?" toolbar, the
+   adjustments sheet's action. Cards, rows and text stay opaque. */
+
+/* ── Bookings list ───────────────────────────────────────────────
+   The in-progress banner takes the tab bar's place. It was a flat flush
+   bar; it now floats as a rounded glass capsule-card in the tab bar's
+   slot, tinted with the status green, content scrolling beneath. */
+[data-platform="ios"] .bk-banner {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 24px;
+  z-index: 40;
+  width: auto;
+  box-sizing: border-box;
+  padding: 14px 20px 14px 14px;
+  border-radius: 36px;
+  background: rgba(183, 221, 168, 0.88);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 0.5px rgba(30, 90, 30, 0.3),
+    var(--lg-shadow);
+}
+[data-platform="ios"] .bk-banner-avatar { width: 48px; height: 48px; }
+[data-platform="ios"] .bk-banner:active { filter: brightness(0.96); }
+/* Last card clears the floating banner as it does the tab bar. */
+[data-platform="ios"] .bk-scroll:has(~ .bk-banner) { padding-bottom: 124px; }
+
+/* ── Visit screens: bar buttons ──────────────────────────────────
+   Same glass-on-brand circles as .app-header-back (the old dark scrim
+   disc is replaced). */
+[data-platform="ios"] .vh-round {
+  background: var(--lg-on-brand-fill);
+  -webkit-backdrop-filter: var(--lg-on-brand-blur);
+  backdrop-filter: var(--lg-on-brand-blur);
+  box-shadow: var(--lg-on-brand-rim);
+  color: #fff;
+}
+[data-platform="ios"] .vh-bar { padding-top: 4px; }
+
+/* ── Visit screens: bottom actions ───────────────────────────────
+   Floating capsule buttons, inset like the tab bar, >= 48pt. The state
+   colours keep their original values (green = go, red = destructive) and
+   take the glass anatomy (rim + soft coloured shadow). Label typography is
+   deliberately left as the app had it. */
+[data-platform="ios"] .vs-actions { left: 14px; right: 14px; bottom: 24px; gap: 10px; }
+[data-platform="ios"] .vs-scroll { padding-bottom: 120px; }
+[data-platform="ios"] .m-btn {
+  height: 52px;
+  border-radius: 999px;
+  padding: 0 24px;
+}
+[data-platform="ios"] .m-btn--go {
+  background: #2ea836;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.14), 0 4px 14px rgba(35, 132, 49, 0.4);
+}
+[data-platform="ios"] .m-btn--danger {
+  background: var(--rag-red-red-overdue);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.14), 0 4px 14px rgba(227, 28, 74, 0.35);
+}
+/* Secondary = neutral clear glass with a purple label. */
+[data-platform="ios"] .m-btn--soft {
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: var(--lg-tint);
+}
+
+/* ── Tag-in sheet ────────────────────────────────────────────────
+   The sheet is inset with a 40px radius; grouped content inside takes a
+   concentric radius (40 - 16px inset = 24). Content stays opaque. */
+[data-platform="ios"] .ts-note,
+[data-platform="ios"] .ts-methods { border-radius: 24px; }
+[data-platform="ios"] .ts-lower { padding-bottom: 20px; }
+[data-platform="ios"] .ts-method { min-height: 64px; }
+
+/* ── Task detail ─────────────────────────────────────────────────
+   "Was this completed?" and the NO / YES control were a flat flush
+   footer with a hard top rule. It becomes a floating glass toolbar card
+   inset from the screen edges; the list scrolls beneath it. The NO/YES
+   pair is a segmented control: a neutral track with opaque white
+   segments (no glass nested inside the glass toolbar). */
+[data-platform="ios"] .td-scroll { padding-bottom: 168px; }
+[data-platform="ios"] .td-footer {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 24px;
+  z-index: 10;
+  padding: 14px 14px 14px;
+  border: none;
+  border-radius: 36px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+}
+[data-platform="ios"] .td-ask { margin: 0 8px 10px; font-size: 16px; font-weight: 600; color: var(--lg-label); }
+[data-platform="ios"] .td-yesno {
+  padding: 4px;
+  gap: 4px;
+  border-radius: 999px;
+  background: rgba(118, 118, 128, 0.16);
+  box-shadow: none;
+}
+[data-platform="ios"] .td-choice {
+  height: 48px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--lg-label);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16), inset 0 0 0 0.5px rgba(60, 60, 67, 0.12);
+}
+[data-platform="ios"] .td-choice + .td-choice { margin-left: 0; }
+[data-platform="ios"] .td-choice:active { background: #ebeaf0; }
+
+/* ── Adjustments sheet (shared component, styled here for this app) ─
+   Its flat white footer + hard rule becomes a floating prominent
+   capsule over the scrolling content. */
+[data-platform="ios"] .as-body { padding-bottom: 104px; }
+[data-platform="ios"] .as-footer {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+[data-platform="ios"] .as-full {
+  height: 52px;
+  border-radius: 999px;
+  background: var(--brand-purple-6-purple-4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 4px 14px rgba(154, 38, 214, 0.35);
+}
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────────── */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .bk-banner {
+    background: #b7dda8;
+    box-shadow: inset 0 0 0 1px rgba(30, 90, 30, 0.6), var(--lg-shadow-small);
+  }
+  [data-platform="ios"] .td-footer { background: #fff; box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.35), var(--lg-shadow-small); }
+  [data-platform="ios"] .bk-banner,
+  [data-platform="ios"] .vh-round,
+  [data-platform="ios"] .m-btn--soft,
+  [data-platform="ios"] .td-footer {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-platform="ios"] .m-btn--soft { background: #fff; }
+}

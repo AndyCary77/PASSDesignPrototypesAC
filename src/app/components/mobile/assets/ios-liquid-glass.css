@@ -1,0 +1,285 @@
+/* ═══════════════════════════════════════════════════════════════
+   iOS 26 "Liquid Glass" platform layer
+
+   Scoped to [data-platform="ios"] (stamped on <html> by platform.js),
+   the mirror of android.css. Android is untouched by this file.
+
+   Rules this file follows, from Apple's HIG "Materials" / Liquid Glass
+   guidance and the iOS 26 adoption notes:
+
+   1. Glass is the FUNCTIONAL layer, floating above content: tab bar,
+      navigation-bar controls, toolbars/floating actions, sheets' chrome,
+      search and segmented controls. Content (cards, rows, documents,
+      text) is never glass — that's the "content layer" and stays opaque.
+   2. No glass on glass. A glass control never sits inside another glass
+      surface; groups share one surface.
+   3. PASS keeps its brand-purple status/navigation bars. Under Liquid
+      Glass the bar's CONTROLS (back, search, filter, Select…) float on it
+      as their own glass buttons, rather than the bar itself changing.
+   4. Concentricity: corners follow the device. Floating bars/controls are
+      capsules, sheets use a large radius inset from the screen.
+   5. Tint only means "primary / selected": the selected tab and the
+      prominent action carry the purple tint; other controls stay neutral.
+   6. Legibility first (and non-negotiable for this user base): glass fills
+      stay dense enough for WCAG AA text, labels are dark on light glass,
+      and prefers-reduced-transparency swaps every blur for an opaque fill
+      (iOS "Reduce Transparency" / "Increase Contrast").
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-platform="ios"] {
+  --lg-blur: blur(20px) saturate(180%);
+  --lg-fill: rgba(255, 255, 255, 0.72);
+  --lg-fill-dense: rgba(255, 255, 255, 0.86);
+  --lg-label: #1c1c1e;
+  --lg-tint: var(--brand-purple-3-purple-2);
+  --lg-tint-fill: rgba(109, 27, 152, 0.14);
+  /* Specular rim: bright top edge, fainter bottom, hairline outline —
+     what makes the material read as a lens rather than frosted plastic. */
+  --lg-rim:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 0 0.5px rgba(60, 60, 67, 0.12);
+  --lg-shadow: 0 8px 24px rgba(30, 10, 50, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --lg-shadow-small: 0 2px 8px rgba(30, 10, 50, 0.14);
+  /* Space the floating tab bar occupies at the foot of a screen; scrolling
+     content pads by this so the last row can scroll clear of it. */
+  --ios-tabbar-clearance: 104px;
+}
+
+/* The shared glass material. Everything below composes this. */
+[data-platform="ios"] .lg-glass,
+[data-platform="ios"] .app-nav {
+  background: var(--lg-fill);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+
+/* ── Device shell ────────────────────────────────────────────────
+   iPhone 17-class: thinner, uniform bezel and the home indicator, which
+   Liquid Glass bars are positioned relative to. */
+[data-platform="ios"] .phone-frame {
+  border-radius: 52px;
+  box-shadow:
+    0 0 0 9px #1c1c1e,
+    0 0 0 11px #3a3a3c,
+    0 40px 80px rgba(0, 0, 0, 0.45);
+}
+[data-platform="ios"] .phone-frame::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 136px;
+  height: 5px;
+  margin-left: -68px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* ── Status bar & navigation bar ─────────────────────────────────
+   The brand-purple bars STAY: PASS keeps its purple header under Liquid
+   Glass, so the bar itself is unchanged (same fill, white clock/title).
+   What changes is the controls sitting on it. Back / trailing buttons are
+   no longer bare glyphs but standalone glass circles — iOS 26's bar
+   buttons — floating on the purple, with the specular rim that makes
+   glass read as glass rather than a flat translucent disc. */
+:root[data-platform="ios"] {
+  /* Glass on a saturated brand fill matches the production app: a slightly DARKER tint of the
+     purple (white label) with only an inset bevel shine — not raised, so no drop shadow. */
+  --lg-on-brand-fill: rgba(25, 0, 45, 0.3);
+  /* Blur only. The standard glass blur also saturates (180%), which on a purple bar makes
+     the area under the button MORE vivid and cancels the darker tint. */
+  --lg-on-brand-blur: blur(12px);
+  --lg-on-brand-rim:
+    inset 1px 1px 0.5px rgba(255, 255, 255, 0.26),
+    inset -1px -1px 0.5px rgba(255, 255, 255, 0.07);
+}
+[data-platform="ios"] .app-header {
+  padding: 0 16px 14px;
+}
+[data-platform="ios"] .app-header-back,
+[data-platform="ios"] .app-header-action,
+[data-platform="ios"] .app-header-action-text,
+[data-platform="ios"] .sheet-close {
+  background: var(--lg-on-brand-fill);
+  -webkit-backdrop-filter: var(--lg-on-brand-blur);
+  backdrop-filter: var(--lg-on-brand-blur);
+  box-shadow: var(--lg-on-brand-rim);
+  color: #fff;
+}
+[data-platform="ios"] .app-header-back,
+[data-platform="ios"] .app-header-action {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  justify-content: center;
+  flex-shrink: 0;
+}
+[data-platform="ios"] .app-header-back svg { width: 22px; height: 22px; }
+[data-platform="ios"] .app-header-action:hover { background: rgba(25, 0, 45, 0.42); }
+/* Text actions ("Select", "Cancel", "Done") are capsule glass buttons. */
+[data-platform="ios"] .app-header-action-text {
+  border: none;
+  border-radius: 999px;
+  min-height: 40px;
+  padding: 0 16px;
+}
+/* The spacer that balances the title when there's no trailing control must
+   match a real glass button's width or the title drifts off-centre. */
+[data-platform="ios"] .app-header > div[style*="width: 36px"] { width: 40px !important; }
+
+/* ── Tab bar ─────────────────────────────────────────────────────
+   A floating capsule inset from the screen edges and the home indicator,
+   with content scrolling underneath. Negative top margin takes it out of
+   the flow height so the screen area extends beneath it. The selected tab
+   gets a tinted glass "lens". All five tabs carry labels. */
+[data-platform="ios"] .app-nav {
+  position: relative;
+  z-index: 40;
+  /* Total footprint (height + bottom margin) stays 88px so everything floating above the bar
+     keeps its position; the extra 4px of height comes out of the bottom margin. */
+  margin: -88px 8px 0;
+  margin-bottom: 20px;
+  height: 68px;
+  box-sizing: border-box;
+  /* Uniform inset: with the 68px bar this makes the selected pill (58px tall, radius 29) exactly
+     concentric with the capsule (radius 34), so there is the same 5px gap all the way round,
+     including around the curved ends. */
+  padding: 5px;
+  border-radius: 999px;
+  justify-content: space-between;
+  gap: 2px;
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+  background: var(--lg-fill);
+}
+/* Tabs size to their content (flex-basis auto) and share the leftover space, with real side
+   padding — an equal-width split left "Notifications" with ~0.5px either side of its label. */
+[data-platform="ios"] .nav-item {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  height: 58px;
+  min-height: 58px;
+  padding: 0 4px;
+  gap: 4px;
+  border-radius: 999px;
+  color: #3c3c43;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+/* The first/last tabs sit inside the capsule's curved ends, so their labels need extra room on
+   the outer side to clear the curve. That room lives inside the tab, not in the bar's padding,
+   so a selected end tab's pill still hugs the capsule at the uniform 5px. */
+[data-platform="ios"] .nav-item:first-child { padding-left: 14px; }
+[data-platform="ios"] .nav-item:last-child { padding-right: 14px; }
+/* The selected pill is a capsule ~58px tall, so at label height its curved ends cut in by ~8px.
+   14px of side padding keeps the label clear of the curve; unselected tabs have no visible
+   edge so they can run tighter (neighbouring labels still keep 8px apart). */
+[data-platform="ios"] .nav-item.active {
+  padding: 0 14px;
+  color: var(--lg-tint);
+  background: var(--lg-tint-fill);
+  box-shadow: inset 0 0 0 0.5px rgba(109, 27, 152, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-platform="ios"] .nav-label {
+  display: block;
+  color: inherit;
+  white-space: nowrap;
+}
+/* The account tab's avatar is the tab's icon: same 24px as the other icons so the labels line up.
+   No ring when selected — the tinted pill and label colour already mark it. */
+/* White initials on the pale mauve used elsewhere is ~1.8:1 — well under AA — so on the
+   tab bar the avatar takes the brand purple instead. */
+[data-platform="ios"] .nav-avatar { width: 24px; height: 24px; font-size: 11px; background: var(--brand-purple-3-purple-2); }
+[data-platform="ios"] .nav-badge { border-color: var(--lg-fill-dense); }
+
+/* The bar floats over the foot of the screen, so scrolling lists need to be
+   able to scroll their last row clear of it. */
+[data-platform="ios"] .bk-scroll,
+[data-platform="ios"] .cust-list,
+[data-platform="ios"] .emp-list { padding-bottom: var(--ios-tabbar-clearance); }
+
+/* ── Sheets ──────────────────────────────────────────────────────
+   Partial sheets float inset from the screen edges with large,
+   device-concentric corners (the old sheet sat flush with a 22px top
+   radius). The purple title bar stays; its close button becomes a glass
+   circle like every other bar control. The sheet body remains an opaque
+   content surface, with a bigger radius clipping the purple bar. */
+[data-platform="ios"] .sheet-scrim { background: rgba(0, 0, 0, 0.3); }
+[data-platform="ios"] .sheet {
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border-radius: 40px;
+  box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.25);
+}
+[data-platform="ios"] .sheet--full { top: 24px; }
+[data-platform="ios"] .sheet--auto { max-height: calc(100% - 72px); }
+[data-platform="ios"] .sheet-header { padding: 14px 16px; }
+[data-platform="ios"] .sheet-close,
+[data-platform="ios"] .sheet-close-spacer { width: 40px; height: 40px; }
+
+/* ── Buttons ─────────────────────────────────────────────────────
+   Prominent = tinted glass capsule (purple), secondary = clear glass,
+   tertiary = plain glass. Always capsule, min 44pt tall. */
+[data-platform="ios"] .round-btn {
+  min-height: 48px;
+  border-radius: 999px;
+}
+[data-platform="ios"] .primary-btn {
+  background: var(--brand-purple-6-purple-4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(154, 38, 214, 0.35);
+}
+[data-platform="ios"] .secondary-btn,
+[data-platform="ios"] .tertiary-btn {
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  border: none;
+}
+[data-platform="ios"] .secondary-btn { color: var(--lg-tint); }
+
+/* Disabled prominent button: keep a visible capsule edge and AA-legible label rather than
+   fading white text on near-white (~2:1). A disabled control is allowed to be exempt from
+   contrast by WCAG, but this user base reads these in poor light and needs to see the shape. */
+[data-platform="ios"] .primary-btn:disabled {
+  background: var(--lg-fill-dense);
+  color: #6b6678;
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+
+/* Home indicator: dark on light screens, light on full-bleed dark ones. */
+[data-platform="ios"] .phone-frame:has(.attachment-preview-overlay)::after { background: rgba(255, 255, 255, 0.9); }
+
+/* NOTE for per-app files — sticky floating buttons: a scroller that already pads its bottom by
+   --ios-tabbar-clearance counts that padding in its sticky offsets, so a sticky button above the
+   tab bar should use `bottom: 0`, not 100px, or it floats twice as high as intended. */
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────────
+   Drop every blur and use solid fills with a real border so the control
+   edges stay visible without the material. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root[data-platform="ios"] {
+    --lg-fill: #ffffff;
+    --lg-fill-dense: #ffffff;
+    --lg-rim: inset 0 0 0 1px rgba(60, 60, 67, 0.35);
+  }
+  [data-platform="ios"] .lg-glass,
+  [data-platform="ios"] .app-header-back,
+  [data-platform="ios"] .app-header-action,
+  [data-platform="ios"] .app-header-action-text,
+  [data-platform="ios"] .sheet-close,
+  [data-platform="ios"] .app-nav,
+  [data-platform="ios"] .secondary-btn,
+  [data-platform="ios"] .tertiary-btn,
+  [data-platform="ios"] .app-header::after {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

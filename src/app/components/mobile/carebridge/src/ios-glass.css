@@ -1,0 +1,183 @@
+/* ═══════════════════════════════════════════════════════════════
+   iOS 26 "Liquid Glass" — Assessment Hero (carebridge)
+
+   Scoped entirely to [data-platform="ios"]; Android is untouched.
+   Builds on assets/ios-liquid-glass.css (tokens, .primary-btn, bar buttons).
+
+   What changes here, and why:
+   - The flat bottom action bar (.cb-footer: white strip + hard rule) becomes
+     floating capsule buttons over the content, with a soft scroll-edge fade
+     behind them so scrolling text never collides with a button. Screens pad
+     their scroll area so the last row clears the buttons.
+   - The search field is a capsule.
+   - Alerts (finish / delete-confirm) become one dense glass card; the
+     buttons inside are NOT glass (no glass on glass) — tinted/solid fills.
+   - Cards, list rows, documents and text stay opaque content.
+   - The Lock Screen is OS chrome (iOS 26 Lock Screen + Live Activity), so
+     it keeps its dark material; only its pill-shaped hint was checked.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Floating bottom actions ─────────────────────────────────────
+   Consent: [Start recording]. Record: [End recording]. Review: [Resume]
+   [Finish] and a Delete link. The footer no longer takes layout space —
+   scroll content slides under it. */
+[data-platform="ios"] .cb-screen { position: relative; }
+
+[data-platform="ios"] .cb-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 0 16px 26px;
+  background: none;
+  border-top: none;
+  box-shadow: none;
+  /* Only the buttons take taps; the gaps pass scrolls through. */
+  pointer-events: none;
+  --cb-edge: #fff;
+}
+[data-platform="ios"] .cb-footer > * { pointer-events: auto; }
+/* Scroll-edge effect: a soft fade of the page colour behind the buttons so
+   text scrolling underneath never sits directly against a control. */
+[data-platform="ios"] .cb-footer::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: -28px;
+  background: linear-gradient(to bottom, transparent 0%, var(--cb-edge) 55%);
+  pointer-events: none;
+}
+/* Review sits on the lavender body colour. */
+[data-platform="ios"] .cb-footer-stack { --cb-edge: var(--ui-purple-7-lightest-lavendar); }
+
+/* Scroll areas clear the floating buttons (48px button + 26px inset + air). */
+[data-platform="ios"] .cb-body,
+[data-platform="ios"] .cb-record-body { padding-bottom: 112px; }
+/* Review has three controls stacked, so it needs more. */
+[data-platform="ios"] .cb-screen:has(.cb-footer-stack) .cb-body { padding-bottom: 214px; }
+
+/* Buttons in the footer: full capsule, min 48 (shared .round-btn), keep the
+   shared prominent treatment. The destructive End button gets the same
+   specular rim as the tinted primary so both read as lit glass. */
+[data-platform="ios"] .cb-end-btn,
+[data-platform="ios"] .cb-delete-confirm-btn {
+  background: var(--rag-red-red-overdue);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(227, 28, 74, 0.35);
+}
+/* Disabled Start recording: keep the capsule shape but flatten the glow so
+   it reads as unavailable. */
+[data-platform="ios"] .cb-footer .primary-btn:disabled {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+/* The quiet destructive link on Review becomes its own small glass capsule,
+   so it stays legible and tappable (44pt) over scrolling content. */
+[data-platform="ios"] .cb-delete-link {
+  align-self: center;
+  min-height: 44px;
+  margin-top: 0;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+[data-platform="ios"] .cb-delete-link:hover { text-decoration: none; }
+
+/* ── Customer context bar ────────────────────────────────────────
+   The flat white strip's hard rule becomes a soft shadow so content
+   scrolls beneath it rather than hitting a line. */
+[data-platform="ios"] .cb-context-bar {
+  position: relative;
+  z-index: 2;
+  border-bottom: none;
+  box-shadow: 0 4px 14px rgba(30, 10, 50, 0.10);
+}
+
+/* ── Search ──────────────────────────────────────────────────────
+   iOS 26 search fields are capsules. Dense fill + rim keeps a visible edge. */
+[data-platform="ios"] .cb-search {
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+
+/* Suggested template: a prominent tinted card; radius coordinated with the
+   device corners. */
+[data-platform="ios"] .cb-suggested { border-radius: 24px; }
+
+/* Template list scrolls clear of the home indicator (no floating bar here). */
+[data-platform="ios"] .cb-body-pad { height: 40px; }
+
+/* ── Consent controls ────────────────────────────────────────────
+   Test microphone / Try again / Listen back are real controls living in a
+   content card — kept as plain tinted text/icon buttons (no glass on a
+   card) but brought up to a comfortable touch size. */
+[data-platform="ios"] .cb-mic-check-btn { min-height: 44px; padding: 0 8px; }
+[data-platform="ios"] .cb-mic-icon-btn { width: 40px; height: 40px; }
+[data-platform="ios"] .cb-mic-check,
+[data-platform="ios"] .cb-consent-confirm,
+[data-platform="ios"] .cb-speaker-tip,
+[data-platform="ios"] .cb-limit-banner,
+[data-platform="ios"] .cb-storage-banner,
+[data-platform="ios"] .cb-review-summary { border-radius: 20px; }
+[data-platform="ios"] .cb-consent-confirm { min-height: 64px; box-sizing: border-box; }
+
+/* ── Alerts (finish / delete-confirm) ────────────────────────────
+   iOS 26 alerts are a single glass card over a dimmed scrim, with large
+   concentric corners. Buttons inside must not be glass again, so the
+   secondary button drops its blur and uses a tinted fill. */
+[data-platform="ios"] .cb-overlay {
+  background: rgba(0, 0, 0, 0.32);
+}
+[data-platform="ios"] .cb-overlay-card {
+  max-width: 340px;
+  padding: 28px 20px 20px;
+  border-radius: 36px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+}
+[data-platform="ios"] .cb-overlay-card .secondary-btn,
+[data-platform="ios"] .cb-overlay-card .tertiary-btn {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--lg-tint-fill);
+  box-shadow: none;
+}
+[data-platform="ios"] .cb-overlay-card .cb-overlay-actions,
+[data-platform="ios"] .cb-overlay-card .round-btn { align-self: stretch; }
+
+/* ── Lock screen ─────────────────────────────────────────────────
+   OS chrome (iOS 26 Lock Screen + Live Activity), not app chrome: left as
+   is, including its dark Live Activity material and its own home
+   indicator (the phone frame's one is covered by the lock overlay). */
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────── */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .cb-search,
+  [data-platform="ios"] .cb-delete-link,
+  [data-platform="ios"] .cb-overlay-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-platform="ios"] .cb-search,
+  [data-platform="ios"] .cb-delete-link { box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.35); }
+  [data-platform="ios"] .cb-overlay-card { box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.35), var(--lg-shadow); }
+  /* The page-colour fade behind floating buttons becomes solid. */
+  [data-platform="ios"] .cb-footer::before { background: var(--cb-edge); top: -8px; }
+}

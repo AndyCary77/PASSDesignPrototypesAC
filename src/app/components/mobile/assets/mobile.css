@@ -325,3 +325,7 @@ html, body {
   align-items: center;
   justify-content: center;
 }
+
+/* Idle tab labels exist in the markup for iOS 26's all-labelled tab bar (ios-liquid-glass.css
+   shows them); everywhere else only the active tab is labelled. */
+.nav-label--idle { display: none; }

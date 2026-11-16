@@ -8,6 +8,8 @@ import '../../assets/mobile.css'
 import './employees.css'
 // Last, so it can override the app's own styles — this is the platform
 // override layer, and several of its rules are single-class.
+import '../../assets/ios-liquid-glass.css'
+import './ios-glass.css'
 import '../../assets/android.css'
 
 // Stamp data-platform on <html> before the first render, so the chosen

@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════════════════════════════
+   Mileage Pay — iOS 26 "Liquid Glass" skin
+
+   Scoped to [data-platform="ios"]; loaded after assets/ios-liquid-glass.css
+   and before android.css. The summary card and visit rows are content and
+   stay opaque; this file makes room for the floating tab bar and carries the
+   embedded AccountScreen's skin (Mileage Pay slides in over Account).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Visit list ──────────────────────────────────────────────────
+   Scrolls under the floating tab bar, so the last visit can clear it. */
+[data-platform="ios"] .visit-list {
+  padding-bottom: var(--ios-tabbar-clearance);
+}
+
+/* ── Account screen (embedded) ───────────────────────────────────
+   The floating tab bar overlays the foot of the screen, so the scroll
+   body pads past it (the last row, "Version", sits ~32px of its own). */
+[data-platform="ios"] .account-body {
+  padding-bottom: calc(var(--ios-tabbar-clearance) - 32px);
+}
+[data-platform="ios"] .logout-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: var(--lg-tint);
+}
+/* iOS 26 switch: a wide capsule thumb that reads as a lens. */
+[data-platform="ios"] .tog {
+  width: 58px;
+  height: 32px;
+  border-radius: 999px;
+}
+[data-platform="ios"] .tog-thumb {
+  width: 40px;
+  height: 28px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+[data-platform="ios"] .tog-on .tog-thumb { transform: translateX(14px); }
+/* The pale off-state track is ~1.2:1 against the white row; give it a visible edge. */
+[data-platform="ios"] .tog:not(.tog-on) { box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.3); }
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────────*/
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .logout-btn {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

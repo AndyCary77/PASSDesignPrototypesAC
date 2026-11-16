@@ -1,0 +1,15 @@
+/* iOS 26 Liquid Glass — customer menu. Scoped to iOS; Android untouched.
+   The purple header/card stay. The tile grid is content (opaque, never glass);
+   what changes is that the grid clears the home indicator the way every other
+   iOS screen clears its floating bar, and tiles take device-concentric radii. */
+[data-platform="ios"] .cm-grid {
+  /* No tab bar on this screen, but the home indicator floats 8px up from the
+     bezel; the last row must scroll clear of it. */
+  padding-bottom: 36px;
+}
+[data-platform="ios"] .cm-tile {
+  border-radius: 22px;
+}
+/* A tap should read on the shape itself: a subtle press scale like iOS controls. */
+[data-platform="ios"] .cm-tile-tap { transition: transform 0.15s ease, filter 0.15s ease; }
+[data-platform="ios"] .cm-tile-tap:active { transform: scale(0.97); }

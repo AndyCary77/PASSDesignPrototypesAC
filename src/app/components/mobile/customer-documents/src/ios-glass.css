@@ -1,0 +1,287 @@
+/* ═══════════════════════════════════════════════════════════════
+   customer-documents — iOS 26 "Liquid Glass" layer
+
+   Loaded after assets/ios-liquid-glass.css; every rule is scoped to
+   [data-platform="ios"], so Android is untouched. Uses the shared tokens
+   (--lg-fill-dense, --lg-blur, --lg-rim, --lg-shadow…) rather than inventing
+   a second material.
+
+   What is glass here (the FUNCTIONAL layer): the floating action / selection
+   capsules, the "Add" popover menu, the search field + filter button, the
+   sheet close buttons and their footer buttons, and the alert.
+   What is NOT glass (the CONTENT layer): document rows, folder cards, the
+   banners, the recordings list, sheet and alert bodies, filter rows.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Floating bottom actions (.docs-fab) ─────────────────────────
+   Prominent = purple-tinted glass capsule that floats over the list.
+   The wrapper spans the screen, so it must not swallow taps/scrolls on
+   the strip either side of the capsule. */
+[data-platform="ios"] .docs-fab-wrap {
+  bottom: 28px;
+  pointer-events: none;
+}
+[data-platform="ios"] .docs-fab-wrap > * { pointer-events: auto; }
+[data-platform="ios"] .docs-fab {
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+  /* White on #9f36d9 is ~5.3:1; the bottom stop is darker still. */
+  background: var(--brand-purple-6-purple-4);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(122, 24, 176, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.14);
+}
+/* Disabled: neutral dense glass with a visible rim, so it still reads as a
+   control (not an empty gap) and the label stays legible. */
+[data-platform="ios"] .docs-fab:disabled {
+  background: var(--lg-fill-dense);
+  color: #5c5c61;
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+}
+/* Lists scroll underneath the floating capsule: clear it fully. */
+[data-platform="ios"] .docs-screen-body { padding-bottom: 112px; }
+
+/* "Add" menu: a glass popover floating above the capsule. Rows are plain
+   (no glass on glass); hover/press uses the brand tint. */
+[data-platform="ios"] .docs-fab-menu {
+  min-width: 240px;
+  padding: 8px;
+  border-radius: 28px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+}
+[data-platform="ios"] .docs-fab-menu-item {
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 999px;
+}
+[data-platform="ios"] .docs-fab-menu-item:hover,
+[data-platform="ios"] .docs-fab-menu-item:active { background: var(--lg-tint-fill); }
+
+/* ── Search + filter ─────────────────────────────────────────────
+   The flat white strip with its hard bottom rule becomes a soft fade, and
+   the search field / filter button float on it as glass. The list slides up
+   under the fade (negative margin + matching body padding). */
+[data-platform="ios"] .docs-search-filter-bar {
+  position: relative;
+  z-index: 6;
+  padding: 12px 16px 16px;
+  margin-bottom: -16px;
+  border-bottom: none;
+  background: linear-gradient(180deg, #fff 0%, #fff 70%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+[data-platform="ios"] .docs-search-filter-bar > * { pointer-events: auto; }
+[data-platform="ios"] .docs-search-filter-bar + .docs-screen-body { padding-top: 16px; }
+
+[data-platform="ios"] .docs-search-input-wrap,
+[data-platform="ios"] .docs-filter-type-search {
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: #3c3c43;
+}
+[data-platform="ios"] .docs-filter-type-search { box-shadow: var(--lg-rim); margin-bottom: 8px; }
+[data-platform="ios"] .docs-search-input-wrap:focus-within,
+[data-platform="ios"] .docs-filter-type-search:focus-within {
+  box-shadow: var(--lg-rim), 0 0 0 2px var(--brand-purple-6-purple-4);
+}
+[data-platform="ios"] .docs-search-input-wrap input::placeholder,
+[data-platform="ios"] .docs-filter-type-search input::placeholder { color: #6b6b70; }
+
+[data-platform="ios"] .docs-filter-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: #3c3c43;
+}
+/* Active filter = the one tinted (primary/selected) control on the bar. */
+[data-platform="ios"] .docs-filter-btn--active {
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(122, 24, 176, 0.35);
+}
+
+/* ── Local sheets (new folder / rename / delete / move / filter /
+   drafting limit) ───────────────────────────────────────────────
+   Same anatomy as the shared .sheet: inset from the screen edges with a
+   large device-concentric radius, opaque body, glass chrome. */
+[data-platform="ios"] .docs-sheet-overlay {
+  padding: 0 8px 8px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.3);
+}
+[data-platform="ios"] .docs-sheet-panel {
+  border-radius: 40px;
+  max-height: calc(100% - 60px);
+  overflow: hidden;
+  box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.25);
+}
+[data-platform="ios"] .docs-filter-panel { max-height: calc(100% - 60px); }
+[data-platform="ios"] .docs-sheet-handle { margin-top: 10px; }
+[data-platform="ios"] .docs-sheet-header {
+  padding: 8px 16px 12px 28px;
+  border-bottom: none;
+}
+[data-platform="ios"] .docs-sheet-header h2 { font-weight: 700; margin: 0; }
+[data-platform="ios"] .docs-sheet-close-btn {
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: #3c3c43;
+}
+[data-platform="ios"] .docs-sheet-field { padding: 8px 28px 16px; }
+[data-platform="ios"] .docs-sheet-field label { color: #3c3c43; font-weight: 600; }
+[data-platform="ios"] .docs-sheet-field .form-input { border-radius: 14px; min-height: 48px; box-sizing: border-box; }
+[data-platform="ios"] .docs-sheet-message { padding-left: 28px; padding-right: 28px; }
+[data-platform="ios"] .docs-sheet-footer {
+  border-top: none;
+  padding: 12px 20px 20px;
+}
+/* The sheets' footer buttons are only .fab-square + .primary-btn /
+   .tertiary-btn in the markup — give them the shared capsule anatomy. */
+[data-platform="ios"] .docs-sheet-footer .fab-square {
+  min-height: 52px;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+[data-platform="ios"] .docs-sheet-footer .primary-btn:disabled {
+  background: var(--lg-fill-dense);
+  color: #5c5c61;
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+}
+[data-platform="ios"] .docs-checklist { margin: 0 12px 16px; }
+[data-platform="ios"] .docs-folder-picker-item { min-height: 48px; }
+[data-platform="ios"] .docs-filter-panel .docs-filter-section { padding-left: 28px; padding-right: 28px; }
+[data-platform="ios"] .docs-cb-limit-meter,
+[data-platform="ios"] .docs-cb-limit-next { padding-left: 28px; padding-right: 28px; }
+[data-platform="ios"] .docs-cb-limit-rules { padding-left: 46px; padding-right: 28px; }
+[data-platform="ios"] .docs-offline-sheet-notice { margin-left: 28px; margin-right: 28px; border-radius: 20px; }
+
+/* ── Alert (new document name) ───────────────────────────────────
+   iOS 26 alert: a floating glass card with a large radius; its buttons are
+   flat capsules inside it (a tinted-text Cancel, a purple OK) rather than
+   the old hairline-divided text cells. No glass nested in the glass card. */
+[data-platform="ios"] .docs-alert-overlay { background: rgba(0, 0, 0, 0.3); }
+[data-platform="ios"] .docs-alert-box {
+  width: 300px;
+  border-radius: 34px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow);
+  padding-bottom: 16px;
+}
+[data-platform="ios"] .docs-alert-title { padding: 24px 24px 14px; font-weight: 700; }
+[data-platform="ios"] .docs-alert-input {
+  width: calc(100% - 40px);
+  margin: 0 20px 16px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: #fff;
+}
+[data-platform="ios"] .docs-alert-actions {
+  border-top: none;
+  gap: 8px;
+  padding: 0 16px;
+}
+[data-platform="ios"] .docs-alert-btn,
+[data-platform="ios"] .docs-alert-btn:first-child {
+  border-right: none;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(60, 60, 67, 0.1);
+  color: var(--brand-purple-3-purple-2);
+}
+/* OK is the prominent action: purple capsule, white label. */
+[data-platform="ios"] .docs-alert-btn:last-child {
+  background: var(--brand-purple-6-purple-4);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(122, 24, 176, 0.3);
+}
+[data-platform="ios"] .docs-alert-btn:last-child:disabled {
+  background: rgba(60, 60, 67, 0.1);
+  color: #5c5c61;
+  box-shadow: none;
+}
+
+/* ── Inline controls (content layer; shape/target tweaks only) ──── */
+/* "Select documents" sits in the banner's lavender row: same prominent
+   capsule as everywhere else, with a 44pt target. */
+[data-platform="ios"] .docs-cb-banner-cta {
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--brand-purple-6-purple-4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(122, 24, 176, 0.3);
+}
+/* The card is width:100% + padding on a content-box <div>, so it overflowed the
+   screen by 32px and clipped its delete button (and caused a stray horizontal
+   scrollbar). */
+[data-platform="ios"] .docs-folder-card { box-sizing: border-box; }
+/* Rename / delete folder buttons were 32px — raise to a 40px target. */
+[data-platform="ios"] .docs-folder-icon-btn { width: 40px; height: 40px; }
+/* Retry sits beside a 26px badge; widen only the hit area, not the look. */
+[data-platform="ios"] .docs-recording-retry { position: relative; }
+[data-platform="ios"] .docs-recording-retry::before { content: ''; position: absolute; inset: -9px -4px; }
+
+/* ── Reduce Transparency / Increase Contrast ─────────────────────
+   Opaque fills + real borders in place of every blur. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .docs-fab {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #7a18b0;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), var(--lg-shadow-small);
+  }
+  [data-platform="ios"] .docs-fab:disabled {
+    background: #fff;
+    box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.5);
+  }
+  [data-platform="ios"] .docs-fab-menu,
+  [data-platform="ios"] .docs-search-input-wrap,
+  [data-platform="ios"] .docs-filter-type-search,
+  [data-platform="ios"] .docs-filter-btn,
+  [data-platform="ios"] .docs-sheet-close-btn,
+  [data-platform="ios"] .docs-alert-box {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #fff;
+  }
+  [data-platform="ios"] .docs-filter-btn--active { background: #7a18b0; }
+  [data-platform="ios"] .docs-search-filter-bar { background: #fff; }
+  [data-platform="ios"] .docs-cb-banner-cta,
+  [data-platform="ios"] .docs-alert-btn:last-child { background: #7a18b0; }
+}

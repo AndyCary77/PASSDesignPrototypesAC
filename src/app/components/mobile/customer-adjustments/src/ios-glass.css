@@ -1,0 +1,32 @@
+/* iOS 26 Liquid Glass — Reasonable adjustments. Scoped to iOS; Android untouched.
+   Purple status bar / header / customer card stay. Cards are content (opaque).
+   The "Menu" action becomes a neutral glass capsule, and the flat bar it sits in
+   swaps its hard rule for a soft shadow so content scrolls beneath it. */
+[data-platform="ios"] .ra-menu-bar {
+  position: relative;
+  z-index: 2;
+  padding: 8px 16px;
+  border-bottom: none;
+  box-shadow: 0 4px 14px rgba(30, 10, 50, 0.10);
+}
+[data-platform="ios"] .ra-menu-action {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--lg-fill-dense);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-rim), var(--lg-shadow-small);
+  color: var(--lg-tint);
+  box-sizing: border-box;
+}
+[data-platform="ios"] .ra-menu-action:active { background: var(--lg-tint-fill); }
+/* Last card scrolls clear of the home indicator. */
+[data-platform="ios"] .ra-body { padding-bottom: 40px; }
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .ra-menu-action {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

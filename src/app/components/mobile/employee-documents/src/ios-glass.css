@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════════════════════════════
+   employee-documents — iOS 26 "Liquid Glass" layer
+
+   Loaded after assets/ios-liquid-glass.css; scoped to [data-platform="ios"]
+   so Android is untouched. Same treatment as customer-documents' floating
+   action (this screen's .docs-fab is a verbatim copy of that one). The page
+   itself is content (profile card, banner, document rows) and stays opaque.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Floating action: purple-tinted glass capsule floating over the list. The
+   wrapper spans the screen, so it must not swallow taps/scrolls either side. */
+[data-platform="ios"] .docs-fab-wrap {
+  bottom: 28px;
+  pointer-events: none;
+}
+[data-platform="ios"] .docs-fab-wrap > * { pointer-events: auto; }
+[data-platform="ios"] .docs-fab {
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+  /* White on #9f36d9 is ~5.3:1; the bottom stop is darker still. */
+  background: var(--brand-purple-6-purple-4);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(122, 24, 176, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.14);
+}
+/* The list scrolls underneath the capsule: let the last row clear it. */
+[data-platform="ios"] .empdoc-body-pad { height: 120px; }
+
+/* "Select documents" in the banner's lavender row: the same prominent capsule
+   as everywhere else, with a 44pt target. */
+[data-platform="ios"] .docs-cb-banner-cta {
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--brand-purple-6-purple-4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(122, 24, 176, 0.3);
+}
+/* Retry sits beside a 26px badge; widen only the hit area, not the look. */
+[data-platform="ios"] .docs-recording-retry { position: relative; }
+[data-platform="ios"] .docs-recording-retry::before { content: ''; position: absolute; inset: -9px -4px; }
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-platform="ios"] .docs-fab {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #7a18b0;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), var(--lg-shadow-small);
+  }
+  [data-platform="ios"] .docs-cb-banner-cta { background: #7a18b0; }
+}
