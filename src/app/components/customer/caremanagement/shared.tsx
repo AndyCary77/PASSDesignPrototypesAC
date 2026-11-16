@@ -487,7 +487,7 @@ function CarePlanDraftBannerContent({ pendingOutcomes, pendingTasks, sources, ac
             // RecordingsLink does for recordings.
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
               <div className="flex items-center gap-2 min-w-0">
-                <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
+                <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
                 <p className="text-body text-purple-900">Drafted by Assessment Hero — add a document to update.</p>
               </div>
               <div className="flex items-center gap-4 flex-shrink-0">

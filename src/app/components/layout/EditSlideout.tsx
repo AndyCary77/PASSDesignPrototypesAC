@@ -13,6 +13,9 @@ import { Button } from '../buttons/Button';
  * `children` may be a function so the body can close the panel the animated
  * way (e.g. after a form submit): `{(close) => <form onSubmit={() => close()}>…}`.
  * Either give a `formId` (the Save button submits that form) or an `onSave`.
+ *
+ * `footerActions` adds extra actions next to Cancel on the left (e.g. a Delete); like `children`
+ * it may be a function so the action can close the panel the animated way.
  */
 export function EditSlideout({
   title,
@@ -25,6 +28,7 @@ export function EditSlideout({
   size = 'default',
   width = 'default',
   readOnly = false,
+  footerActions,
 }: {
   title: ReactNode;
   onClose: () => void;
@@ -40,6 +44,8 @@ export function EditSlideout({
   width?: 'default' | 'wide';
   /** For a panel that only shows something: the footer is a single Close button, with no save. */
   readOnly?: boolean;
+  /** Extra actions shown beside Cancel, on the left of the footer. */
+  footerActions?: ReactNode | ((close: () => void) => ReactNode);
 }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -97,7 +103,10 @@ export function EditSlideout({
 
         {/* Footer */}
         <div className={`border-t border-gray-200 flex items-center bg-white px-8 py-4 flex-shrink-0 ${readOnly ? 'justify-end' : 'justify-between'}`}>
-          <Button type="button" variant="tertiary" size="lg" onClick={close}>{readOnly ? 'Close' : 'Cancel'}</Button>
+          <div className="flex items-center gap-3">
+            <Button type="button" variant="tertiary" size="lg" onClick={close}>{readOnly ? 'Close' : 'Cancel'}</Button>
+            {typeof footerActions === 'function' ? footerActions(close) : footerActions}
+          </div>
           {readOnly ? null : formId ? (
             <Button type="submit" form={formId} size="lg" disabled={saveDisabled}>{saveLabel}</Button>
           ) : (

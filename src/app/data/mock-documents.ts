@@ -237,6 +237,17 @@ export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
       category: 'Other',
       to: '/customers/vera-bramwell/documents/wiitm',
     },
+    // Deliberately incomplete: a blank assessment that Assessment Hero can fill in from one of her files — see
+    // NutritionHydrationDocumentPage. Stays 'danger' (Incomplete) here; the list is static, so publishing it on its
+    // own page doesn't change this row.
+    {
+      id: 'd-nutrition',
+      status: 'danger',
+      title: 'Nutrition and Hydration Assessment',
+      createdDate: '16/11/2026',
+      category: 'Other',
+      to: '/customers/vera-bramwell/documents/nutrition',
+    },
     ...STANDARD_ASSESSMENT_PACK.slice(1).map(doc => ({
       ...doc,
       status: (doc.title === 'Consent to Care' || doc.title === 'Privacy Policy' ? 'success' : 'danger') as const,

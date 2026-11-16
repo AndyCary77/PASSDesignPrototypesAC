@@ -128,7 +128,31 @@ const TRANSCRIPT: TranscriptLine[] = [
   { speaker: 'Arthur', role: 'customer', time: '10:24', text: "Thank you for coming out." },
 ];
 
-interface AssessmentSection {
+/**
+ * Marks an item (a prose section or a form field) that an "Update document" run has changed, while that
+ * update is still a draft — i.e. until it is published or discarded. Carries what the item was before, so the
+ * reviewer can see what changed and Discard can put it back.
+ */
+export interface ItemUpdate {
+  /** Shared by every item changed in the same run. */
+  id: string;
+  /** What it was updated from — a recording's label or a file's name. */
+  sourceLabel: string;
+  sourceKind: 'recording' | 'file';
+  /** Set for a recording source: Check transcript then points at that recording, not the original assessment. */
+  recordingId?: string;
+  previous: {
+    text?: string;
+    value?: string;
+    rows?: string[][];
+    reviewed?: boolean;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    sourceLines?: TranscriptReference[];
+  };
+}
+
+export interface AssessmentSection {
   id: string;
   title: string;
   target?: string;
@@ -139,10 +163,12 @@ interface AssessmentSection {
   reviewed?: boolean;
   /** Where in the recording's transcript this section was drafted from — powers "Check transcript". */
   sourceLines?: TranscriptReference[];
+  /** Set while this section is a not-yet-published change from "Update document". */
+  update?: ItemUpdate;
 }
 
 /** A transcript line this field's content was drafted from, and optionally the exact substring of that line's text to highlight — lets "Check transcript" point at precisely the words that generated the value, not just the line. */
-interface TranscriptReference {
+export interface TranscriptReference {
   index: number;
   highlight?: string;
 }
@@ -176,6 +202,31 @@ export interface FormField {
   reviewedAt?: string;
   /** Where in the recording's transcript this field was drafted from — lets a reviewer jump straight to the source via "Check transcript". Undefined for fields with nothing to trace (not drafted from this recording). */
   sourceLines?: TranscriptReference[];
+  /** Set while this field is a not-yet-published change from "Update document". */
+  update?: ItemUpdate;
+}
+
+/** Puts a section changed by "Update document" back to what it was before — used by its Discard, and by Discard draft. */
+export function revertSectionUpdate(section: AssessmentSection): AssessmentSection {
+  const u = section.update;
+  if (!u) return section;
+  return { ...section, text: u.previous.text ?? section.text, reviewed: u.previous.reviewed, sourceLines: u.previous.sourceLines, update: undefined };
+}
+
+/** Same for a form field. */
+export function revertFieldUpdate(field: FormField): FormField {
+  const u = field.update;
+  if (!u) return field;
+  return {
+    ...field,
+    value: u.previous.value,
+    rows: u.previous.rows,
+    reviewed: u.previous.reviewed,
+    reviewedBy: u.previous.reviewedBy,
+    reviewedAt: u.previous.reviewedAt,
+    sourceLines: u.previous.sourceLines,
+    update: undefined,
+  };
 }
 
 // The logged-in reviewer accepting/editing a field — matches TopNav's own
@@ -924,7 +975,7 @@ const VERA_REVIEW_TASK_SUGGESTION: TaskSuggestion = {
 };
 
 // Strip the CareBridge/AI-drafted framing from a recording's Care Plan
-// content — used for Vera's Initial Assessment, whose "Customer Care and
+// content — used for Arthur's and Vera's Initial Assessments. Vera's "Customer Care and
 // Support Plan" is being treated as an already-completed document (drafted
 // from her completed assessment paperwork, not this recording) rather than
 // a pending AI draft (see the note on her Assessments list entry).
@@ -955,10 +1006,14 @@ const RECORDINGS: Record<string, Recording[]> = {
       transcript: [...TRANSCRIPT, ...CONSENT_TRANSCRIPT_ARTHUR, ...RECEIPT_TRANSCRIPT_ARTHUR, ...PRIVACY_TRANSCRIPT_ARTHUR, ...TERMS_TRANSCRIPT_ARTHUR, ...GUIDE_TRANSCRIPT_ARTHUR],
       focusDocumentName: 'Customer Care and Support Plan',
       isCarePlanFocus: true,
-      focusSections: ASSESSMENT_SECTIONS,
+      // Completed by default (2026-11-16): Arthur's Customer Care and Support Plan is already
+      // 'Complete' in his Assessments list, so opening it shows a finished document — no draft banner,
+      // no per-field Check transcript / Accept — same treatment as Vera's. The "update it from a new
+      // recording, document or file" flow is what re-opens it as a draft from here.
+      focusSections: asCompletedSections(ASSESSMENT_SECTIONS),
       focusOutcomes: SUGGESTED_OUTCOMES,
       focusTasks: SUGGESTED_TASKS,
-      formSections: { 'personal-details': ARTHUR_PERSONAL_DETAILS },
+      formSections: { 'personal-details': asCompletedDocument(ARTHUR_PERSONAL_DETAILS) },
       secondary: [
         { id: 'consent-care', name: 'Consent to Care', sections: CONSENT_SECTIONS_ARTHUR },
         { id: 'confirm-receipt', name: 'Confirmation of Receipt', sections: RECEIPT_SECTIONS_ARTHUR },
@@ -1162,6 +1217,22 @@ function buildCarePlan(recordings: Recording[]): {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** "Updated from 6-Week Review" — shown on an item an Update document run changed, while it's still a draft. */
+function UpdatedFromTag({ update }: { update: ItemUpdate }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-0.5 text-sm font-semibold text-[rgb(109,27,152)]">
+      <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+      Updated from {update.sourceLabel}
+    </span>
+  );
+}
+
+/** What a field was before the update, as one line of text. */
+function describePreviousValue(previous: ItemUpdate['previous']): string {
+  if (previous.rows) return previous.rows.length ? previous.rows.map(r => r.join(' · ')).join('; ') : 'Not captured';
+  return previous.value ? previous.value : 'Not captured';
+}
+
 function EditableBlock({ text, pending, onChange }: { text: string; pending?: boolean; onChange?: () => void }) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -1342,12 +1413,15 @@ function EditableFormField({
   return (
     <div className="mb-5 last:mb-0">
       <div className="flex items-center justify-between gap-3 mb-1.5">
-        {labelEl}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+          {labelEl}
+          {field.update && <UpdatedFromTag update={field.update} />}
+        </div>
         {/* Once accepted there's nothing left to action — Check transcript
             and Accept both drop away in favour of the confirmation banner below. */}
-        {pending && (
+        {(pending || field.update) && (
           <div className="flex items-center gap-3 flex-shrink-0">
-            {!!field.sourceLines?.length && (
+            {pending && !!field.sourceLines?.length && (
               <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines} audioUrl={audioUrl}>
                 <button
                   type="button"
@@ -1357,13 +1431,25 @@ function EditableFormField({
                 </button>
               </TranscriptCheckPopover>
             )}
-            <button
-              type="button"
-              onClick={() => markReviewed()}
-              className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
-            >
-              <Check className="w-3.5 h-3.5" /> Accept
-            </button>
+            {/* Rejects this one change from "Update document" (accepted or not), leaving the rest of the draft. */}
+            {field.update && (
+              <button
+                type="button"
+                onClick={() => onChange(revertFieldUpdate(field))}
+                className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" /> Discard
+              </button>
+            )}
+            {pending && (
+              <button
+                type="button"
+                onClick={() => markReviewed()}
+                className="inline-flex items-center gap-1 text-body font-medium text-green-700 hover:text-green-900 transition-colors cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" /> Accept
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1448,6 +1534,12 @@ function EditableFormField({
 
       {field.type === 'table' && (
         <EditableTableField field={field} pending={pending} captured={captured} onChange={onChange} />
+      )}
+
+      {field.update && (
+        <p className="mt-1.5 text-sm text-gray-600">
+          <span className="font-medium">Previously:</span> {describePreviousValue(field.update.previous)}
+        </p>
       )}
 
       {/* Small green-tinted confirmation, replacing the old plain "Accepted"
@@ -2113,7 +2205,7 @@ export function AssessmentHeroReuseBanner({
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
-        <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
+        <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
         <p className="text-body text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
@@ -2149,11 +2241,24 @@ export function FormFieldsView({
     onChange(fields.map(f => (f.id === id ? { ...f, ...patch } : f)));
   };
 
+  // A field changed by "Update document" from a recording is checked against THAT recording's transcript, not the
+  // assessment the rest of the form was drafted from.
+  const customer = useCustomer();
+
   return (
     <div>
-      {fields.map(field => (
-        <EditableFormField key={field.id} field={field} onChange={patch => updateField(field.id, patch)} transcript={transcript} audioUrl={audioUrl} />
-      ))}
+      {fields.map(field => {
+        const source = field.update?.recordingId ? resolveRecording(customer.id, field.update.recordingId) : undefined;
+        return (
+          <EditableFormField
+            key={field.id}
+            field={field}
+            onChange={patch => updateField(field.id, patch)}
+            transcript={source?.transcript ?? transcript}
+            audioUrl={source ? source.audioUrl : audioUrl}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -2166,6 +2271,7 @@ export function FormFieldsView({
  * is the true full structure, not just what's been captured so far.
  */
 function CarePlanMultiDocView({ recording }: { recording: Recording }) {
+  const customer = useCustomer();
   // Draft review state lives in CareBridgeContext (per recording), not locally
   // here, so the "Save updates" CTA in the subnav can also see whether
   // there's anything still outstanding and disable itself.
@@ -2182,9 +2288,21 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recording.id]);
 
+  // When "Update document" lands, jump to the first section it changed so the reviewer starts on the thing to
+  // review rather than having to hunt for the amber sections. Keyed on the update's id, so ticking Accept (which
+  // keeps the same update) doesn't move them, but a second update does.
+  const firstUpdated = CARE_PLAN_STRUCTURE.find(item => formSections[item.id]?.some(f => f.update) || proseSections[item.id]?.update);
+  const updateId = firstUpdated ? (formSections[firstUpdated.id]?.find(f => f.update)?.update ?? proseSections[firstUpdated.id]?.update)?.id : undefined;
+  useEffect(() => {
+    if (updateId && firstUpdated) setSelectedId(firstUpdated.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateId]);
+
   const selectedItem = CARE_PLAN_STRUCTURE.find(item => item.id === selectedId) ?? CARE_PLAN_STRUCTURE[0];
   const selectedFormFields = formSections[selectedId];
   const selectedContent = proseSections[selectedId];
+  // A section changed by "Update document" from a recording is checked against that recording's transcript.
+  const updateSource = selectedContent?.update?.recordingId ? resolveRecording(customer.id, selectedContent.update.recordingId) : undefined;
   const capturedCount = CARE_PLAN_STRUCTURE.filter(item => sectionCompletion(formSections, recording, item.id)).length;
 
   return (
@@ -2218,18 +2336,17 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      isActive ? 'bg-white' : needsReview ? 'bg-amber-500' : hasContent ? 'bg-[rgb(154,38,214)]' : 'bg-gray-300'
+                      isActive ? 'bg-white' : hasContent ? 'bg-[rgb(154,38,214)]' : 'bg-gray-300'
                     }`}
                   />
                   <span className="flex-1 min-w-0">{item.label}</span>
-                  {completion && (
+                  {/* The count pill only flags a section with fields still to accept — a draft state. Once
+                      everything in it is accepted, or in a finished/published document, there's nothing to
+                      point at, so no pill (the dot and highlight still mark which sections have content). */}
+                  {completion && needsReview && (
                     <span
                       className={`flex-shrink-0 text-sm font-semibold rounded-full px-2 py-0.5 ${
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : needsReview
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-purple-100 text-[rgb(109,27,152)]'
+                        isActive ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'
                       }`}
                     >
                       {completion.captured}/{completion.total}
@@ -2261,9 +2378,11 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
           ) : selectedContent ? (
             <>
               {selectedContent.reviewed !== undefined && (
-                <div className="flex items-center justify-end gap-3 mb-2">
+                <div className={`flex items-center gap-3 mb-2 ${selectedContent.update ? 'justify-between' : 'justify-end'}`}>
+                  {selectedContent.update && <UpdatedFromTag update={selectedContent.update} />}
+                  <div className="flex items-center gap-3">
                   {!!selectedContent.sourceLines?.length && (
-                    <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={recording.transcript} references={selectedContent.sourceLines} audioUrl={recording.audioUrl}>
+                    <TranscriptCheckPopover fieldLabel={selectedItem.label} transcript={updateSource?.transcript ?? recording.transcript} references={selectedContent.sourceLines} audioUrl={updateSource ? updateSource.audioUrl : recording.audioUrl}>
                       <button
                         type="button"
                         className="inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
@@ -2272,11 +2391,21 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                       </button>
                     </TranscriptCheckPopover>
                   )}
+                  {/* Rejects this one change from "Update document" (accepted or not), leaving the rest of the draft. */}
+                  {selectedContent.update && (
+                    <button
+                      type="button"
+                      onClick={() => setProseSections(recording.id, { ...proseSections, [selectedId]: revertSectionUpdate(selectedContent) })}
+                      className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" /> Discard
+                    </button>
+                  )}
                   {selectedContent.reviewed === false ? (
                     <button
                       type="button"
                       onClick={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
-                      className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-body font-medium text-green-700 hover:text-green-900 transition-colors cursor-pointer"
                     >
                       <Check className="w-3.5 h-3.5" /> Accept
                     </button>
@@ -2287,14 +2416,23 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                       <Check className="w-3.5 h-3.5" /> Accepted
                     </span>
                   )}
+                  </div>
                 </div>
               )}
               <EditableBlock
-                key={`${recording.id}-${selectedId}`}
+                // Re-keyed when an update lands or is discarded: the block is uncontrolled, so it only reads
+                // its text on mount and would otherwise keep showing the previous version.
+                key={`${recording.id}-${selectedId}-${selectedContent.update?.id ?? 'current'}`}
                 text={selectedContent.text}
                 pending={selectedContent.reviewed === false}
                 onChange={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
               />
+              {selectedContent.update?.previous.text && (
+                <details className="mt-3 text-sm text-gray-600">
+                  <summary className="cursor-pointer font-medium text-[rgb(109,27,152)]">Previous version</summary>
+                  <p className="mt-2 whitespace-pre-line leading-relaxed">{selectedContent.update.previous.text}</p>
+                </details>
+              )}
               {selectedContent.promptingQuestions && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="text-body font-semibold text-gray-500 mb-1.5">Prompting questions</p>

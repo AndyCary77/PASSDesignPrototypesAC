@@ -10,6 +10,7 @@ import { DocumentTabs } from './DocumentTabs';
 import { DocumentFilters } from './DocumentFilters';
 import { DocumentList } from './DocumentList';
 import { CareBridgeRecordingsTab } from './CareBridgeRecordingsTab';
+import { FilesTab } from './FilesTab';
 
 export function DocumentsPage() {
   const customer = useCustomer();
@@ -89,6 +90,15 @@ export function DocumentsPage() {
     );
   }
 
+  if (activeTab === 'files') {
+    return (
+      <div className="max-w-[1280px] mx-auto flex flex-col gap-4">
+        <DocumentTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <FilesTab key={customer.id} />
+      </div>
+    );
+  }
+
   if (activeTab !== 'assessments' && activeTab !== 'documents') {
     return (
       <div className="max-w-[1280px] mx-auto">
@@ -96,7 +106,7 @@ export function DocumentsPage() {
           <DocumentTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-400 text-sm">
-          {activeTab === 'enquiry' ? 'Enquiry' : 'Files'} — coming soon
+          Enquiry — coming soon
         </div>
       </div>
     );

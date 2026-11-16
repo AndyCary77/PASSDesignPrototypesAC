@@ -1,4 +1,4 @@
-import { createContext, useContext as useReactContext, useState, useRef } from 'react';
+import { createContext, useContext as useReactContext, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, Send } from 'lucide-react';
 import { Button } from '../../buttons/Button';
@@ -14,6 +14,9 @@ import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
 import { CarePlanDocumentView, CareBridgeContext, PublishedConfirmationBanner, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
+import { AssessmentHeroUpdateBanner, AssessmentHeroUpdateDraftBanner, UpdateNoChangesNotice, type UpdateSource } from './UpdateDocumentBanner';
+import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS, getUpdateSteps } from './UpdateProgress';
+import { applyPlanUpdate, discardPlanUpdate, getPlanUpdate, getUpdateInfo, publishPlanUpdate } from './carePlanUpdate';
 import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
 import { useScrolled } from '../../../hooks/useScrolled';
 import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
@@ -31,6 +34,24 @@ interface CarePlanDocumentState {
   setDirty: (dirty: boolean) => void;
   published: boolean;
   setPublished: (published: boolean) => void;
+  /** A finished document (see COMPLETED_CARE_PLAN_CUSTOMERS), not a draft awaiting review. */
+  isCompletedDocument: boolean;
+  /** A finished document that has been updated from a recording or file and has changes awaiting review. */
+  isUpdateDraft: boolean;
+  /** What the update in progress was made from, and how many sections/fields it changed. */
+  updateInfo: ReturnType<typeof getUpdateInfo>;
+  /** Update the finished document from a chosen recording or file — drafts only what has new information. */
+  startUpdate: (source: UpdateSource) => void;
+  /** The simulated run in progress (its source and which step it's on), or null when idle. */
+  updating: { source: UpdateSource; step: number } | null;
+  discardUpdate: () => void;
+  publishUpdate: () => void;
+  /** Set when the last source chosen had nothing new for the document. */
+  noChangesFor: string | null;
+  dismissNoChanges: () => void;
+  /** Just published an update — drives the green confirmation. */
+  justPublished: boolean;
+  dismissJustPublished: () => void;
   linkedSource: LinkedSource;
   setLinkedSource: (source: LinkedSource) => void;
   linkedRecording: Recording | null;
@@ -43,6 +64,23 @@ interface CarePlanDocumentState {
   relinkRecording: (id: string) => void;
   handleUnlink: () => void;
 }
+
+/**
+ * Customers whose Customer Care and Support Plan is a finished document rather than an Assessment Hero
+ * draft: no draft/published banner, and (see asCompletedDocument / asCompletedSections in CareBridgePage)
+ * no per-field pending review. Matches 'Complete' in their Assessments list. Vera's was drafted from her
+ * completed paperwork; Arthur's is shown complete by default, ahead of the update-from-a-new-source flow.
+ */
+const COMPLETED_CARE_PLAN_CUSTOMERS = ['arthur-barrington', 'vera-bramwell'];
+
+/**
+ * Of those, the customers whose finished plan shows the minimal AssessmentHeroUpdateBanner above it: "Drafted
+ * by Assessment Hero", with one "Update document" link to bring the plan up to date from a recording or file.
+ * (A published document doesn't keep a link to the recordings it came from, so there are no recording links.)
+ * Vera's plan was drafted from paperwork rather than a recording, so she has no recordings to pick and no authored
+ * updates yet: the banner is there, but any source she chooses reports nothing new (see finishUpdate).
+ */
+const UPDATE_BANNER_CUSTOMERS = ['arthur-barrington', 'vera-bramwell'];
 
 const CarePlanDocumentContext = createContext<CarePlanDocumentState | null>(null);
 
@@ -87,12 +125,82 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
   const pendingCount = linkedRecording ? countPendingFields(linkedRecording) : 0;
   const [published, setPublished] = useState(false);
 
+  // Update document (finished documents only). The draft needs no state of its own: it IS the set of items on the
+  // finished document that carry an update marker, which live in CareBridgeContext with everything else, so it
+  // survives leaving and coming back. Each changed item carries what it was before (see ItemUpdate), which is what Discard
+  // restores and what the review UI shows as "Previously".
+  const { getFormSections, setFormSections, getProseSections, setProseSections } = useReactContext(CareBridgeContext);
+  const isCompletedDocument = COMPLETED_CARE_PLAN_CUSTOMERS.includes(customer.id);
+  const baseRecording = resolveRecording(customer.id, 'initial');
+  // In draft from the moment an update lands until it is published or discarded — NOT just while fields are still
+  // pending: once the last one is accepted the draft is ready to publish, and needs to stay put until it is.
+  const updateInfo = isCompletedDocument && baseRecording ? getUpdateInfo(getFormSections(baseRecording), getProseSections(baseRecording)) : null;
+  const isUpdateDraft = updateInfo !== null;
+  const [noChangesFor, setNoChangesFor] = useState<string | null>(null);
+  const [justPublished, setJustPublished] = useState(false);
+
+  // The update runs for a few seconds first — "thinking time", the same stepper as drafting a care plan — and is
+  // only applied when it finishes. Kept in this provider, so leaving the page cancels it.
+  const [updating, setUpdating] = useState<{ source: UpdateSource; step: number } | null>(null);
+
+  const startUpdate = (source: UpdateSource) => {
+    setNoChangesFor(null);
+    setJustPublished(false);
+    setUpdating({ source, step: 0 });
+  };
+
+  // Works out what the source changes and applies it (or reports nothing new). Runs once the stepper has finished.
+  const finishUpdate = (source: UpdateSource) => {
+    const sourceLabel = source.type === 'recording' ? source.label : source.name;
+    const def = getPlanUpdate(customer.id, source);
+    const result = def && baseRecording && applyPlanUpdate(def, source, getFormSections(baseRecording), getProseSections(baseRecording));
+    if (!result || result.changed === 0) {
+      // Nothing relevant in it: leave the document alone and say so, rather than hand over an empty draft.
+      setNoChangesFor(sourceLabel);
+      return;
+    }
+    if (!baseRecording) return;
+    setFormSections(baseRecording.id, result.forms);
+    setProseSections(baseRecording.id, result.prose);
+  };
+
+  useEffect(() => {
+    if (!updating) return;
+    const steps = getUpdateSteps(updating.source.type);
+    const isFinalHold = updating.step === steps.length;
+    const timer = window.setTimeout(() => {
+      if (isFinalHold) {
+        finishUpdate(updating.source);
+        setUpdating(null);
+      } else {
+        setUpdating(u => (u ? { ...u, step: u.step + 1 } : u));
+      }
+    }, isFinalHold ? UPDATE_COMPLETE_HOLD_MS : steps[updating.step].ms);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updating]);
+
+  const discardUpdate = () => {
+    if (!baseRecording) return;
+    const result = discardPlanUpdate(getFormSections(baseRecording), getProseSections(baseRecording));
+    setFormSections(baseRecording.id, result.forms);
+    setProseSections(baseRecording.id, result.prose);
+  };
+
+  const publishUpdate = () => {
+    if (!baseRecording) return;
+    const result = publishPlanUpdate(getFormSections(baseRecording), getProseSections(baseRecording));
+    setFormSections(baseRecording.id, result.forms);
+    setProseSections(baseRecording.id, result.prose);
+    setJustPublished(true);
+  };
+
   // Every relink-family action below also un-publishes — same reasoning as
   // ChangeRecordingsButton's Replace on the other Assessment Hero pages:
   // choosing a different source (or removing it) means this document needs
   // review again, so a published document doesn't stay marked Published
   // while quietly pointing at content nobody's actually looked at yet. This
-  // is what makes the post-publish AssessmentHeroReuseBanner below (see
+  // is what makes the post-publish reuse banner below (see
   // CarePlanDocumentContent) an actual "update" rather than a dead click —
   // it reopens this exact same dropdown.
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +228,11 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
   return (
     <CarePlanDocumentContext.Provider
       value={{
-        customer, navigate, dirty, setDirty, published, setPublished, linkedSource, setLinkedSource,
+        customer, navigate, dirty, setDirty, published, setPublished,
+        isCompletedDocument, isUpdateDraft, updateInfo, startUpdate, updating, discardUpdate, publishUpdate,
+        noChangesFor, dismissNoChanges: () => setNoChangesFor(null),
+        justPublished, dismissJustPublished: () => setJustPublished(false),
+        linkedSource, setLinkedSource,
         linkedRecording, otherRecordings, pendingReview, pendingCount, fileInputRef,
         handleUpload, relinkRecording, handleUnlink,
       }}
@@ -132,8 +244,10 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
 
 /** Pinned sub-nav — same sticky treatment as CareManagementSubnav: lives in AppShell's infoBar, so it scrolls with CustomerInfo instead of away with the page content. */
 export function CarePlanDocumentSubnav() {
-  const { customer, navigate, dirty, published, setDirty } = useCarePlanDocument();
+  const { customer, navigate, dirty, published, isCompletedDocument, isUpdateDraft, setDirty } = useCarePlanDocument();
   const scrolled = useScrolled();
+  // A completed document is saved like a published one, not as a draft — until it has an update awaiting review.
+  const saved = (published || isCompletedDocument) && !isUpdateDraft;
 
   return (
     <div className="bg-gray-50 border-b border-gray-200">
@@ -166,10 +280,10 @@ export function CarePlanDocumentSubnav() {
                   clicking Accept, so it can't reliably tell whether
                   there's anything worth saving — always enabled instead. */}
               <Button
-                disabled={published && !dirty}
+                disabled={saved && !dirty}
                 onClick={() => setDirty(false)}
               >
-                {published ? 'Save' : 'Save Draft'}
+                {saved ? 'Save' : 'Save Draft'}
               </Button>
             </div>
           </div>
@@ -267,18 +381,14 @@ function RelinkDropdown() {
 /** Everything below the pinned sub-nav — the CareBridge Draft panel, title bar, History and the form itself. */
 export function CarePlanDocumentContent() {
   const {
-    customer, navigate, published, linkedSource, linkedRecording,
+    customer, navigate, published, isCompletedDocument, isUpdateDraft, updateInfo, startUpdate, updating, discardUpdate,
+    publishUpdate, noChangesFor, dismissNoChanges, justPublished, dismissJustPublished, linkedSource, linkedRecording,
     pendingReview, pendingCount, fileInputRef, handleUpload, setDirty, setPublished,
   } = useCarePlanDocument();
 
-  // Vera's Care and Support Plan is being treated as an already-completed
-  // document (drafted from her completed assessment paperwork, not a
-  // recording — see the project note on her Assessments list entry), so it
-  // shows as a real, finished document rather than a CareBridge draft: no
-  // draft/published banner above it at all, and (see asCompletedDocument /
-  // asCompletedSections on her 'initial' recording) no per-field pending
-  // highlighting, Check transcript, or Accept controls in the content below.
-  const isCompletedDocument = customer.id === 'vera-bramwell';
+  // For a completed document (see COMPLETED_CARE_PLAN_CUSTOMERS) there is no draft/published banner above the
+  // form at all, and — see asCompletedDocument / asCompletedSections on the customer's 'initial' recording —
+  // no per-field pending highlighting, Check transcript, or Accept controls in the content below.
   const scrolled = useScrolled();
   const infoBarBottom = useInfoBarBottom();
 
@@ -292,7 +402,42 @@ export function CarePlanDocumentContent() {
           the limit is about the customer, not this document. */}
       <AssessmentHeroLimitNotice />
 
-      {isCompletedDocument ? null : published ? (
+      {isCompletedDocument ? (
+        isUpdateDraft && updateInfo ? (
+          <AssessmentHeroUpdateDraftBanner
+            customerId={customer.id}
+            update={updateInfo.update}
+            changed={updateInfo.changed}
+            pendingCount={pendingCount}
+            onViewSource={() => navigate(
+              updateInfo.update.recordingId
+                ? `/customers/${customer.id}/documents/recording/${updateInfo.update.recordingId}`
+                : `/customers/${customer.id}/documents?tab=files`,
+            )}
+            onDiscard={discardUpdate}
+            onPublish={publishUpdate}
+          />
+        ) : UPDATE_BANNER_CUSTOMERS.includes(customer.id) && (
+          <div className="flex flex-col gap-3">
+            {justPublished && <PublishedConfirmationBanner onDismissed={dismissJustPublished} />}
+            {noChangesFor && <UpdateNoChangesNotice sourceLabel={noChangesFor} onDismiss={dismissNoChanges} />}
+            {updating ? (
+              <DocumentUpdateProgress
+                documentName="Customer Care and Support Plan"
+                sourceLabel={updating.source.type === 'recording' ? updating.source.label : updating.source.name}
+                steps={getUpdateSteps(updating.source.type)}
+                step={updating.step}
+              />
+            ) : (
+              <AssessmentHeroUpdateBanner
+                customerId={customer.id}
+                documentName="Customer Care and Support Plan"
+                onSelect={startUpdate}
+              />
+            )}
+          </div>
+        )
+      ) : published ? (
         <div className="flex flex-col gap-3">
           <PublishedConfirmationBanner />
           {/* Stripped-back reuse banner — same RelinkDropdown as the draft
@@ -301,7 +446,7 @@ export function CarePlanDocumentContent() {
               this document as a draft again (see relinkRecording). */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
-              <img src={assessmentHeroIconUrl} className="w-4 h-4 flex-shrink-0" alt="Assessment Hero" />
+              <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
               <p className="text-body text-purple-900">Drafted by Assessment Hero — add a recording to update.</p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
