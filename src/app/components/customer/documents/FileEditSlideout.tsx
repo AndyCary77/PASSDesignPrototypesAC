@@ -125,7 +125,7 @@ export function FileEditSlideout({ file, siblings, onClose, onRename, onDelete }
           </div>
 
           <dl className="flex flex-col gap-6">
-            <Detail label="Folder">All files</Detail>
+            <Detail label="Folder">{file.folder}</Detail>
             <Detail label="Size">{formatFileSize(file.sizeBytes)}</Detail>
             <Detail label="Uploaded">{formatFileDate(file.uploaded)}</Detail>
             <Detail label="Modified">{formatFileDate(file.modified)}</Detail>

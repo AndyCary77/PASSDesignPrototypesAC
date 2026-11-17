@@ -139,8 +139,12 @@ export interface ItemUpdate {
   /** What it was updated from — a recording's label or a file's name. */
   sourceLabel: string;
   sourceKind: 'recording' | 'file';
+  /** The recording's or file's id, so the source can still be opened once the update is published. */
+  sourceId?: string;
   /** Set for a recording source: Check transcript then points at that recording, not the original assessment. */
   recordingId?: string;
+  /** Every recording and file behind this change when more than one source fed it. `sourceLabel` joins their names. */
+  sources?: { type: 'recording' | 'file'; id: string; label: string }[];
   previous: {
     text?: string;
     value?: string;

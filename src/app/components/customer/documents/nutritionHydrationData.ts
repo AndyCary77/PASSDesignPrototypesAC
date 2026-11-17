@@ -1,6 +1,5 @@
 import type { FormField } from '../CareBridgePage';
 import type { UpdateSource } from './UpdateDocumentBanner';
-import { UPLOADED_FILE_ID } from './UpdateDocumentBanner';
 
 // "Nutrition and Hydration Assessment" — Vera Bramwell's incomplete assessment, the scenario for filling a blank
 // document from a recording OR a file. It starts with every field empty; picking a source drafts in only the answers
@@ -64,7 +63,7 @@ export const NUTRITION_GROUPS: NutritionGroup[] = [
 ];
 
 /** What a source file contributes: new values for the fields it has an answer for, and nothing for the rest. */
-type FillPatch = Record<string, Pick<FormField, 'value' | 'rows' | 'sourceLines'>>;
+export type FillPatch = Record<string, Pick<FormField, 'value' | 'rows' | 'sourceLines'>>;
 
 const FILL_FROM_FILE: Record<string, FillPatch> = {
   // Nutrition and Hydration Screening (MUST).docx — the main source: the screening scores and her intake.
@@ -144,19 +143,25 @@ const FILL_FROM_RECORDING: Record<string, FillPatch> = {
   // The WiitM follow-up and the 4-week review have nothing on food and drink, so have no entry.
 };
 
-// A file uploaded from the user's own computer has no id in customerFiles.ts, so it's matched on its name.
-const UPLOAD_NAME_MATCHES: [RegExp, string][] = [
-  [/nutrition|hydration|\bmust\b|screening/i, 'file:vb-2'],
-  [/initial|home visit/i, 'file:vb-1'],
-  [/nurse|pressure/i, 'file:vb-3'],
-];
-
 /** What this recording or file would fill in, or null if it has nothing on nutrition and hydration. */
 export function getNutritionFill(source: UpdateSource): FillPatch | null {
   if (source.type === 'recording') return FILL_FROM_RECORDING[source.id] ?? null;
-  if (source.id !== UPLOADED_FILE_ID) return FILL_FROM_FILE[`file:${source.id}`] ?? null;
-  const match = UPLOAD_NAME_MATCHES.find(([re]) => re.test(source.name));
-  return match ? FILL_FROM_FILE[match[1]] : null;
+  return FILL_FROM_FILE[`file:${source.id}`] ?? null;
+}
+
+/**
+ * Combines what several sources found into one patch. A field more than one source answers takes the last one's
+ * answer — noticing and flagging a disagreement is the next piece of work (AIOP-25366). Transcript citations are
+ * dropped when more than one recording is involved, since a field's Check transcript can only point into one.
+ */
+export function mergeFillPatches(patches: FillPatch[], recordingCount: number): FillPatch {
+  const merged: FillPatch = {};
+  for (const patch of patches) {
+    for (const [fieldId, answer] of Object.entries(patch)) {
+      merged[fieldId] = recordingCount > 1 ? { ...answer, sourceLines: undefined } : answer;
+    }
+  }
+  return merged;
 }
 
 /** Applies a fill: each field it has an answer for gets that answer and goes to pending review. Returns how many changed. */
@@ -172,9 +177,9 @@ export function applyNutritionFill(fields: FormField[], patch: FillPatch): { fie
 }
 
 /** The same steps as the update's "thinking time", worded for filling in a blank document. */
-export function getFillSteps(kind: 'recording' | 'file'): { label: string; ms: number }[] {
+export function getFillSteps(sources: { type: 'recording' | 'file' }[]): { label: string; ms: number }[] {
   return [
-    { label: `Reading the ${kind}`, ms: 1300 },
+    { label: sources.length > 1 ? 'Reading the sources' : `Reading the ${sources[0]?.type ?? 'source'}`, ms: 1300 },
     { label: 'Finding the answers', ms: 2000 },
     { label: 'Filling in the document', ms: 1500 },
   ];

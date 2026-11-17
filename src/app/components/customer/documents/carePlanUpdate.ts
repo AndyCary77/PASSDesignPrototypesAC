@@ -1,5 +1,5 @@
 import { revertFieldUpdate, revertSectionUpdate, type AssessmentSection, type FormField, type ItemUpdate, type TranscriptReference } from '../CareBridgePage';
-import { UPLOADED_FILE_ID, type UpdateSource } from './UpdateDocumentBanner';
+import type { UpdateSource } from './UpdateDocumentBanner';
 
 // Simulates "Update document" on a finished Customer Care and Support Plan: given a recording or a file, work out
 // which fields it has NEW, relevant information for, and change only those (they come back as pending review,
@@ -8,7 +8,6 @@ import { UPLOADED_FILE_ID, type UpdateSource } from './UpdateDocumentBanner';
 //
 // There is no real extraction here: what each source "finds" is authored below, for Arthur Barrington only, and is
 // grounded in what the source actually contains (the recordings' transcripts; what each file in his Files tab is).
-// A file the user uploads from their own computer is matched on its name against the same set.
 
 /** Rewrites a prose section. Most updates add a sentence to what's there; the personal-care one rewrites it. */
 interface SectionEdit {
@@ -155,76 +154,102 @@ const ARTHUR_UPDATES: Record<string, PlanUpdateDef> = {
   // Assessment itself has nothing new for the plan, so has no entry: getPlanUpdate returns null.
 };
 
-// A file uploaded from the user's computer has no id in customerFiles.ts, so it's matched on its name.
-const UPLOAD_NAME_MATCHES: [RegExp, string][] = [
-  [/discharge|hospital/i, 'file:ab-1'],
-  [/handling/i, 'file:ab-2'],
-  [/falls/i, 'file:ab-3'],
-  [/occupational|\bot\b/i, 'file:ab-4'],
-  [/medication|\bgp\b/i, 'file:ab-5'],
-  [/dnacpr|dnar|respect/i, 'file:ab-10'],
-  [/power of attorney|\blpa\b/i, 'file:ab-11'],
-];
-
 /** What this source would change in the plan, or null if it has nothing new for it. */
 export function getPlanUpdate(customerId: string, source: UpdateSource): PlanUpdateDef | null {
   if (customerId !== 'arthur-barrington') return null;
   if (source.type === 'recording') return ARTHUR_UPDATES[`recording:${source.id}`] ?? null;
-  if (source.id !== UPLOADED_FILE_ID) return ARTHUR_UPDATES[`file:${source.id}`] ?? null;
-  const match = UPLOAD_NAME_MATCHES.find(([re]) => re.test(source.name));
-  return match ? ARTHUR_UPDATES[match[1]] : null;
+  return ARTHUR_UPDATES[`file:${source.id}`] ?? null;
 }
 
 type Forms = Record<string, FormField[]>;
 type Prose = Record<string, AssessmentSection>;
 
+const toItemSource = (s: UpdateSource) => ({ type: s.type, id: s.id, label: s.type === 'file' ? s.name : s.label });
+
 /**
- * Applies an update: each affected section/field gets its new content, goes back to pending review, and remembers
- * what it was. Anything that doesn't change (the edit produces the same text, or the field is missing) is left alone,
- * and `changed` counts only what actually did.
+ * Applies a run of one or more sources: each affected section/field gets its new content, goes back to pending
+ * review, and remembers what it was. A section several sources touch has their edits applied in turn, and its
+ * marker names them all. A field several sources set takes the last one's value — spotting and flagging a
+ * disagreement between sources is the next piece of work (AIOP-25366). Anything that doesn't change (the edit
+ * produces the same text, or the field is missing) is left alone, and `changed` counts only what actually did.
  */
-export function applyPlanUpdate(def: PlanUpdateDef, source: UpdateSource, forms: Forms, prose: Prose): { forms: Forms; prose: Prose; changed: number } {
-  const info = {
-    id: `upd-${Date.now()}`,
-    sourceLabel: source.type === 'recording' ? source.label : source.name,
-    sourceKind: source.type,
-    recordingId: source.type === 'recording' ? source.id : undefined,
-  } as const;
-  const isRecording = source.type === 'recording';
+export function applyPlanUpdates(runs: { def: PlanUpdateDef; source: UpdateSource }[], forms: Forms, prose: Prose): { forms: Forms; prose: Prose; changed: number } {
+  const runId = `upd-${Date.now()}`;
+
+  /** The marker for an item changed by `contributors` — keeping any sources already behind an unpublished earlier update. */
+  const markerFor = (earlier: ItemUpdate | undefined, contributors: UpdateSource[], lastRecording: UpdateSource | undefined) => {
+    const all = [...(earlier?.sources ?? []), ...contributors.map(toItemSource)];
+    const sources = all.filter((s, i) => all.findIndex(o => o.type === s.type && o.id === s.id && o.label === s.label) === i);
+    const last = contributors[contributors.length - 1];
+    return {
+      id: runId,
+      sourceLabel: sources.map(s => s.label).join(', '),
+      sourceKind: last.type,
+      sourceId: last.id,
+      recordingId: lastRecording?.id,
+      sources,
+    };
+  };
 
   let changed = 0;
   const nextProse: Prose = { ...prose };
-  for (const e of def.sections) {
-    const current = nextProse[e.sectionId];
+  for (const sectionId of new Set(runs.flatMap(r => r.def.sections.map(e => e.sectionId)))) {
+    const current = nextProse[sectionId];
     if (!current) continue;
-    const text = e.edit(current.text);
-    if (text === current.text) continue;
-    const update: ItemUpdate = {
-      ...info,
-      // A second update before the first is published keeps the ORIGINAL as the thing to discard back to.
-      previous: current.update?.previous ?? { text: current.text, reviewed: current.reviewed, sourceLines: current.sourceLines },
+    let text = current.text;
+    const contributors: UpdateSource[] = [];
+    let cited: { source: UpdateSource; lines?: TranscriptReference[] } | undefined;
+    for (const { def, source } of runs) {
+      for (const e of def.sections.filter(x => x.sectionId === sectionId)) {
+        const next = e.edit(text);
+        if (next === text) continue;
+        text = next;
+        contributors.push(source);
+        if (source.type === 'recording') cited = { source, lines: e.sourceLines };
+      }
+    }
+    if (contributors.length === 0) continue;
+    nextProse[sectionId] = {
+      ...current,
+      text,
+      reviewed: false,
+      sourceLines: cited?.lines,
+      update: {
+        ...markerFor(current.update, contributors, cited?.source),
+        // A second update before the first is published keeps the ORIGINAL as the thing to discard back to.
+        previous: current.update?.previous ?? { text: current.text, reviewed: current.reviewed, sourceLines: current.sourceLines },
+      },
     };
-    nextProse[e.sectionId] = { ...current, text, reviewed: false, sourceLines: isRecording ? e.sourceLines : undefined, update };
     changed++;
   }
 
   const nextForms: Forms = { ...forms };
-  for (const e of def.fields) {
-    const fields = nextForms[e.sectionId];
-    if (!fields) continue;
-    nextForms[e.sectionId] = fields.map(f => {
-      if (f.id !== e.fieldId) return f;
+  for (const [sectionId, fields] of Object.entries(forms)) {
+    nextForms[sectionId] = fields.map(f => {
+      const contributors: UpdateSource[] = [];
+      let value = f.value;
+      let rows = f.rows;
+      let cited: { source: UpdateSource; lines?: TranscriptReference[] } | undefined;
+      for (const { def, source } of runs) {
+        for (const e of def.fields.filter(x => x.sectionId === sectionId && x.fieldId === f.id)) {
+          value = e.value ?? value;
+          rows = e.rows ?? rows;
+          contributors.push(source);
+          if (source.type === 'recording') cited = { source, lines: e.sourceLines };
+        }
+      }
+      if (contributors.length === 0) return f;
       changed++;
       return {
         ...f,
-        value: e.value ?? f.value,
-        rows: e.rows ?? f.rows,
+        value,
+        rows,
         reviewed: false,
         reviewedBy: undefined,
         reviewedAt: undefined,
-        sourceLines: isRecording ? e.sourceLines : undefined,
+        sourceLines: cited?.lines,
         update: {
-          ...info,
+          ...markerFor(f.update, contributors, cited?.source),
           previous: f.update?.previous ?? { value: f.value, rows: f.rows, reviewed: f.reviewed, reviewedBy: f.reviewedBy, reviewedAt: f.reviewedAt, sourceLines: f.sourceLines },
         },
       };
@@ -256,6 +281,39 @@ export function publishPlanUpdate(forms: Forms, prose: Prose): { forms: Forms; p
       : f);
   }
   return { forms: nextForms, prose: nextProse };
+}
+
+const sourceKey = (s: UpdateSource) => `${s.type}:${s.id}:${s.type === 'file' ? s.name : s.label}`;
+
+/** Every distinct recording/file the draft in progress was made from (several if one run used many, or it was updated twice before publishing). */
+export function getUpdateSources(forms: Forms, prose: Prose): UpdateSource[] {
+  const seen = new Map<string, UpdateSource>();
+  for (const { update } of [...Object.values(prose), ...Object.values(forms).flat()]) {
+    if (!update) continue;
+    const behind = update.sources ?? [{ type: update.sourceKind, id: update.sourceId ?? update.recordingId ?? '', label: update.sourceLabel }];
+    for (const b of behind) {
+      const s: UpdateSource = b.type === 'recording' ? { type: 'recording', id: b.id, label: b.label } : { type: 'file', id: b.id, name: b.label };
+      seen.set(sourceKey(s), s);
+    }
+  }
+  return [...seen.values()];
+}
+
+// What each customer's published plan has been drafted from — kept here, not in the page's state, so it survives
+// leaving the page and coming back (the plan's content itself lives in CareBridgeContext and does too).
+const publishedSources = new Map<string, UpdateSource[]>();
+
+export function getPublishedSources(customerId: string): UpdateSource[] {
+  return publishedSources.get(customerId) ?? [];
+}
+
+/** Adds the sources behind a just-published update to the plan's "drafted from" list, without duplicates. */
+export function recordPublishedSources(customerId: string, sources: UpdateSource[]): UpdateSource[] {
+  const merged = new Map<string, UpdateSource>();
+  for (const s of [...getPublishedSources(customerId), ...sources]) merged.set(sourceKey(s), s);
+  const next = [...merged.values()];
+  publishedSources.set(customerId, next);
+  return next;
 }
 
 /** The source behind a draft that's in progress, and how many sections/fields it changed, read off the items themselves. */

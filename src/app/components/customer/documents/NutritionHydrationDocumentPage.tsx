@@ -9,10 +9,10 @@ import {
 } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
-import { UpdateDocumentDialog, UpdateNoChangesNotice, type UpdateSource } from './UpdateDocumentBanner';
+import { AssessmentHeroSourceIndicator, UpdateDocumentDialog, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type UpdateSource } from './UpdateDocumentBanner';
 import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS } from './UpdateProgress';
 import {
-  NUTRITION_BLANK_FIELDS, NUTRITION_GROUPS, applyNutritionFill, getFillSteps, getNutritionFill,
+  NUTRITION_BLANK_FIELDS, NUTRITION_GROUPS, applyNutritionFill, getFillSteps, getNutritionFill, mergeFillPatches,
 } from './nutritionHydrationData';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -38,11 +38,14 @@ interface NutritionDocumentState {
   setDirty: (dirty: boolean) => void;
   fields: FormField[];
   setFields: (fields: FormField[]) => void;
-  /** What the draft was filled from; null while the document is blank. */
-  filledSource: UpdateSource | null;
+  /** What the draft was filled from; empty while the document is blank. */
+  filledSources: UpdateSource[];
   filledCount: number;
-  filling: { source: UpdateSource; step: number } | null;
-  startFill: (source: UpdateSource) => void;
+  filling: { sources: UpdateSource[]; step: number } | null;
+  startFill: (sources: UpdateSource[]) => void;
+  /** Files in the last run that couldn't be read — and whether the rest still filled something in. */
+  fileProblems: { problems: FileProblem[]; othersDrafted: boolean } | null;
+  dismissFileProblems: () => void;
   discardDraft: () => void;
   noChangesFor: string | null;
   dismissNoChanges: () => void;
@@ -64,39 +67,50 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
   const customer = useCustomer();
   const [dirty, setDirty] = useState(false);
   const [fields, setFields] = useState<FormField[]>(NUTRITION_BLANK_FIELDS);
-  const [filledSource, setFilledSource] = useState<UpdateSource | null>(null);
+  const [filledSources, setFilledSources] = useState<UpdateSource[]>([]);
   const [filledCount, setFilledCount] = useState(0);
-  const [filling, setFilling] = useState<{ source: UpdateSource; step: number } | null>(null);
+  const [filling, setFilling] = useState<{ sources: UpdateSource[]; step: number } | null>(null);
+  const [fileProblems, setFileProblems] = useState<{ problems: FileProblem[]; othersDrafted: boolean } | null>(null);
   const [noChangesFor, setNoChangesFor] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
 
-  const startFill = (source: UpdateSource) => {
+  const startFill = (sources: UpdateSource[]) => {
     setNoChangesFor(null);
-    setFilling({ source, step: 0 });
+    setFileProblems(null);
+    setFilling({ sources, step: 0 });
   };
 
   // Works out what the file answers and drafts it in (or reports there was nothing). Runs once the stepper is done.
-  const finishFill = (source: UpdateSource) => {
-    const sourceLabel = source.type === 'file' ? source.name : source.label;
-    const patch = getNutritionFill(source);
-    const result = patch && applyNutritionFill(NUTRITION_BLANK_FIELDS, patch);
-    if (!result || result.filled === 0) {
-      setNoChangesFor(sourceLabel);
+  const finishFill = (sources: UpdateSource[]) => {
+    // A file that can't be read is named and nothing is drafted from it; the other sources still go ahead.
+    const problems = sources.flatMap(s => getSourceProblem(customer.id, s) ?? []);
+    const readable = sources.filter(s => !getSourceProblem(customer.id, s));
+    const found = readable.flatMap(s => {
+      const patch = getNutritionFill(s);
+      return patch ? [{ source: s, patch }] : [];
+    });
+    const patch = mergeFillPatches(found.map(f => f.patch), found.filter(f => f.source.type === 'recording').length);
+    const result = found.length > 0 ? applyNutritionFill(NUTRITION_BLANK_FIELDS, patch) : null;
+    const drafted = !!result && result.filled > 0;
+    if (problems.length > 0) setFileProblems({ problems, othersDrafted: drafted });
+    if (!result || !drafted) {
+      if (readable.length > 0) setNoChangesFor(describeSources(readable));
       return;
     }
     setFields(result.fields);
-    setFilledSource(source);
+    // Only the sources that actually had something are named as where the draft came from.
+    setFilledSources(found.map(f => f.source));
     setFilledCount(result.filled);
   };
 
   // The "thinking time" — same stepper as updating a finished document, kept here so leaving the page cancels it.
   useEffect(() => {
     if (!filling) return;
-    const steps = getFillSteps(filling.source.type);
+    const steps = getFillSteps(filling.sources);
     const isFinalHold = filling.step === steps.length;
     const timer = window.setTimeout(() => {
       if (isFinalHold) {
-        finishFill(filling.source);
+        finishFill(filling.sources);
         setFilling(null);
       } else {
         setFilling(f => (f ? { ...f, step: f.step + 1 } : f));
@@ -108,7 +122,7 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
 
   const discardDraft = () => {
     setFields(NUTRITION_BLANK_FIELDS);
-    setFilledSource(null);
+    setFilledSources([]);
     setFilledCount(0);
     setDirty(false);
   };
@@ -118,7 +132,8 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
   return (
     <NutritionDocumentContext.Provider
       value={{
-        customer, navigate, dirty, setDirty, fields, setFields, filledSource, filledCount, filling, startFill,
+        customer, navigate, dirty, setDirty, fields, setFields, filledSources, filledCount, filling, startFill,
+        fileProblems, dismissFileProblems: () => setFileProblems(null),
         discardDraft, noChangesFor, dismissNoChanges: () => setNoChangesFor(null),
         published, publish: () => setPublished(true), pendingCount,
       }}
@@ -207,8 +222,8 @@ function FillBanner() {
 
 /** The panel above a filled-in draft: what it was made from, what is left for the reviewer, Discard and Publish. */
 function FilledDraftBanner() {
-  const { filledSource, filledCount, pendingCount, discardDraft, publish } = useNutritionDocument();
-  const filledFrom = filledSource ? (filledSource.type === 'file' ? filledSource.name : filledSource.label) : '';
+  const { filledSources, filledCount, pendingCount, discardDraft, publish } = useNutritionDocument();
+  const filledFrom = filledSources.length > 0 ? describeSources(filledSources) : '';
   const total = NUTRITION_BLANK_FIELDS.length;
   const left = total - filledCount;
 
@@ -273,10 +288,11 @@ function FilledDraftBanner() {
 /** Everything below the pinned sub-nav — the Assessment Hero panel, title bar, History and the form itself. */
 export function NutritionDocumentContent() {
   const {
-    customer, fields, setFields, setDirty, filledSource, filling, noChangesFor, dismissNoChanges, published,
+    customer, fields, setFields, setDirty, filledSources, filling, noChangesFor, dismissNoChanges, fileProblems, dismissFileProblems, published,
   } = useNutritionDocument();
   // Filled from a recording, each field's Check transcript points into that recording; a file has no transcript.
-  const citedRecording = filledSource?.type === 'recording' ? resolveRecording(customer.id, filledSource.id) : undefined;
+  const onlySource = filledSources.length === 1 ? filledSources[0] : undefined;
+  const citedRecording = onlySource?.type === 'recording' ? resolveRecording(customer.id, onlySource.id) : undefined;
   const scrolled = useScrolled();
   const infoBarBottom = useInfoBarBottom();
 
@@ -285,19 +301,27 @@ export function NutritionDocumentContent() {
       <AssessmentHeroLimitNotice />
 
       {published ? (
-        <PublishedConfirmationBanner />
+        <div className="flex flex-col gap-3">
+          <PublishedConfirmationBanner />
+          {/* The small "drafted with Assessment Hero" indicator stays on the published form and names its source. */}
+          {filledSources.length > 0 && <AssessmentHeroSourceIndicator customerId={customer.id} sources={filledSources} />}
+        </div>
       ) : filling ? (
         <DocumentUpdateProgress
           action="Filling in"
           documentName={DOCUMENT_NAME}
-          sourceLabel={filling.source.type === 'file' ? filling.source.name : filling.source.label}
-          steps={getFillSteps(filling.source.type)}
+          sourceLabel={describeSources(filling.sources)}
+          steps={getFillSteps(filling.sources)}
           step={filling.step}
         />
-      ) : filledSource ? (
-        <FilledDraftBanner />
+      ) : filledSources.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {fileProblems && <UpdateProblemsNotice problems={fileProblems.problems} othersDrafted={fileProblems.othersDrafted} onDismiss={dismissFileProblems} />}
+          <FilledDraftBanner />
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
+          {fileProblems && <UpdateProblemsNotice problems={fileProblems.problems} othersDrafted={fileProblems.othersDrafted} onDismiss={dismissFileProblems} />}
           {noChangesFor && (
             <UpdateNoChangesNotice
               sourceLabel={noChangesFor}

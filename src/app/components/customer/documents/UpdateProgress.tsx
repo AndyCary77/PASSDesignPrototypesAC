@@ -10,9 +10,9 @@ import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 export type UpdateSourceKind = 'recording' | 'file';
 
 /** How long each step takes, in the same range as CARE_PLAN_DRAFT_STEPS so the two waits feel alike. */
-export function getUpdateSteps(kind: UpdateSourceKind): { label: string; ms: number }[] {
+export function getUpdateSteps(sources: { type: UpdateSourceKind }[]): { label: string; ms: number }[] {
   return [
-    { label: `Reading the ${kind}`, ms: 1300 },
+    { label: sources.length > 1 ? 'Reading the sources' : `Reading the ${sources[0]?.type ?? 'source'}`, ms: 1300 },
     { label: "Finding what's new", ms: 2000 },
     { label: 'Updating the document', ms: 1500 },
   ];

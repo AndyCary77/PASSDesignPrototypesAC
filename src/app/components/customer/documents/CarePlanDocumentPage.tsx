@@ -14,9 +14,9 @@ import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
 import { CarePlanDocumentView, CareBridgeContext, PublishedConfirmationBanner, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
-import { AssessmentHeroUpdateBanner, AssessmentHeroUpdateDraftBanner, UpdateNoChangesNotice, type UpdateSource } from './UpdateDocumentBanner';
+import { AssessmentHeroUpdateBanner, AssessmentHeroUpdateDraftBanner, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type UpdateSource } from './UpdateDocumentBanner';
 import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS, getUpdateSteps } from './UpdateProgress';
-import { applyPlanUpdate, discardPlanUpdate, getPlanUpdate, getUpdateInfo, publishPlanUpdate } from './carePlanUpdate';
+import { applyPlanUpdates, discardPlanUpdate, getPlanUpdate, getPublishedSources, getUpdateInfo, getUpdateSources, publishPlanUpdate, recordPublishedSources } from './carePlanUpdate';
 import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
 import { useScrolled } from '../../../hooks/useScrolled';
 import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
@@ -40,15 +40,22 @@ interface CarePlanDocumentState {
   isUpdateDraft: boolean;
   /** What the update in progress was made from, and how many sections/fields it changed. */
   updateInfo: ReturnType<typeof getUpdateInfo>;
-  /** Update the finished document from a chosen recording or file — drafts only what has new information. */
-  startUpdate: (source: UpdateSource) => void;
-  /** The simulated run in progress (its source and which step it's on), or null when idle. */
-  updating: { source: UpdateSource; step: number } | null;
+  /** Every recording and file the update in progress was made from. */
+  updateSources: UpdateSource[];
+  /** Update the finished document from the chosen recordings and files — drafts only what has new information. */
+  startUpdate: (sources: UpdateSource[]) => void;
+  /** The simulated run in progress (its sources and which step it's on), or null when idle. */
+  updating: { sources: UpdateSource[]; step: number } | null;
   discardUpdate: () => void;
   publishUpdate: () => void;
   /** Set when the last source chosen had nothing new for the document. */
   noChangesFor: string | null;
   dismissNoChanges: () => void;
+  /** Files in the last run that couldn't be read (password-protected, damaged, or a scan) — and whether the rest still drafted. */
+  fileProblems: { problems: FileProblem[]; othersDrafted: boolean } | null;
+  dismissFileProblems: () => void;
+  /** The recordings/files published updates were drafted from — named on the persistent Assessment Hero banner. */
+  publishedSources: UpdateSource[];
   /** Just published an update — drives the green confirmation. */
   justPublished: boolean;
   dismissJustPublished: () => void;
@@ -76,7 +83,7 @@ const COMPLETED_CARE_PLAN_CUSTOMERS = ['arthur-barrington', 'vera-bramwell'];
 /**
  * Of those, the customers whose finished plan shows the minimal AssessmentHeroUpdateBanner above it: "Drafted
  * by Assessment Hero", with one "Update document" link to bring the plan up to date from a recording or file.
- * (A published document doesn't keep a link to the recordings it came from, so there are no recording links.)
+ * Once an update has been published into it, the banner also names what it was drafted from, with a link to open it.
  * Vera's plan was drafted from paperwork rather than a recording, so she has no recordings to pick and no authored
  * updates yet: the banner is there, but any source she chooses reports nothing new (see finishUpdate).
  */
@@ -135,42 +142,53 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
   // In draft from the moment an update lands until it is published or discarded — NOT just while fields are still
   // pending: once the last one is accepted the draft is ready to publish, and needs to stay put until it is.
   const updateInfo = isCompletedDocument && baseRecording ? getUpdateInfo(getFormSections(baseRecording), getProseSections(baseRecording)) : null;
+  const updateSources = isCompletedDocument && baseRecording ? getUpdateSources(getFormSections(baseRecording), getProseSections(baseRecording)) : [];
   const isUpdateDraft = updateInfo !== null;
   const [noChangesFor, setNoChangesFor] = useState<string | null>(null);
   const [justPublished, setJustPublished] = useState(false);
+  const [publishedSources, setPublishedSources] = useState<UpdateSource[]>(() => getPublishedSources(customer.id));
 
   // The update runs for a few seconds first — "thinking time", the same stepper as drafting a care plan — and is
   // only applied when it finishes. Kept in this provider, so leaving the page cancels it.
-  const [updating, setUpdating] = useState<{ source: UpdateSource; step: number } | null>(null);
+  const [updating, setUpdating] = useState<{ sources: UpdateSource[]; step: number } | null>(null);
+  const [fileProblems, setFileProblems] = useState<{ problems: FileProblem[]; othersDrafted: boolean } | null>(null);
 
-  const startUpdate = (source: UpdateSource) => {
+  const startUpdate = (sources: UpdateSource[]) => {
     setNoChangesFor(null);
+    setFileProblems(null);
     setJustPublished(false);
-    setUpdating({ source, step: 0 });
+    setUpdating({ sources, step: 0 });
   };
 
   // Works out what the source changes and applies it (or reports nothing new). Runs once the stepper has finished.
-  const finishUpdate = (source: UpdateSource) => {
-    const sourceLabel = source.type === 'recording' ? source.label : source.name;
-    const def = getPlanUpdate(customer.id, source);
-    const result = def && baseRecording && applyPlanUpdate(def, source, getFormSections(baseRecording), getProseSections(baseRecording));
-    if (!result || result.changed === 0) {
-      // Nothing relevant in it: leave the document alone and say so, rather than hand over an empty draft.
-      setNoChangesFor(sourceLabel);
+  const finishUpdate = (sources: UpdateSource[]) => {
+    // A file that can't be read is named and nothing is drafted from it; the other sources still go ahead.
+    const problems = sources.flatMap(s => getSourceProblem(customer.id, s) ?? []);
+    const readable = sources.filter(s => !getSourceProblem(customer.id, s));
+    const runs = readable.flatMap(source => {
+      const def = getPlanUpdate(customer.id, source);
+      return def ? [{ def, source }] : [];
+    });
+    const result = baseRecording && runs.length > 0 ? applyPlanUpdates(runs, getFormSections(baseRecording), getProseSections(baseRecording)) : null;
+    const drafted = !!result && result.changed > 0;
+    if (problems.length > 0) setFileProblems({ problems, othersDrafted: drafted });
+    if (!drafted) {
+      // Nothing relevant in what could be read: leave the document alone and say so, rather than hand over an empty draft.
+      if (readable.length > 0) setNoChangesFor(describeSources(readable));
       return;
     }
-    if (!baseRecording) return;
+    if (!baseRecording || !result) return;
     setFormSections(baseRecording.id, result.forms);
     setProseSections(baseRecording.id, result.prose);
   };
 
   useEffect(() => {
     if (!updating) return;
-    const steps = getUpdateSteps(updating.source.type);
+    const steps = getUpdateSteps(updating.sources);
     const isFinalHold = updating.step === steps.length;
     const timer = window.setTimeout(() => {
       if (isFinalHold) {
-        finishUpdate(updating.source);
+        finishUpdate(updating.sources);
         setUpdating(null);
       } else {
         setUpdating(u => (u ? { ...u, step: u.step + 1 } : u));
@@ -189,6 +207,8 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
 
   const publishUpdate = () => {
     if (!baseRecording) return;
+    // Read the sources off the draft before publishing clears its markers: the published plan keeps naming them.
+    setPublishedSources(recordPublishedSources(customer.id, getUpdateSources(getFormSections(baseRecording), getProseSections(baseRecording))));
     const result = publishPlanUpdate(getFormSections(baseRecording), getProseSections(baseRecording));
     setFormSections(baseRecording.id, result.forms);
     setProseSections(baseRecording.id, result.prose);
@@ -229,9 +249,10 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
     <CarePlanDocumentContext.Provider
       value={{
         customer, navigate, dirty, setDirty, published, setPublished,
-        isCompletedDocument, isUpdateDraft, updateInfo, startUpdate, updating, discardUpdate, publishUpdate,
+        isCompletedDocument, isUpdateDraft, updateInfo, updateSources, startUpdate, updating, discardUpdate, publishUpdate,
         noChangesFor, dismissNoChanges: () => setNoChangesFor(null),
-        justPublished, dismissJustPublished: () => setJustPublished(false),
+        fileProblems, dismissFileProblems: () => setFileProblems(null),
+        publishedSources, justPublished, dismissJustPublished: () => setJustPublished(false),
         linkedSource, setLinkedSource,
         linkedRecording, otherRecordings, pendingReview, pendingCount, fileInputRef,
         handleUpload, relinkRecording, handleUnlink,
@@ -381,8 +402,8 @@ function RelinkDropdown() {
 /** Everything below the pinned sub-nav — the CareBridge Draft panel, title bar, History and the form itself. */
 export function CarePlanDocumentContent() {
   const {
-    customer, navigate, published, isCompletedDocument, isUpdateDraft, updateInfo, startUpdate, updating, discardUpdate,
-    publishUpdate, noChangesFor, dismissNoChanges, justPublished, dismissJustPublished, linkedSource, linkedRecording,
+    customer, navigate, published, isCompletedDocument, isUpdateDraft, updateInfo, updateSources, startUpdate, updating, discardUpdate,
+    publishUpdate, noChangesFor, dismissNoChanges, fileProblems, dismissFileProblems, publishedSources, justPublished, dismissJustPublished, linkedSource, linkedRecording,
     pendingReview, pendingCount, fileInputRef, handleUpload, setDirty, setPublished,
   } = useCarePlanDocument();
 
@@ -404,28 +425,27 @@ export function CarePlanDocumentContent() {
 
       {isCompletedDocument ? (
         isUpdateDraft && updateInfo ? (
-          <AssessmentHeroUpdateDraftBanner
-            customerId={customer.id}
-            update={updateInfo.update}
-            changed={updateInfo.changed}
-            pendingCount={pendingCount}
-            onViewSource={() => navigate(
-              updateInfo.update.recordingId
-                ? `/customers/${customer.id}/documents/recording/${updateInfo.update.recordingId}`
-                : `/customers/${customer.id}/documents?tab=files`,
-            )}
-            onDiscard={discardUpdate}
-            onPublish={publishUpdate}
-          />
+          <div className="flex flex-col gap-3">
+            {fileProblems && <UpdateProblemsNotice problems={fileProblems.problems} othersDrafted={fileProblems.othersDrafted} onDismiss={dismissFileProblems} />}
+            <AssessmentHeroUpdateDraftBanner
+              customerId={customer.id}
+              sources={updateSources}
+              changed={updateInfo.changed}
+              pendingCount={pendingCount}
+              onDiscard={discardUpdate}
+              onPublish={publishUpdate}
+            />
+          </div>
         ) : UPDATE_BANNER_CUSTOMERS.includes(customer.id) && (
           <div className="flex flex-col gap-3">
             {justPublished && <PublishedConfirmationBanner onDismissed={dismissJustPublished} />}
+            {fileProblems && <UpdateProblemsNotice problems={fileProblems.problems} othersDrafted={fileProblems.othersDrafted} onDismiss={dismissFileProblems} />}
             {noChangesFor && <UpdateNoChangesNotice sourceLabel={noChangesFor} onDismiss={dismissNoChanges} />}
             {updating ? (
               <DocumentUpdateProgress
                 documentName="Customer Care and Support Plan"
-                sourceLabel={updating.source.type === 'recording' ? updating.source.label : updating.source.name}
-                steps={getUpdateSteps(updating.source.type)}
+                sourceLabel={describeSources(updating.sources)}
+                steps={getUpdateSteps(updating.sources)}
                 step={updating.step}
               />
             ) : (
@@ -433,6 +453,7 @@ export function CarePlanDocumentContent() {
                 customerId={customer.id}
                 documentName="Customer Care and Support Plan"
                 onSelect={startUpdate}
+                sources={publishedSources}
               />
             )}
           </div>

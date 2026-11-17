@@ -18,6 +18,24 @@ export interface CustomerFile {
   uploaded: string;  // 'YYYY-MM-DDTHH:mm'
   modified: string;  // 'YYYY-MM-DDTHH:mm' — equal to `uploaded` unless the file has been renamed/replaced
   uploadedBy: string;
+  /** Which folder in the Files tab it sits in — shown in Assessment Hero's source picker. */
+  folder: string;
+  /**
+   * Set when Assessment Hero can't read the file's content: a password-protected PDF, a damaged file, or a scan
+   * with no text layer (scanned PDFs aren't read with OCR in this phase). Drafting from it names the file and
+   * drafts nothing from it (AIOP-24513). Left unset for a normal, readable file.
+   */
+  readability?: FileReadability;
+}
+
+export type FileReadability = 'password-protected' | 'corrupt' | 'no-text';
+
+/** The formats Assessment Hero can read as a source: PDF and Word. Anything else is listed but can't be selected. */
+export const SOURCE_EXTENSIONS: FileExtension[] = ['pdf', 'docx'];
+export const isSupportedSource = (f: Pick<CustomerFile, 'extension'>) => SOURCE_EXTENSIONS.includes(f.extension);
+
+export function getFileReadability(customerId: string, fileId: string): FileReadability | undefined {
+  return CUSTOMER_FILES[customerId]?.find(f => f.id === fileId)?.readability;
 }
 
 const KB = 1000;
@@ -27,82 +45,82 @@ export const CUSTOMER_FILES: Record<string, CustomerFile[]> = {
   'arthur-barrington': [
     {
       id: 'ab-1', name: 'Hospital Discharge Summary - Hip Fracture', extension: 'pdf',
-      sizeBytes: 1.8 * MB, uploaded: '2026-11-16T09:41', modified: '2026-11-16T09:41', uploadedBy: 'Admin',
+      sizeBytes: 1.8 * MB, uploaded: '2026-11-16T09:41', modified: '2026-11-16T09:41', uploadedBy: 'Admin', folder: 'Health and hospital',
     },
     {
       id: 'ab-2', name: 'Moving and Handling Risk Assessment', extension: 'docx',
-      sizeBytes: 412 * KB, uploaded: '2026-11-16T10:05', modified: '2026-11-16T10:32', uploadedBy: 'Priya Sharma',
+      sizeBytes: 412 * KB, uploaded: '2026-11-16T10:05', modified: '2026-11-16T10:32', uploadedBy: 'Priya Sharma', folder: 'Assessments',
     },
     {
       id: 'ab-3', name: 'Falls Risk Assessment (Initial)', extension: 'docx',
-      sizeBytes: 96.4 * KB, uploaded: '2026-11-13T15:18', modified: '2026-11-13T15:18', uploadedBy: 'Priya Sharma',
+      sizeBytes: 96.4 * KB, uploaded: '2026-11-13T15:18', modified: '2026-11-13T15:18', uploadedBy: 'Priya Sharma', folder: 'Assessments',
     },
     {
       id: 'ab-4', name: 'Occupational Therapy Report - Bed and Stair Rails', extension: 'pdf',
-      sizeBytes: 1.1 * MB, uploaded: '2026-11-12T11:52', modified: '2026-11-12T11:52', uploadedBy: 'Admin',
+      sizeBytes: 1.1 * MB, uploaded: '2026-11-12T11:52', modified: '2026-11-12T11:52', uploadedBy: 'Admin', folder: 'Health and hospital',
     },
     {
       id: 'ab-5', name: 'GP Medication List - October 2026', extension: 'pdf',
-      sizeBytes: 188 * KB, uploaded: '2026-10-20T16:33', modified: '2026-10-20T16:33', uploadedBy: 'Adrianna Janowski',
+      sizeBytes: 188 * KB, uploaded: '2026-10-20T16:33', modified: '2026-10-20T16:33', uploadedBy: 'Adrianna Janowski', folder: 'Health and hospital',
     },
     {
       id: 'ab-6', name: 'Key Safe Location and Access Instructions', extension: 'docx',
-      sizeBytes: 31.4 * KB, uploaded: '2026-10-05T08:47', modified: '2026-10-19T13:10', uploadedBy: 'Admin',
+      sizeBytes: 31.4 * KB, uploaded: '2026-10-05T08:47', modified: '2026-10-19T13:10', uploadedBy: 'Admin', folder: 'Access and safety', readability: 'corrupt',
     },
     {
       id: 'ab-7', name: 'Front Door Key Safe Photo', extension: 'jpg',
-      sizeBytes: 2.6 * MB, uploaded: '2026-10-05T08:49', modified: '2026-10-05T08:49', uploadedBy: 'Adrianna Janowski',
+      sizeBytes: 2.6 * MB, uploaded: '2026-10-05T08:49', modified: '2026-10-05T08:49', uploadedBy: 'Adrianna Janowski', folder: 'Access and safety',
     },
     {
       id: 'ab-8', name: 'Signed Service Agreement - Arthur Barrington', extension: 'pdf',
-      sizeBytes: 2.4 * MB, uploaded: '2026-10-02T14:20', modified: '2026-10-02T14:20', uploadedBy: 'Admin',
+      sizeBytes: 2.4 * MB, uploaded: '2026-10-02T14:20', modified: '2026-10-02T14:20', uploadedBy: 'Admin', folder: 'Agreements and funding', readability: 'no-text',
     },
     {
       id: 'ab-9', name: 'Funding Approval Letter - Birmingham City Council', extension: 'pdf',
-      sizeBytes: 214 * KB, uploaded: '2026-09-29T10:04', modified: '2026-09-29T10:04', uploadedBy: 'Admin',
+      sizeBytes: 214 * KB, uploaded: '2026-09-29T10:04', modified: '2026-09-29T10:04', uploadedBy: 'Admin', folder: 'Agreements and funding', readability: 'password-protected',
     },
     {
       id: 'ab-10', name: 'DNACPR Form (Original Copy)', extension: 'pdf',
-      sizeBytes: 640 * KB, uploaded: '2026-09-28T11:12', modified: '2026-09-28T11:12', uploadedBy: 'Admin',
+      sizeBytes: 640 * KB, uploaded: '2026-09-28T11:12', modified: '2026-09-28T11:12', uploadedBy: 'Admin', folder: 'Legal',
     },
     {
       id: 'ab-11', name: 'Lasting Power of Attorney - Health and Welfare', extension: 'pdf',
-      sizeBytes: 3.2 * MB, uploaded: '2026-09-28T11:15', modified: '2026-09-28T11:15', uploadedBy: 'Admin',
+      sizeBytes: 3.2 * MB, uploaded: '2026-09-28T11:15', modified: '2026-09-28T11:15', uploadedBy: 'Admin', folder: 'Legal',
     },
   ],
 
   'vera-bramwell': [
     {
       id: 'vb-1', name: 'Initial Assessment Notes - Home Visit', extension: 'docx',
-      sizeBytes: 148 * KB, uploaded: '2026-11-16T11:09', modified: '2026-11-16T11:40', uploadedBy: 'Priya Sharma',
+      sizeBytes: 148 * KB, uploaded: '2026-11-16T11:09', modified: '2026-11-16T11:40', uploadedBy: 'Priya Sharma', folder: 'Assessments',
     },
     {
       id: 'vb-2', name: 'Nutrition and Hydration Screening (MUST)', extension: 'docx',
-      sizeBytes: 58.7 * KB, uploaded: '2026-11-16T11:08', modified: '2026-11-16T11:08', uploadedBy: 'Priya Sharma',
+      sizeBytes: 58.7 * KB, uploaded: '2026-11-16T11:08', modified: '2026-11-16T11:08', uploadedBy: 'Priya Sharma', folder: 'Assessments',
     },
     {
       id: 'vb-3', name: 'District Nurse Handover - Pressure Care', extension: 'pdf',
-      sizeBytes: 326 * KB, uploaded: '2026-11-11T14:26', modified: '2026-11-11T14:26', uploadedBy: 'Admin',
+      sizeBytes: 326 * KB, uploaded: '2026-11-11T14:26', modified: '2026-11-11T14:26', uploadedBy: 'Admin', folder: 'Health and hospital',
     },
     {
       id: 'vb-4', name: 'GP Surgery Letter - Medication Review', extension: 'pdf',
-      sizeBytes: 172 * KB, uploaded: '2026-11-09T09:15', modified: '2026-11-09T09:15', uploadedBy: 'Admin',
+      sizeBytes: 172 * KB, uploaded: '2026-11-09T09:15', modified: '2026-11-09T09:15', uploadedBy: 'Admin', folder: 'Health and hospital',
     },
     {
       id: 'vb-5', name: 'Mental Capacity Assessment - Managing Finances', extension: 'pdf',
-      sizeBytes: 905 * KB, uploaded: '2026-11-06T16:02', modified: '2026-11-06T16:02', uploadedBy: 'Priya Sharma',
+      sizeBytes: 905 * KB, uploaded: '2026-11-06T16:02', modified: '2026-11-06T16:02', uploadedBy: 'Priya Sharma', folder: 'Legal',
     },
     {
       id: 'vb-6', name: 'Medication Administration Consent Form', extension: 'pdf',
-      sizeBytes: 1.3 * MB, uploaded: '2026-11-04T12:30', modified: '2026-11-04T12:30', uploadedBy: 'Admin',
+      sizeBytes: 1.3 * MB, uploaded: '2026-11-04T12:30', modified: '2026-11-04T12:30', uploadedBy: 'Admin', folder: 'Legal', readability: 'no-text',
     },
     {
       id: 'vb-7', name: 'Care Package Referral - Staffordshire County Council', extension: 'pdf',
-      sizeBytes: 2.1 * MB, uploaded: '2026-11-02T10:11', modified: '2026-11-02T10:11', uploadedBy: 'Admin',
+      sizeBytes: 2.1 * MB, uploaded: '2026-11-02T10:11', modified: '2026-11-02T10:11', uploadedBy: 'Admin', folder: 'Referral', readability: 'password-protected',
     },
     {
       id: 'vb-8', name: 'Next of Kin and Emergency Contacts', extension: 'xlsx',
-      sizeBytes: 24.2 * KB, uploaded: '2026-11-02T10:14', modified: '2026-11-05T09:48', uploadedBy: 'Admin',
+      sizeBytes: 24.2 * KB, uploaded: '2026-11-02T10:14', modified: '2026-11-05T09:48', uploadedBy: 'Admin', folder: 'Referral',
     },
   ],
   // Edith has no uploads yet, so her Files tab shows its empty state.
