@@ -1,5 +1,7 @@
-import type { FormField } from '../CareBridgePage';
+import { resolveRecording, type FormField, type ItemUpdate } from '../CareBridgePage';
 import type { UpdateSource } from './UpdateDocumentBanner';
+import { getSourceMeta } from './carePlanUpdate';
+import { resolveCandidates, sortOldestFirst, type ConflictValue, type SourceExtract, type SourceRef } from './sourceMerge';
 
 // "Nutrition and Hydration Assessment" — Vera Bramwell's incomplete assessment, the scenario for filling a blank
 // document from a recording OR a file. It starts with every field empty; picking a source drafts in only the answers
@@ -64,6 +66,30 @@ export const NUTRITION_GROUPS: NutritionGroup[] = [
 
 /** What a source file contributes: new values for the fields it has an answer for, and nothing for the rest. */
 export type FillPatch = Record<string, Pick<FormField, 'value' | 'rows' | 'sourceLines'>>;
+
+/** Where in each file an answer came from — what Check source shows. Keyed `file:<id>` then by field id. */
+const FILE_EXTRACTS: Record<string, Record<string, { location: string; text: string }>> = {
+  'file:vb-2': {
+    height: { location: 'Step 1', text: 'Height: 1.57 m.' },
+    weight: { location: 'Step 1', text: 'Weight: 49.8 kg (16/11/2026).' },
+    bmi: { location: 'Step 1', text: 'BMI 20.2 kg/m² — score 0.' },
+    'weight-loss': { location: 'Step 2', text: 'Unplanned weight loss in the last 3–6 months: 4.1 kg (7.6%) — score 1.' },
+    'acute-illness': { location: 'Step 3', text: 'Acute disease effect: no. Score 0.' },
+    'must-risk': { location: 'Step 4', text: 'Overall risk of malnutrition: MEDIUM (total score 1).' },
+    'must-action': { location: 'Step 5', text: 'Medium risk: observe — record 3-day intake; refer to GP if intake does not improve; rescreen in 1 month.' },
+    appetite: { location: 'Notes', text: 'Small appetite, smallest in the evening. Eats more at lunchtime when someone sits with her.' },
+    fluids: { location: 'Notes', text: 'Fluid intake approx. 800 ml/day (target about 1,500 ml). Forgets to drink unless prompted.' },
+  },
+  'file:vb-1': {
+    allergies: { location: 'Section 3 — Food and drink', text: 'Allergies/intolerances: none known. Special diet: none.' },
+    preferences: { location: 'Section 3 — Food and drink', text: 'Likes porridge, soup, fish fingers with mash, tinned peaches; tea with one sugar. Dislikes spicy food and cold sandwiches.' },
+    'meal-prep': { location: 'Section 4 — Meals', text: 'Cannot cook safely (arthritis, hip) or carry a hot plate. Carers prepare breakfast and heat lunch. Paul brings her evening meal Wednesdays and Sundays.' },
+    'meals-plan': { location: 'Section 4 — Meals', text: 'Breakfast 8:00 — porridge and tea. Lunch 12:30 — heated meal, food cut up. Evening 5:30 — light meal. Drink left within reach at every visit.' },
+  },
+  'file:vb-3': {
+    risks: { location: 'Page 1 — Risks', text: 'Poor food and fluid intake could slow healing of the heel pressure area. Fortified food and drinks at every visit; tell the district nurse if she eats very little for 2 days.' },
+  },
+};
 
 const FILL_FROM_FILE: Record<string, FillPatch> = {
   // Nutrition and Hydration Screening (MUST).docx — the main source: the screening scores and her intake.
@@ -149,29 +175,70 @@ export function getNutritionFill(source: UpdateSource): FillPatch | null {
   return FILL_FROM_FILE[`file:${source.id}`] ?? null;
 }
 
-/**
- * Combines what several sources found into one patch. A field more than one source answers takes the last one's
- * answer — noticing and flagging a disagreement is the next piece of work (AIOP-25366). Transcript citations are
- * dropped when more than one recording is involved, since a field's Check transcript can only point into one.
- */
-export function mergeFillPatches(patches: FillPatch[], recordingCount: number): FillPatch {
-  const merged: FillPatch = {};
-  for (const patch of patches) {
-    for (const [fieldId, answer] of Object.entries(patch)) {
-      merged[fieldId] = recordingCount > 1 ? { ...answer, sourceLines: undefined } : answer;
-    }
-  }
-  return merged;
-}
+const toRef = (s: UpdateSource): SourceRef => ({ type: s.type, id: s.id, label: s.type === 'file' ? s.name : s.label });
+const keyOf = (r: Pick<SourceRef, 'type' | 'id'>) => `${r.type}:${r.id}`;
 
-/** Applies a fill: each field it has an answer for gets that answer and goes to pending review. Returns how many changed. */
-export function applyNutritionFill(fields: FormField[], patch: FillPatch): { fields: FormField[]; filled: number } {
+/**
+ * Applies a fill from one or more sources: each field any of them has an answer for is drafted in and goes to pending
+ * review, remembering what it was (blank) so it can be discarded on its own. Where sources give different answers
+ * for a field the rules in sourceMerge.ts decide — the newest source by its own date wins and the disagreement is
+ * flagged, a legal document is kept, and where a date can't be trusted nothing is picked until the reviewer chooses.
+ * Returns how many fields got an answer.
+ */
+export function applyNutritionFill(
+  fields: FormField[],
+  found: { source: UpdateSource; patch: FillPatch }[],
+  customerId: string,
+): { fields: FormField[]; filled: number } {
+  const runId = `fill-${Date.now()}`;
+  const ordered = sortOldestFirst(found.map(f => ({ ...f, ref: toRef(f.source), ...getSourceMeta(customerId, f.source) })));
+
   let filled = 0;
   const next = fields.map(f => {
-    const p = patch[f.id];
-    if (!p) return f;
+    const candidates: ConflictValue[] = [];
+    const extracts: SourceExtract[] = [];
+    for (const run of ordered) {
+      const answer = run.patch[f.id];
+      if (!answer) continue;
+      candidates.push({
+        ...run.ref, date: run.date, dateUncertain: run.dateUncertain, legal: run.legal,
+        value: answer.value, rows: answer.rows,
+        text: answer.rows ? answer.rows.map(r => r.join(' · ')).join('; ') : (answer.value ?? ''),
+      });
+      const base = { source: run.ref, date: run.date, dateUncertain: run.dateUncertain };
+      if (run.source.type === 'file') {
+        const x = FILE_EXTRACTS[keyOf(run.ref)]?.[f.id];
+        if (x) extracts.push({ ...base, ...x });
+      } else {
+        const first = answer.sourceLines?.[0];
+        const line = first ? resolveRecording(customerId, run.source.id)?.transcript[first.index] : undefined;
+        if (line) extracts.push({ ...base, location: `Transcript, ${line.time}`, text: first?.highlight ?? line.text });
+      }
+    }
+    if (candidates.length === 0) return f;
     filled++;
-    return { ...f, ...p, reviewed: false };
+
+    const { chosen, conflict } = resolveCandidates(candidates);
+    const keep = conflict?.resolution === 'undated';
+    const chosenRun = chosen && ordered.find(o => keyOf(o.ref) === keyOf(chosen));
+    const sources = candidates.map(({ type, id, label }) => ({ type, id, label })).filter((s, i, all) => all.findIndex(o => keyOf(o) === keyOf(s)) === i);
+    const update: ItemUpdate = {
+      id: runId,
+      sourceLabel: sources.map(s => s.label).join(', '),
+      sourceKind: candidates[candidates.length - 1].type,
+      sourceId: candidates[candidates.length - 1].id,
+      recordingId: chosenRun?.source.type === 'recording' ? chosenRun.source.id : undefined,
+      sources, extracts, conflict, fill: true,
+      previous: { value: f.value, rows: f.rows, reviewed: f.reviewed },
+    };
+    return {
+      ...f,
+      value: keep ? f.value : chosen?.value ?? f.value,
+      rows: keep ? f.rows : chosen?.rows ?? f.rows,
+      reviewed: false,
+      sourceLines: chosenRun?.source.type === 'recording' ? chosenRun.patch[f.id].sourceLines : undefined,
+      update,
+    };
   });
   return { fields: next, filled };
 }

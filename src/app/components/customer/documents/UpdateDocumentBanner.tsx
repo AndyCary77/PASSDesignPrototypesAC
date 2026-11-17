@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { AlertTriangle, ChevronDown, ChevronRight, File as FileIcon, Info, Mic, RefreshCw, Send, X } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronRight, File as FileIcon, FileX, Info, Mic, RefreshCw, Send, X } from 'lucide-react';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
+import { FILE_UNAVAILABLE, useDeletedFileIds } from '../../../data/fileStore';
 import { CUSTOMER_FILES, formatFileDate, formatFileSize, getFileReadability, isSupportedSource, type FileReadability } from '../../../data/customerFiles';
 import { Button } from '../../buttons/Button';
 import { SegmentedControl } from '../../buttons/SegmentedControl';
@@ -28,7 +29,23 @@ export type UpdateSource =
 
 type SourceKind = 'recording' | 'file';
 
+/** Opens the picker already showing a state — used by the prototype's ?demo= links, so a reviewer can land straight on it. */
+export interface PickerSeed {
+  open?: boolean;
+  kind?: SourceKind;
+  recordingIds?: string[];
+  fileIds?: string[];
+  /** Scroll the first unsupported file into view, so "Only PDF and Word files can be used" is on screen. */
+  scrollToUnsupported?: boolean;
+}
+
 export const sourceName = (s: UpdateSource) => (s.type === 'file' ? s.name : s.label);
+
+/** Whether a source is a file that has since been deleted from the Files tab. */
+export function useSourceGone(customerId: string) {
+  const deleted = useDeletedFileIds(customerId);
+  return (s: { type: 'recording' | 'file'; id: string }) => s.type === 'file' && deleted.has(s.id);
+}
 
 /** Where "View file" / "View recording" goes: the recording's page, or the customer's Files tab. */
 export const sourceHref = (customerId: string, s: UpdateSource) =>
@@ -52,8 +69,18 @@ export function ViewSourcesLink({ customerId, sources, onViewSource }: {
   onViewSource?: (source: UpdateSource) => void;
 }) {
   const navigate = useNavigate();
+  const gone = useSourceGone(customerId);
   const open = onViewSource ?? ((s: UpdateSource) => navigate(sourceHref(customerId, s)));
 
+  if (sources.length === 1 && gone(sources[0])) {
+    // A deleted file can't be opened; the record keeps its content, and says the source has gone.
+    return (
+      <span className="flex items-center gap-1 text-body font-medium text-gray-700">
+        <FileX className="w-3.5 h-3.5" aria-hidden="true" />
+        {FILE_UNAVAILABLE}
+      </span>
+    );
+  }
   if (sources.length === 1) {
     return (
       <button type="button" onClick={() => open(sources[0])} className={LINK_CLASS}>
@@ -75,9 +102,14 @@ export function ViewSourcesLink({ customerId, sources, onViewSource }: {
           {sources.map(s => {
             const Icon = s.type === 'file' ? FileIcon : Mic;
             return (
-              <DropdownMenuItem key={`${s.type}:${s.id}:${sourceName(s)}`} onSelect={() => open(s)} className="flex items-center gap-2 text-body">
-                <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" aria-hidden="true" />
-                <span className="truncate">{sourceName(s)}</span>
+              <DropdownMenuItem
+                key={`${s.type}:${s.id}:${sourceName(s)}`}
+                disabled={gone(s)}
+                onSelect={() => open(s)}
+                className="flex items-center gap-2 text-body"
+              >
+                {gone(s) ? <FileX className="w-4 h-4 text-gray-600 flex-shrink-0" aria-hidden="true" /> : <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" aria-hidden="true" />}
+                <span className="truncate">{gone(s) ? FILE_UNAVAILABLE : sourceName(s)}</span>
               </DropdownMenuItem>
             );
           })}
@@ -98,13 +130,16 @@ export function AssessmentHeroSourceIndicator({ customerId, sources = [], onView
   onViewSource?: (source: UpdateSource) => void;
   children?: React.ReactNode;
 }) {
+  const gone = useSourceGone(customerId);
+  // One source that has been deleted: the sentence drops "from …" and the link area says the file has gone.
+  const onlyGone = sources.length === 1 && gone(sources[0]);
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
         <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="Assessment Hero" />
         <p className="text-body text-purple-900 break-words">
           Drafted by Assessment Hero
-          {sources.length > 0 && <> from <strong>{describeSources(sources)}</strong></>}
+          {sources.length > 0 && !onlyGone && <> from <strong>{describeSources(sources)}</strong></>}
           {children ? ' — add a recording or file to update.' : '.'}
         </p>
       </div>
@@ -116,7 +151,7 @@ export function AssessmentHeroSourceIndicator({ customerId, sources = [], onView
   );
 }
 
-export function AssessmentHeroUpdateBanner({ customerId, documentName, onSelect, sources }: {
+export function AssessmentHeroUpdateBanner({ customerId, documentName, onSelect, sources, pickerSeed }: {
   customerId: string;
   /** Used in the dialog's wording ("update the Customer Care and Support Plan"). */
   documentName: string;
@@ -124,6 +159,7 @@ export function AssessmentHeroUpdateBanner({ customerId, documentName, onSelect,
   onSelect: (sources: UpdateSource[]) => void;
   /** What the published document was drafted from, once something has been published into it. */
   sources?: UpdateSource[];
+  pickerSeed?: PickerSeed;
 }) {
   const limitReached = isAssessmentHeroLimitReached(customerId);
 
@@ -143,7 +179,7 @@ export function AssessmentHeroUpdateBanner({ customerId, documentName, onSelect,
             Update document
           </button>
         ) : (
-          <UpdateDocumentDialog customerId={customerId} documentName={documentName} onSelect={onSelect} />
+          <UpdateDocumentDialog customerId={customerId} documentName={documentName} onSelect={onSelect} seed={pickerSeed} />
         )
       )}
     </AssessmentHeroSourceIndicator>
@@ -158,7 +194,7 @@ export function AssessmentHeroUpdateBanner({ customerId, documentName, onSelect,
  * Also used, with `fileOnly`, to fill a blank document from files — then `trigger` is the button that opens it and
  * `title`/`description` word the dialog for that.
  */
-export function UpdateDocumentDialog({ customerId, documentName, onSelect, fileOnly = false, trigger, title = 'Update document', description }: {
+export function UpdateDocumentDialog({ customerId, documentName, onSelect, fileOnly = false, trigger, title = 'Update document', description, seed }: {
   customerId: string;
   documentName: string;
   onSelect: (sources: UpdateSource[]) => void;
@@ -167,15 +203,18 @@ export function UpdateDocumentDialog({ customerId, documentName, onSelect, fileO
   trigger?: React.ReactNode;
   title?: string;
   description?: string;
+  seed?: PickerSeed;
 }) {
   const recordings = resolveRecordings(customerId);
-  const files = CUSTOMER_FILES[customerId] ?? [];
+  const deletedIds = useDeletedFileIds(customerId);
+  const files = (CUSTOMER_FILES[customerId] ?? []).filter(f => !deletedIds.has(f.id));
 
-  const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<SourceKind>(fileOnly ? 'file' : 'recording');
+  const [open, setOpen] = useState(!!seed?.open);
+  const [kind, setKind] = useState<SourceKind>(seed?.kind ?? (fileOnly ? 'file' : 'recording'));
   // Kept per tab, so switching tabs doesn't lose what's ticked on the other one.
-  const [recordingIds, setRecordingIds] = useState<string[]>([]);
-  const [fileIds, setFileIds] = useState<string[]>([]);
+  const [recordingIds, setRecordingIds] = useState<string[]>(seed?.recordingIds ?? []);
+  const [fileIds, setFileIds] = useState<string[]>(seed?.fileIds ?? []);
+  const scrolledToUnsupported = useRef(false);
 
   const reset = () => { setKind(fileOnly ? 'file' : 'recording'); setRecordingIds([]); setFileIds([]); };
 
@@ -262,7 +301,16 @@ export function UpdateDocumentDialog({ customerId, documentName, onSelect, fileO
                 const supported = isSupportedSource(f);
                 const checked = fileIds.includes(f.id);
                 return (
-                  <label key={f.id} className={rowClass(checked, !supported)}>
+                  <label
+                    key={f.id}
+                    className={rowClass(checked, !supported)}
+                    ref={el => {
+                      if (el && !supported && seed?.scrollToUnsupported && !scrolledToUnsupported.current) {
+                        scrolledToUnsupported.current = true;
+                        el.scrollIntoView({ block: 'center' });
+                      }
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={checked}
@@ -318,6 +366,7 @@ export function AssessmentHeroUpdateDraftBanner({ customerId, sources, changed, 
   onDiscard: () => void;
   onPublish: () => void;
 }) {
+  const gone = useSourceGone(customerId);
   const only = sources.length === 1 ? sources[0] : undefined;
   const recording = only?.type === 'recording' ? resolveRecording(customerId, only.id) : undefined;
   const sourceLabel = describeSources(sources);
@@ -343,7 +392,7 @@ export function AssessmentHeroUpdateDraftBanner({ customerId, sources, changed, 
             {recording ? (
               <>Updated from <strong>{sourceLabel}</strong>, recorded <strong>{recordedOn} at {recordedAt}</strong> by <strong>{recording.recordedBy}</strong></>
             ) : only ? (
-              <>Updated from the file <strong>{sourceLabel}</strong></>
+              gone(only) ? <>Updated from <strong>a file that is no longer available</strong></> : <>Updated from the file <strong>{sourceLabel}</strong></>
             ) : (
               <>Updated from <strong>{sourceLabel}</strong></>
             )}

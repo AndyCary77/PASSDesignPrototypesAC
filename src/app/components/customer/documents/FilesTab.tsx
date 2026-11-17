@@ -4,6 +4,7 @@ import {
   File, FileSpreadsheet, FileText, FolderPlus, Image as ImageIcon, Inbox, Pencil, Search, X,
 } from 'lucide-react';
 import { useCustomer } from '../../../data/CustomerContext';
+import { deleteCustomerFile, isFileDeleted } from '../../../data/fileStore';
 import {
   CUSTOMER_FILES, formatFileDate, formatFileSize, type CustomerFile, type FileExtension,
 } from '../../../data/customerFiles';
@@ -51,7 +52,7 @@ export function FilesTab() {
   const customer = useCustomer();
   // Local copy, so renaming and deleting in the detail panel show up in the table. DocumentsPage keys this
   // component by customer, so each customer starts again from their own mock files.
-  const [allFiles, setAllFiles] = useState<CustomerFile[]>(() => CUSTOMER_FILES[customer.id] ?? []);
+  const [allFiles, setAllFiles] = useState<CustomerFile[]>(() => (CUSTOMER_FILES[customer.id] ?? []).filter(f => !isFileDeleted(customer.id, f.id)));
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [query, setQuery] = useState('');
@@ -88,6 +89,8 @@ export function FilesTab() {
   };
 
   const deleteFile = (id: string) => {
+    // Recorded centrally so it sticks when the tab is left and reopened, and so Assessment Hero knows the file has gone.
+    deleteCustomerFile(customer.id, id);
     setAllFiles(prev => prev.filter(f => f.id !== id));
     setSelected(prev => { const next = new Set(prev); next.delete(id); return next; });
   };

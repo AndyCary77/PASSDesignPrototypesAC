@@ -33,6 +33,9 @@ import { OutcomeBadge, TaskBadge } from './caremanagement/shared';
 import type { TaskCategory } from './caremanagement/types';
 import { Waveform } from '../icons/Waveform';
 import { SubnavTabs } from '../tabs/SubnavTabs';
+import { useDeletedFileIds } from '../../data/fileStore';
+import { chooseConflictValue, needsChoice, type FieldConflict, type Removal, type SourceExtract } from './documents/sourceMerge';
+import { CheckSourceLabel, ConflictPanel, RemovalNote, SourceExtractPopover, checkSourceButtonClass } from './documents/SourceCheck';
 
 
 // ─── Care & Support Plan structure — the real "multi-document" taxonomy ──────
@@ -145,6 +148,14 @@ export interface ItemUpdate {
   recordingId?: string;
   /** Every recording and file behind this change when more than one source fed it. `sourceLabel` joins their names. */
   sources?: { type: 'recording' | 'file'; id: string; label: string }[];
+  /** A blank document filled in from a source, rather than a finished one updated — worded "Filled from", with nothing "previously". */
+  fill?: boolean;
+  /** The passages each source's change came from — Check source. */
+  extracts?: SourceExtract[];
+  /** Set on a field when its sources disagreed: what was suggested and why, and the other values found. */
+  conflict?: FieldConflict;
+  /** Set on a section when a newer source took something out of it. */
+  removal?: Removal;
   previous: {
     text?: string;
     value?: string;
@@ -1223,10 +1234,15 @@ function buildCarePlan(recordings: Recording[]): {
 
 /** "Updated from 6-Week Review" — shown on an item an Update document run changed, while it's still a draft. */
 function UpdatedFromTag({ update }: { update: ItemUpdate }) {
+  const customer = useCustomer();
+  const deleted = useDeletedFileIds(customer.id);
+  // One source, and it is a file that has since been deleted from the Files tab.
+  const goneFile = update.sources?.length === 1 && update.sources[0].type === 'file' && deleted.has(update.sources[0].id);
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-0.5 text-sm font-semibold text-[rgb(109,27,152)]">
       <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-      Updated from {update.sourceLabel}
+      {/* Several sources: the names are in the disagreement panel and Check source, so the chip stays one short line. */}
+      {update.fill ? 'Filled from' : 'Updated from'} {update.sources && update.sources.length > 1 ? `${update.sources.length} sources` : goneFile ? 'a file that is no longer available' : update.sourceLabel}
     </span>
   );
 }
@@ -1400,8 +1416,11 @@ function EditableFormField({
   transcript: TranscriptLine[];
   audioUrl?: string;
 }) {
+  const customer = useCustomer();
   const captured = isFieldCaptured(field);
-  const pending = captured && field.reviewed === false;
+  // A field whose sources disagree about a date it can't tell apart has nothing suggested yet, but is still waiting on the reviewer.
+  const unresolved = needsChoice(field.update?.conflict);
+  const pending = field.reviewed === false && (captured || unresolved);
   const inputClass = `w-full ${fieldBoxClass(captured, pending)} rounded-lg px-3 py-2 text-body text-gray-900 placeholder:text-gray-500 placeholder:italic focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors`;
 
   const labelEl = field.type === 'text' || field.type === 'select'
@@ -1435,6 +1454,11 @@ function EditableFormField({
                 </button>
               </TranscriptCheckPopover>
             )}
+            {field.update?.extracts?.some(x => x.source.type === 'file') && (
+              <SourceExtractPopover customerId={customer.id} fieldLabel={field.label} extracts={field.update.extracts}>
+                <button type="button" className={checkSourceButtonClass}><CheckSourceLabel /></button>
+              </SourceExtractPopover>
+            )}
             {/* Rejects this one change from "Update document" (accepted or not), leaving the rest of the draft. */}
             {field.update && (
               <button
@@ -1445,7 +1469,9 @@ function EditableFormField({
                 <X className="w-3.5 h-3.5" /> Discard
               </button>
             )}
-            {pending && (
+            {pending && (unresolved ? (
+              <span className="text-body font-medium text-gray-700">Choose a value first</span>
+            ) : (
               <button
                 type="button"
                 onClick={() => markReviewed()}
@@ -1453,7 +1479,7 @@ function EditableFormField({
               >
                 <Check className="w-3.5 h-3.5" /> Accept
               </button>
-            )}
+            ))}
           </div>
         )}
       </div>
@@ -1540,7 +1566,19 @@ function EditableFormField({
         <EditableTableField field={field} pending={pending} captured={captured} onChange={onChange} />
       )}
 
-      {field.update && (
+      {field.update?.conflict && (
+        <ConflictPanel
+          customerId={customer.id}
+          conflict={field.update.conflict}
+          onChoose={pick => onChange({
+            value: pick.value ?? field.value,
+            rows: pick.rows ?? field.rows,
+            update: { ...field.update!, conflict: chooseConflictValue(field.update!.conflict!, pick) },
+          })}
+        />
+      )}
+
+      {field.update && (field.update.previous.value || field.update.previous.rows?.length) && (
         <p className="mt-1.5 text-sm text-gray-600">
           <span className="font-medium">Previously:</span> {describePreviousValue(field.update.previous)}
         </p>
@@ -2297,8 +2335,12 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
   // keeps the same update) doesn't move them, but a second update does.
   const firstUpdated = CARE_PLAN_STRUCTURE.find(item => formSections[item.id]?.some(f => f.update) || proseSections[item.id]?.update);
   const updateId = firstUpdated ? (formSections[firstUpdated.id]?.find(f => f.update)?.update ?? proseSections[firstUpdated.id]?.update)?.id : undefined;
+  // A link can ask for a particular section instead (?section=section-6) — the prototype's ?demo= links use this.
+  const [sectionParams] = useSearchParams();
+  const requestedSection = sectionParams.get('section');
   useEffect(() => {
-    if (updateId && firstUpdated) setSelectedId(firstUpdated.id);
+    if (!updateId || !firstUpdated) return;
+    setSelectedId(CARE_PLAN_STRUCTURE.some(item => item.id === requestedSection) ? requestedSection! : firstUpdated.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateId]);
 
@@ -2395,6 +2437,11 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                       </button>
                     </TranscriptCheckPopover>
                   )}
+                  {selectedContent.update?.extracts?.some(x => x.source.type === 'file') && (
+                    <SourceExtractPopover customerId={customer.id} fieldLabel={selectedItem.label} extracts={selectedContent.update.extracts}>
+                      <button type="button" className={checkSourceButtonClass}><CheckSourceLabel /></button>
+                    </SourceExtractPopover>
+                  )}
                   {/* Rejects this one change from "Update document" (accepted or not), leaving the rest of the draft. */}
                   {selectedContent.update && (
                     <button
@@ -2431,6 +2478,7 @@ function CarePlanMultiDocView({ recording }: { recording: Recording }) {
                 pending={selectedContent.reviewed === false}
                 onChange={() => setProseSections(recording.id, { ...proseSections, [selectedId]: { ...proseSections[selectedId], reviewed: true } })}
               />
+              {selectedContent.update?.removal && <RemovalNote removal={selectedContent.update.removal} />}
               {selectedContent.update?.previous.text && (
                 <details className="mt-3 text-sm text-gray-600">
                   <summary className="cursor-pointer font-medium text-[rgb(109,27,152)]">Previous version</summary>
@@ -3151,7 +3199,7 @@ export function CareBridgeProvider({ children }: { children: React.ReactNode }) 
   const countPendingFields = (recording: Recording) => {
     const forms = getFormSections(recording);
     const prose = getProseSections(recording);
-    const formsPending = Object.values(forms).reduce((n, fields) => n + fields.filter(f => isFieldCaptured(f) && f.reviewed === false).length, 0);
+    const formsPending = Object.values(forms).reduce((n, fields) => n + fields.filter(f => (isFieldCaptured(f) || needsChoice(f.update?.conflict)) && f.reviewed === false).length, 0);
     const prosePending = Object.values(prose).filter(s => s.reviewed === false).length;
     return formsPending + prosePending;
   };

@@ -1,5 +1,5 @@
-import { createContext, useContext as useReactContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { createContext, useContext as useReactContext, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { ArrowLeft, History, Printer, Send, Trash2 } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import { useCustomer } from '../../../data/CustomerContext';
@@ -9,10 +9,13 @@ import {
 } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
-import { AssessmentHeroSourceIndicator, UpdateDocumentDialog, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type UpdateSource } from './UpdateDocumentBanner';
+import { AssessmentHeroSourceIndicator, UpdateDocumentDialog, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type PickerSeed, type UpdateSource } from './UpdateDocumentBanner';
 import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS } from './UpdateProgress';
+import { needsChoice } from './sourceMerge';
+import { NUTRITION_DEMOS, demoSource } from './demoLinks';
+import { CUSTOMER_FILES } from '../../../data/customerFiles';
 import {
-  NUTRITION_BLANK_FIELDS, NUTRITION_GROUPS, applyNutritionFill, getFillSteps, getNutritionFill, mergeFillPatches,
+  NUTRITION_BLANK_FIELDS, NUTRITION_GROUPS, applyNutritionFill, getFillSteps, getNutritionFill,
 } from './nutritionHydrationData';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -43,6 +46,8 @@ interface NutritionDocumentState {
   filledCount: number;
   filling: { sources: UpdateSource[]; step: number } | null;
   startFill: (sources: UpdateSource[]) => void;
+  /** A ?demo= link asked for the source picker to open already showing something. */
+  pickerSeed?: PickerSeed;
   /** Files in the last run that couldn't be read — and whether the rest still filled something in. */
   fileProblems: { problems: FileProblem[]; othersDrafted: boolean } | null;
   dismissFileProblems: () => void;
@@ -89,8 +94,7 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
       const patch = getNutritionFill(s);
       return patch ? [{ source: s, patch }] : [];
     });
-    const patch = mergeFillPatches(found.map(f => f.patch), found.filter(f => f.source.type === 'recording').length);
-    const result = found.length > 0 ? applyNutritionFill(NUTRITION_BLANK_FIELDS, patch) : null;
+    const result = found.length > 0 ? applyNutritionFill(NUTRITION_BLANK_FIELDS, found, customer.id) : null;
     const drafted = !!result && result.filled > 0;
     if (problems.length > 0) setFileProblems({ problems, othersDrafted: drafted });
     if (!result || !drafted) {
@@ -102,6 +106,17 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
     setFilledSources(found.map(f => f.source));
     setFilledCount(result.filled);
   };
+
+  // ?demo=<name> (see demoLinks.ts): put the form in a named state on load, so a link can land on it without the clicks.
+  const [searchParams] = useSearchParams();
+  const demo = NUTRITION_DEMOS[searchParams.get('demo') ?? ''];
+  const demoRan = useRef(false);
+  useEffect(() => {
+    if (!demo?.sources || demoRan.current) return;
+    demoRan.current = true;
+    finishFill(demo.sources.flatMap(k => demoSource(customer.id, k, id => CUSTOMER_FILES[customer.id]?.find(f => f.id === id)) ?? []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The "thinking time" — same stepper as updating a finished document, kept here so leaving the page cancels it.
   useEffect(() => {
@@ -127,12 +142,12 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
     setDirty(false);
   };
 
-  const pendingCount = fields.filter(f => isFieldCaptured(f) && f.reviewed === false).length;
+  const pendingCount = fields.filter(f => (isFieldCaptured(f) || needsChoice(f.update?.conflict)) && f.reviewed === false).length;
 
   return (
     <NutritionDocumentContext.Provider
       value={{
-        customer, navigate, dirty, setDirty, fields, setFields, filledSources, filledCount, filling, startFill,
+        customer, navigate, dirty, setDirty, fields, setFields, filledSources, filledCount, filling, startFill, pickerSeed: demo?.picker,
         fileProblems, dismissFileProblems: () => setFileProblems(null),
         discardDraft, noChangesFor, dismissNoChanges: () => setNoChangesFor(null),
         published, publish: () => setPublished(true), pendingCount,
@@ -181,7 +196,7 @@ export function NutritionDocumentSubnav() {
 
 /** Minimal prompt above a blank document: Assessment Hero offering to fill it from a recording or a file. */
 function FillBanner() {
-  const { customer, startFill } = useNutritionDocument();
+  const { customer, startFill, pickerSeed } = useNutritionDocument();
   const limitReached = isAssessmentHeroLimitReached(customer.id);
 
   return (
@@ -204,6 +219,7 @@ function FillBanner() {
           customerId={customer.id}
           documentName={DOCUMENT_NAME}
           onSelect={startFill}
+          seed={pickerSeed}
           title="Select a recording or file"
           description={`Choose a recording or a file to fill in the ${DOCUMENT_NAME} from.`}
           trigger={

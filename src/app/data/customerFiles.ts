@@ -26,6 +26,12 @@ export interface CustomerFile {
    * drafts nothing from it (AIOP-24513). Left unset for a normal, readable file.
    */
   readability?: FileReadability;
+  /** The date written in the document itself (the letter's date, the assessment date) — not the upload date. YYYY-MM-DD. */
+  documentDate?: string;
+  /** The document has a date but Assessment Hero can't be sure of it (handwritten, smudged, ambiguous). */
+  dateUncertain?: boolean;
+  /** A legal document — a Lasting Power of Attorney, a DNACPR, a signed consent. Never overridden by a newer non-legal source. */
+  legal?: boolean;
 }
 
 export type FileReadability = 'password-protected' | 'corrupt' | 'no-text';
@@ -45,27 +51,27 @@ export const CUSTOMER_FILES: Record<string, CustomerFile[]> = {
   'arthur-barrington': [
     {
       id: 'ab-1', name: 'Hospital Discharge Summary - Hip Fracture', extension: 'pdf',
-      sizeBytes: 1.8 * MB, uploaded: '2026-11-16T09:41', modified: '2026-11-16T09:41', uploadedBy: 'Admin', folder: 'Health and hospital',
+      sizeBytes: 1.8 * MB, uploaded: '2026-11-16T09:41', modified: '2026-11-16T09:41', uploadedBy: 'Admin', folder: 'Health and hospital', documentDate: '2026-11-05',
     },
     {
       id: 'ab-2', name: 'Moving and Handling Risk Assessment', extension: 'docx',
-      sizeBytes: 412 * KB, uploaded: '2026-11-16T10:05', modified: '2026-11-16T10:32', uploadedBy: 'Priya Sharma', folder: 'Assessments',
+      sizeBytes: 412 * KB, uploaded: '2026-11-16T10:05', modified: '2026-11-16T10:32', uploadedBy: 'Priya Sharma', folder: 'Assessments', documentDate: '2026-11-14', dateUncertain: true,
     },
     {
       id: 'ab-3', name: 'Falls Risk Assessment (Initial)', extension: 'docx',
-      sizeBytes: 96.4 * KB, uploaded: '2026-11-13T15:18', modified: '2026-11-13T15:18', uploadedBy: 'Priya Sharma', folder: 'Assessments',
+      sizeBytes: 96.4 * KB, uploaded: '2026-11-13T15:18', modified: '2026-11-13T15:18', uploadedBy: 'Priya Sharma', folder: 'Assessments', documentDate: '2026-11-12',
     },
     {
       id: 'ab-4', name: 'Occupational Therapy Report - Bed and Stair Rails', extension: 'pdf',
-      sizeBytes: 1.1 * MB, uploaded: '2026-11-12T11:52', modified: '2026-11-12T11:52', uploadedBy: 'Admin', folder: 'Health and hospital',
+      sizeBytes: 1.1 * MB, uploaded: '2026-11-12T11:52', modified: '2026-11-12T11:52', uploadedBy: 'Admin', folder: 'Health and hospital', documentDate: '2026-11-10',
     },
     {
       id: 'ab-5', name: 'GP Medication List - October 2026', extension: 'pdf',
-      sizeBytes: 188 * KB, uploaded: '2026-10-20T16:33', modified: '2026-10-20T16:33', uploadedBy: 'Adrianna Janowski', folder: 'Health and hospital',
+      sizeBytes: 188 * KB, uploaded: '2026-10-20T16:33', modified: '2026-10-20T16:33', uploadedBy: 'Adrianna Janowski', folder: 'Health and hospital', documentDate: '2026-10-20',
     },
     {
       id: 'ab-6', name: 'Key Safe Location and Access Instructions', extension: 'docx',
-      sizeBytes: 31.4 * KB, uploaded: '2026-10-05T08:47', modified: '2026-10-19T13:10', uploadedBy: 'Admin', folder: 'Access and safety', readability: 'corrupt',
+      sizeBytes: 31.4 * KB, uploaded: '2026-10-05T08:47', modified: '2026-10-19T13:10', uploadedBy: 'Admin', folder: 'Access and safety', readability: 'corrupt', documentDate: '2026-10-05',
     },
     {
       id: 'ab-7', name: 'Front Door Key Safe Photo', extension: 'jpg',
@@ -73,50 +79,50 @@ export const CUSTOMER_FILES: Record<string, CustomerFile[]> = {
     },
     {
       id: 'ab-8', name: 'Signed Service Agreement - Arthur Barrington', extension: 'pdf',
-      sizeBytes: 2.4 * MB, uploaded: '2026-10-02T14:20', modified: '2026-10-02T14:20', uploadedBy: 'Admin', folder: 'Agreements and funding', readability: 'no-text',
+      sizeBytes: 2.4 * MB, uploaded: '2026-10-02T14:20', modified: '2026-10-02T14:20', uploadedBy: 'Admin', folder: 'Agreements and funding', readability: 'no-text', documentDate: '2026-10-02',
     },
     {
       id: 'ab-9', name: 'Funding Approval Letter - Birmingham City Council', extension: 'pdf',
-      sizeBytes: 214 * KB, uploaded: '2026-09-29T10:04', modified: '2026-09-29T10:04', uploadedBy: 'Admin', folder: 'Agreements and funding', readability: 'password-protected',
+      sizeBytes: 214 * KB, uploaded: '2026-09-29T10:04', modified: '2026-09-29T10:04', uploadedBy: 'Admin', folder: 'Agreements and funding', readability: 'password-protected', documentDate: '2026-09-29',
     },
     {
       id: 'ab-10', name: 'DNACPR Form (Original Copy)', extension: 'pdf',
-      sizeBytes: 640 * KB, uploaded: '2026-09-28T11:12', modified: '2026-09-28T11:12', uploadedBy: 'Admin', folder: 'Legal',
+      sizeBytes: 640 * KB, uploaded: '2026-09-28T11:12', modified: '2026-09-28T11:12', uploadedBy: 'Admin', folder: 'Legal', documentDate: '2026-09-20', legal: true,
     },
     {
       id: 'ab-11', name: 'Lasting Power of Attorney - Health and Welfare', extension: 'pdf',
-      sizeBytes: 3.2 * MB, uploaded: '2026-09-28T11:15', modified: '2026-09-28T11:15', uploadedBy: 'Admin', folder: 'Legal',
+      sizeBytes: 3.2 * MB, uploaded: '2026-09-28T11:15', modified: '2026-09-28T11:15', uploadedBy: 'Admin', folder: 'Legal', documentDate: '2026-08-14', legal: true,
     },
   ],
 
   'vera-bramwell': [
     {
       id: 'vb-1', name: 'Initial Assessment Notes - Home Visit', extension: 'docx',
-      sizeBytes: 148 * KB, uploaded: '2026-11-16T11:09', modified: '2026-11-16T11:40', uploadedBy: 'Priya Sharma', folder: 'Assessments',
+      sizeBytes: 148 * KB, uploaded: '2026-11-16T11:09', modified: '2026-11-16T11:40', uploadedBy: 'Priya Sharma', folder: 'Assessments', documentDate: '2026-11-02',
     },
     {
       id: 'vb-2', name: 'Nutrition and Hydration Screening (MUST)', extension: 'docx',
-      sizeBytes: 58.7 * KB, uploaded: '2026-11-16T11:08', modified: '2026-11-16T11:08', uploadedBy: 'Priya Sharma', folder: 'Assessments',
+      sizeBytes: 58.7 * KB, uploaded: '2026-11-16T11:08', modified: '2026-11-16T11:08', uploadedBy: 'Priya Sharma', folder: 'Assessments', documentDate: '2026-11-10',
     },
     {
       id: 'vb-3', name: 'District Nurse Handover - Pressure Care', extension: 'pdf',
-      sizeBytes: 326 * KB, uploaded: '2026-11-11T14:26', modified: '2026-11-11T14:26', uploadedBy: 'Admin', folder: 'Health and hospital',
+      sizeBytes: 326 * KB, uploaded: '2026-11-11T14:26', modified: '2026-11-11T14:26', uploadedBy: 'Admin', folder: 'Health and hospital', documentDate: '2026-11-09',
     },
     {
       id: 'vb-4', name: 'GP Surgery Letter - Medication Review', extension: 'pdf',
-      sizeBytes: 172 * KB, uploaded: '2026-11-09T09:15', modified: '2026-11-09T09:15', uploadedBy: 'Admin', folder: 'Health and hospital',
+      sizeBytes: 172 * KB, uploaded: '2026-11-09T09:15', modified: '2026-11-09T09:15', uploadedBy: 'Admin', folder: 'Health and hospital', documentDate: '2026-11-08',
     },
     {
       id: 'vb-5', name: 'Mental Capacity Assessment - Managing Finances', extension: 'pdf',
-      sizeBytes: 905 * KB, uploaded: '2026-11-06T16:02', modified: '2026-11-06T16:02', uploadedBy: 'Priya Sharma', folder: 'Legal',
+      sizeBytes: 905 * KB, uploaded: '2026-11-06T16:02', modified: '2026-11-06T16:02', uploadedBy: 'Priya Sharma', folder: 'Legal', documentDate: '2026-11-05', legal: true,
     },
     {
       id: 'vb-6', name: 'Medication Administration Consent Form', extension: 'pdf',
-      sizeBytes: 1.3 * MB, uploaded: '2026-11-04T12:30', modified: '2026-11-04T12:30', uploadedBy: 'Admin', folder: 'Legal', readability: 'no-text',
+      sizeBytes: 1.3 * MB, uploaded: '2026-11-04T12:30', modified: '2026-11-04T12:30', uploadedBy: 'Admin', folder: 'Legal', readability: 'no-text', documentDate: '2026-11-04', legal: true,
     },
     {
       id: 'vb-7', name: 'Care Package Referral - Staffordshire County Council', extension: 'pdf',
-      sizeBytes: 2.1 * MB, uploaded: '2026-11-02T10:11', modified: '2026-11-02T10:11', uploadedBy: 'Admin', folder: 'Referral', readability: 'password-protected',
+      sizeBytes: 2.1 * MB, uploaded: '2026-11-02T10:11', modified: '2026-11-02T10:11', uploadedBy: 'Admin', folder: 'Referral', readability: 'password-protected', documentDate: '2026-11-01',
     },
     {
       id: 'vb-8', name: 'Next of Kin and Emergency Contacts', extension: 'xlsx',

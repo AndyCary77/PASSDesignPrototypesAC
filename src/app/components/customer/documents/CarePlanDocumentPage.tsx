@@ -1,5 +1,5 @@
 import { createContext, useContext as useReactContext, useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { ArrowLeft, History, Printer, Trash2, Mic, ChevronDown, ChevronRight, Upload, Link2Off, Send } from 'lucide-react';
 import { Button } from '../../buttons/Button';
 import {
@@ -11,10 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
 import { useCustomer } from '../../../data/CustomerContext';
+import { CUSTOMER_FILES } from '../../../data/customerFiles';
+import { deleteCustomerFile } from '../../../data/fileStore';
 import type { CustomerProfile } from '../../../data/customers';
 import { CarePlanDocumentView, CareBridgeContext, PublishedConfirmationBanner, resolveRecording, resolveRecordings, type Recording } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
-import { AssessmentHeroUpdateBanner, AssessmentHeroUpdateDraftBanner, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type UpdateSource } from './UpdateDocumentBanner';
+import { CARE_PLAN_DEMOS, demoSource } from './demoLinks';
+import { AssessmentHeroUpdateBanner, AssessmentHeroUpdateDraftBanner, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type PickerSeed, type UpdateSource } from './UpdateDocumentBanner';
 import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS, getUpdateSteps } from './UpdateProgress';
 import { applyPlanUpdates, discardPlanUpdate, getPlanUpdate, getPublishedSources, getUpdateInfo, getUpdateSources, publishPlanUpdate, recordPublishedSources } from './carePlanUpdate';
 import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
@@ -42,6 +45,8 @@ interface CarePlanDocumentState {
   updateInfo: ReturnType<typeof getUpdateInfo>;
   /** Every recording and file the update in progress was made from. */
   updateSources: UpdateSource[];
+  /** A ?demo= link asked for the source picker to open already showing something. */
+  pickerSeed?: PickerSeed;
   /** Update the finished document from the chosen recordings and files — drafts only what has new information. */
   startUpdate: (sources: UpdateSource[]) => void;
   /** The simulated run in progress (its sources and which step it's on), or null when idle. */
@@ -169,7 +174,7 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
       const def = getPlanUpdate(customer.id, source);
       return def ? [{ def, source }] : [];
     });
-    const result = baseRecording && runs.length > 0 ? applyPlanUpdates(runs, getFormSections(baseRecording), getProseSections(baseRecording)) : null;
+    const result = baseRecording && runs.length > 0 ? applyPlanUpdates(runs, getFormSections(baseRecording), getProseSections(baseRecording), { customerId: customer.id }) : null;
     const drafted = !!result && result.changed > 0;
     if (problems.length > 0) setFileProblems({ problems, othersDrafted: drafted });
     if (!drafted) {
@@ -197,6 +202,33 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updating]);
+
+  // ?demo=<name> (see demoLinks.ts): put the page in a named state on load, so a link can land on it without the clicks.
+  const [searchParams] = useSearchParams();
+  const demo = CARE_PLAN_DEMOS[searchParams.get('demo') ?? ''];
+  const demoRan = useRef(false);
+  useEffect(() => {
+    if (!demo?.sources || demoRan.current || !baseRecording || !isCompletedDocument) return;
+    demoRan.current = true;
+    const sources = demo.sources.flatMap(k => demoSource(customer.id, k, id => CUSTOMER_FILES[customer.id]?.find(f => f.id === id)) ?? []);
+    if (!demo.end) {
+      finishUpdate(sources);
+      return;
+    }
+    // Published (and possibly then deleted): apply, accept everything, publish — the same engine, minus the review.
+    const runs = sources.flatMap(source => {
+      const def = getPlanUpdate(customer.id, source);
+      return def ? [{ def, source }] : [];
+    });
+    const applied = applyPlanUpdates(runs, getFormSections(baseRecording), getProseSections(baseRecording), { customerId: customer.id });
+    const done = publishPlanUpdate(applied.forms, applied.prose);
+    setFormSections(baseRecording.id, done.forms);
+    setProseSections(baseRecording.id, done.prose);
+    setPublishedSources(recordPublishedSources(customer.id, sources));
+    setJustPublished(true);
+    if (demo.deleteFile) deleteCustomerFile(customer.id, demo.deleteFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseRecording?.id, isCompletedDocument]);
 
   const discardUpdate = () => {
     if (!baseRecording) return;
@@ -249,7 +281,7 @@ export function CarePlanDocumentProvider({ children }: { children: React.ReactNo
     <CarePlanDocumentContext.Provider
       value={{
         customer, navigate, dirty, setDirty, published, setPublished,
-        isCompletedDocument, isUpdateDraft, updateInfo, updateSources, startUpdate, updating, discardUpdate, publishUpdate,
+        isCompletedDocument, isUpdateDraft, updateInfo, updateSources, pickerSeed: demo?.picker, startUpdate, updating, discardUpdate, publishUpdate,
         noChangesFor, dismissNoChanges: () => setNoChangesFor(null),
         fileProblems, dismissFileProblems: () => setFileProblems(null),
         publishedSources, justPublished, dismissJustPublished: () => setJustPublished(false),
@@ -402,7 +434,7 @@ function RelinkDropdown() {
 /** Everything below the pinned sub-nav — the CareBridge Draft panel, title bar, History and the form itself. */
 export function CarePlanDocumentContent() {
   const {
-    customer, navigate, published, isCompletedDocument, isUpdateDraft, updateInfo, updateSources, startUpdate, updating, discardUpdate,
+    customer, navigate, published, isCompletedDocument, isUpdateDraft, updateInfo, updateSources, pickerSeed, startUpdate, updating, discardUpdate,
     publishUpdate, noChangesFor, dismissNoChanges, fileProblems, dismissFileProblems, publishedSources, justPublished, dismissJustPublished, linkedSource, linkedRecording,
     pendingReview, pendingCount, fileInputRef, handleUpload, setDirty, setPublished,
   } = useCarePlanDocument();
@@ -454,6 +486,7 @@ export function CarePlanDocumentContent() {
                 documentName="Customer Care and Support Plan"
                 onSelect={startUpdate}
                 sources={publishedSources}
+                pickerSeed={pickerSeed}
               />
             )}
           </div>

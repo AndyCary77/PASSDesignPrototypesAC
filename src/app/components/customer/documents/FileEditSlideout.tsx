@@ -70,7 +70,8 @@ export function FileEditSlideout({ file, siblings, onClose, onRename, onDelete }
               <AlertDialogTitle>Delete this file?</AlertDialogTitle>
               <AlertDialogDescription>
                 {file.name}.{file.extension} will be removed from this customer&rsquo;s record. There&rsquo;s no way to
-                bring it back once it&rsquo;s gone.
+                bring it back once it&rsquo;s gone. Anything Assessment Hero drafted from it keeps its content, but
+                will show the source as &ldquo;File no longer available&rdquo;.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
