@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Stethoscope, Calendar, Check, Search } from 'lucide-react';
 import { useCustomer } from '../../data/CustomerContext';
 import { EmptyTab, DiscardButton } from './caremanagement/shared';
@@ -12,6 +12,17 @@ import {
   type RecordingSelectionMode,
 } from './CareBridgePage';
 import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
+import { CUSTOMER_FILES } from '../../data/customerFiles';
+import {
+  UpdateDocumentDialog, UpdateNoChangesNotice, UpdateProblemsNotice, ViewSourcesLink, describeSources,
+  type FileProblem, type UpdateSource,
+} from './documents/UpdateDocumentBanner';
+import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS, getUpdateSteps } from './documents/UpdateProgress';
+import { SourceExtractPopover, SourceChip, checkSourceButtonClass, CheckSourceLabel } from './documents/SourceCheck';
+import { draftMedicalHistory, type DraftedEntry, type MedicalHistoryDraft } from './documents/medicalHistoryFiles';
+import { MEDICAL_HISTORY_DEMOS, demoSource } from './documents/demoLinks';
+import type { SourceExtract, SourceRef } from './documents/sourceMerge';
+import { RefreshCw } from 'lucide-react';
 
 interface Diagnosis {
   id: string;
@@ -24,6 +35,9 @@ interface Diagnosis {
   recordingId?: string;
   /** Where in that recording's transcript this ties back to — omitted where there's genuinely nothing to point at, in which case the field still shows Publish, just no "Check transcript". */
   sourceLines?: { index: number; highlight?: string }[];
+  /** Set when the entry was drafted from one or more FILES (AIOP-24513): which, and the passages each came from — Check source. */
+  sources?: SourceRef[];
+  extracts?: SourceExtract[];
 }
 
 // Arthur's diagnoses are deliberately the explanation behind what he
@@ -151,11 +165,13 @@ function getMedicalHistory(customerId: string): Diagnosis[] {
 
 function DiagnosisCard({
   d,
+  customerId,
   recording,
   onPublish,
   onReject,
 }: {
   d: Diagnosis;
+  customerId: string;
   /** The specific recording d.sourceLines indexes into — not necessarily the same one every other card on this page uses, see the note above MEDICAL_HISTORY. */
   recording: Recording | null;
   onPublish: () => void;
@@ -177,6 +193,11 @@ function DiagnosisCard({
       <div className="px-5 py-4">
         {pending && (
           <div className="flex items-center justify-end gap-3 mb-2">
+            {d.extracts?.some(x => x.source.type === 'file') && (
+              <SourceExtractPopover customerId={customerId} fieldLabel={d.name} extracts={d.extracts}>
+                <button type="button" className={checkSourceButtonClass}><CheckSourceLabel /></button>
+              </SourceExtractPopover>
+            )}
             {!!d.sourceLines?.length && (
               <TranscriptCheckPopover fieldLabel={d.name} transcript={recording?.transcript ?? []} references={d.sourceLines} audioUrl={recording?.audioUrl}>
                 <button type="button" className="inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
@@ -206,6 +227,9 @@ function DiagnosisCard({
         <p className={`text-body text-gray-700 leading-relaxed whitespace-pre-line ${pending ? 'border-2 border-amber-300 bg-amber-50/40 rounded-lg p-3' : ''}`}>
           {d.notes}
         </p>
+        {d.sources && d.sources.length > 0 && (
+          <div className="mt-2"><SourceChip customerId={customerId} sources={d.sources} /></div>
+        )}
         {d.reviewed === true && (
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[rgb(232,247,232)] border border-[rgb(178,224,178)] px-2.5 py-1">
             <Check className="w-3 h-3 text-[rgb(33,166,33)] flex-shrink-0" />
@@ -231,14 +255,14 @@ export function MedicalHistoryPage() {
   // Which recording backs a given diagnosis — defaults to 'personal-care'
   // so existing entries that predate `recordingId` don't need updating.
   const recordingFor = (d: Diagnosis): Recording | null =>
-    isDraft ? resolveRecording(customer.id, d.recordingId ?? 'personal-care') ?? null : null;
+    isDraft && !d.sources ? resolveRecording(customer.id, d.recordingId ?? 'personal-care') ?? null : null;
 
   // Every distinct recording actually cited by something on this page, plus
   // anything merged in explicitly — one when everything traces back to the
   // same visit, more once a second recording (like Arthur's original
   // 'initial' assessment) also contributes.
   const linkedRecordingIds = Array.from(
-    new Set([...diagnoses.map(d => d.recordingId ?? 'personal-care'), ...extraLinkedRecordingIds]),
+    new Set([...diagnoses.filter(d => !d.sources).map(d => d.recordingId ?? 'personal-care'), ...extraLinkedRecordingIds]),
   );
   const linkedRecordings: Recording[] = isDraft
     ? linkedRecordingIds.map(id => resolveRecording(customer.id, id)).filter((r): r is Recording => !!r)
@@ -256,13 +280,76 @@ export function MedicalHistoryPage() {
   const handleChangeRecordings = (ids: string[], mode: RecordingSelectionMode) => {
     if (mode === 'replace') {
       setDiagnoses(prev =>
-        prev.map(d => (ids.includes(d.recordingId ?? 'personal-care') ? d : { ...d, recordingId: undefined, sourceLines: undefined })),
+        prev.map(d => (d.sources || ids.includes(d.recordingId ?? 'personal-care') ? d : { ...d, recordingId: undefined, sourceLines: undefined })),
       );
       setExtraLinkedRecordingIds(ids);
     } else {
       setExtraLinkedRecordingIds(prev => Array.from(new Set([...prev, ...ids])));
     }
   };
+
+  // ── Drafting from files ──
+  // The files (and any recordings) this tab's entries were drafted from, apart from the recordings above.
+  const fileSources: UpdateSource[] = [];
+  for (const d of diagnoses) {
+    for (const s of d.sources ?? []) {
+      if (s.type === 'file' && !fileSources.some(f => f.id === s.id)) fileSources.push({ type: 'file', id: s.id, name: s.label });
+    }
+  }
+  const [running, setRunning] = useState<{ sources: UpdateSource[]; step: number } | null>(null);
+  const [result, setResult] = useState<{ draft: MedicalHistoryDraft; readable: boolean } | null>(null);
+  const [noChangesFor, setNoChangesFor] = useState<string | null>(null);
+  const [problems, setProblems] = useState<{ problems: FileProblem[]; othersDrafted: boolean } | null>(null);
+
+  const startFromFiles = (sources: UpdateSource[]) => {
+    setResult(null); setNoChangesFor(null); setProblems(null);
+    setRunning({ sources, step: 0 });
+  };
+
+  const finishFromFiles = (sources: UpdateSource[]) => {
+    const draft = draftMedicalHistory(customer.id, sources, diagnoses.map(d => d.id));
+    const readable = sources.filter(s => !draft.problems.some(p => p.name === (s.type === 'file' ? s.name : s.label)));
+    const found = draft.added.length > 0 || draft.alreadyRecorded.length > 0;
+    if (draft.problems.length > 0) setProblems({ problems: draft.problems, othersDrafted: draft.added.length > 0 });
+    if (draft.added.length > 0) {
+      setDiagnoses(prev => [
+        ...prev,
+        ...draft.added.map((e: DraftedEntry): Diagnosis => ({
+          id: e.id, name: e.name, notes: e.notes, dateOfDiagnosis: e.dateOfDiagnosis, reviewed: false, sources: e.sources, extracts: e.extracts,
+        })),
+      ]);
+    }
+    if (!found && readable.length > 0) setNoChangesFor(describeSources(readable));
+    setResult(found ? { draft, readable: readable.length > 0 } : null);
+  };
+
+  // The "thinking time" — same stepper as the other documents, kept in this component so leaving the page cancels it.
+  useEffect(() => {
+    if (!running) return;
+    const steps = getUpdateSteps(running.sources);
+    const isFinalHold = running.step === steps.length;
+    const timer = window.setTimeout(() => {
+      if (isFinalHold) {
+        finishFromFiles(running.sources);
+        setRunning(null);
+      } else {
+        setRunning(r => (r ? { ...r, step: r.step + 1 } : r));
+      }
+    }, isFinalHold ? UPDATE_COMPLETE_HOLD_MS : steps[running.step].ms);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
+  // ?demo=<name> (see demoLinks.ts): land on a named state without the clicks.
+  const [searchParams] = useSearchParams();
+  const demo = MEDICAL_HISTORY_DEMOS[searchParams.get('demo') ?? ''];
+  const demoRan = useRef(false);
+  useEffect(() => {
+    if (!demo?.sources || demoRan.current || !isDraft) return;
+    demoRan.current = true;
+    finishFromFiles(demo.sources.flatMap(k => demoSource(customer.id, k, id => CUSTOMER_FILES[customer.id]?.find(f => f.id === id)) ?? []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Publishes just this one diagnosis — there's no document-level Publish
   // gating everything else, see the note on the per-card button below.
@@ -285,6 +372,30 @@ export function MedicalHistoryPage() {
           pending, since "generated from this recording" is worth being able
           to trace back to at any point, not just while there's review work
           left to do. */}
+      {running && (
+        <DocumentUpdateProgress
+          action="Drafting"
+          documentName="Medical History"
+          sourceLabel={describeSources(running.sources)}
+          steps={getUpdateSteps(running.sources)}
+          step={running.step}
+        />
+      )}
+      {problems && <UpdateProblemsNotice problems={problems.problems} othersDrafted={problems.othersDrafted} onDismiss={() => setProblems(null)} />}
+      {noChangesFor && <UpdateNoChangesNotice sourceLabel={noChangesFor} onDismiss={() => setNoChangesFor(null)} />}
+      {result && result.draft.alreadyRecorded.length > 0 && (
+        <div role="status" className="flex items-start gap-2.5 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">
+          <Check className="w-4 h-4 text-[rgb(154,38,214)] flex-shrink-0 mt-1" aria-hidden="true" />
+          <p className="flex-1 text-body text-purple-900">
+            Already in the Medical History, so not added again:{' '}
+            {result.draft.alreadyRecorded.map((a, i) => (
+              <span key={a.name}>{i > 0 && ', '}<strong>{a.name}</strong> (from {a.source.label})</span>
+            ))}
+            .
+          </p>
+          <button type="button" onClick={() => setResult(null)} aria-label="Dismiss" className="p-0.5 rounded text-purple-900 hover:bg-purple-100 cursor-pointer">×</button>
+        </div>
+      )}
       {isDraft && (
         <div className="rounded-lg border border-purple-200 shadow overflow-hidden">
           <div className="flex items-start gap-3 bg-white px-4 py-3">
@@ -323,19 +434,40 @@ export function MedicalHistoryPage() {
                   direct quote, so please review before accepting.
                 </p>
               )}
+              {fileSources.length > 0 && (
+                <p className="text-body text-purple-800 mt-0.5">
+                  Also drafted from <strong>{describeSources(fileSources)}</strong>.
+                </p>
+              )}
             </div>
           </div>
 
-          {linkedRecordings.length > 0 && (
-            <div className="bg-purple-50 border-t border-purple-200 px-4 py-3 flex items-center gap-4">
-              <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
-              <ChangeRecordingsButton
-                customerId={customer.id}
-                linkedRecordingIds={linkedRecordingIds}
-                onConfirm={handleChangeRecordings}
-              />
-            </div>
-          )}
+          <div className="bg-purple-50 border-t border-purple-200 px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            {linkedRecordings.length > 0 && (
+              <>
+                <RecordingsLink customerId={customer.id} recordings={linkedRecordings} navigate={navigate} />
+                <ChangeRecordingsButton
+                  customerId={customer.id}
+                  linkedRecordingIds={linkedRecordingIds}
+                  onConfirm={handleChangeRecordings}
+                />
+              </>
+            )}
+            <ViewSourcesLink customerId={customer.id} sources={fileSources} />
+            <UpdateDocumentDialog
+              customerId={customer.id}
+              documentName="Medical History"
+              onSelect={startFromFiles}
+              title="Add to the Medical History"
+              description="Choose one or more recordings and files to draft Medical History entries from."
+              trigger={
+                <button type="button" className="flex items-center gap-1 text-body font-medium text-[rgb(154,38,214)] hover:underline cursor-pointer">
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Add from a file
+                </button>
+              }
+            />
+          </div>
         </div>
       )}
 
@@ -363,6 +495,7 @@ export function MedicalHistoryPage() {
             <DiagnosisCard
               key={d.id}
               d={d}
+              customerId={customer.id}
               recording={recordingFor(d)}
               onPublish={() => publishDiagnosis(d.id)}
               onReject={() => rejectDiagnosis(d.id)}

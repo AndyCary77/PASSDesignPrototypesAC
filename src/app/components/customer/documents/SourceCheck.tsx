@@ -79,6 +79,19 @@ export function SourceExtractPopover({ customerId, fieldLabel, extracts, childre
 export const checkSourceButtonClass = 'inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer';
 export const CheckSourceLabel = () => <><Search className="w-3.5 h-3.5" /> Check source</>;
 
+/** "Drafted from Hospital Discharge Summary.pdf" — or "from 2 sources", or "from a file that is no longer available". */
+export function SourceChip({ customerId, sources, verb = 'Drafted from' }: { customerId: string; sources: SourceRef[]; verb?: string }) {
+  const deleted = useDeletedFileIds(customerId);
+  const goneFile = sources.length === 1 && sources[0].type === 'file' && deleted.has(sources[0].id);
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-0.5 text-sm font-semibold text-[rgb(109,27,152)] max-w-full">
+      <span className="truncate">
+        {verb} {sources.length > 1 ? `${sources.length} sources` : goneFile ? 'a file that is no longer available' : sources[0]?.label}
+      </span>
+    </span>
+  );
+}
+
 function ValueLine({ v, customerId }: { v: ConflictValue; customerId: string }) {
   const deleted = useDeletedFileIds(customerId);
   const gone = v.type === 'file' && deleted.has(v.id);

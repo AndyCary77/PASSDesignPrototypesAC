@@ -43,6 +43,13 @@ export const NUTRITION_DEMOS: Record<string, Demo> = {
   failures: { sources: ['file:vb-2', 'file:vb-6', 'file:vb-7'] },
 };
 
+export const MEDICAL_HISTORY_DEMOS: Record<string, Demo> = {
+  // Medical History drafted from two files: one new entry (Hip hemiarthroplasty); two conditions already on the record are not repeated.
+  files: { sources: ['file:ab-1', 'file:ab-5'] },
+  // The same, with a scanned file and a password-protected one chosen too.
+  failures: { sources: ['file:ab-1', 'file:ab-5', 'file:ab-8', 'file:ab-9'] },
+};
+
 /** `file:ab-1` / `recording:review6` -> the source the pages work with, or undefined if it doesn't exist for this customer. */
 export function demoSource(customerId: string, key: string, filesById: (id: string) => { name: string; extension: string } | undefined): UpdateSource | undefined {
   const [type, id] = key.split(':');
