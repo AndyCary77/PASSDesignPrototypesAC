@@ -5,18 +5,22 @@ import { Button } from '../../buttons/Button';
 import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
 import {
-  FormFieldsView, isFieldCaptured, PublishedConfirmationBanner, resolveRecording, type FormField,
+  FormFieldsView, countPendingReview, PublishedConfirmationBanner, resolveRecording, type FormField,
 } from '../CareBridgePage';
 import { DocumentTabs } from './DocumentTabs';
 import { AssessmentHeroLimitNotice, isAssessmentHeroLimitReached, LIMIT_REACHED_TITLE } from './AssessmentHeroLimitBanner';
 import { AssessmentHeroSourceIndicator, UpdateDocumentDialog, UpdateNoChangesNotice, UpdateProblemsNotice, describeSources, getSourceProblem, type FileProblem, type PickerSeed, type UpdateSource } from './UpdateDocumentBanner';
 import { DocumentUpdateProgress, UPDATE_COMPLETE_HOLD_MS } from './UpdateProgress';
 import { needsChoice } from './sourceMerge';
-import { NUTRITION_DEMOS, demoSource } from './demoLinks';
+import { NUTRITION_DEMOS, PERSONAL_CARE_DEMOS, demoSource, type Demo } from './demoLinks';
 import { CUSTOMER_FILES } from '../../../data/customerFiles';
 import {
   NUTRITION_BLANK_FIELDS, NUTRITION_GROUPS, applyNutritionFill, getFillSteps, getNutritionFill,
+  type FillPatch, type NutritionGroup,
 } from './nutritionHydrationData';
+import {
+  PERSONAL_CARE_BLANK_FIELDS, VERA_PERSONAL_CARE_FILL, personalCareGroupsFor,
+} from './personalCareMovingHandlingData';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -32,9 +36,42 @@ import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 // Everything is simulated and held in this provider's own state (see nutritionHydrationData.ts for what each
 // file contributes).
 
-const DOCUMENT_NAME = 'Nutrition and Hydration Assessment';
+// The same blank-then-fill flow serves any assessment that starts empty: what differs is the document's name, its
+// fields and layout, and what each recording or file answers. Vera's "Personal Care / Moving and Handling" assessment
+// (the AIOP-25788 scenario — a draft that adds whole items, not just answers) is the second user of it.
+export interface FillConfig {
+  documentName: string;
+  blankFields: FormField[];
+  groups: NutritionGroup[];
+  getFill: (source: UpdateSource) => FillPatch | null;
+  /** Where in each file an answer came from — only needed when files can contribute. */
+  fileExtracts?: Record<string, Record<string, { location: string; text: string }>>;
+  demos: Record<string, Demo>;
+  /** The summary banner above the form already says where the draft came from, so skip the chip on every field. */
+  hideFieldSourceTag?: boolean;
+}
+
+const NUTRITION_CONFIG: FillConfig = {
+  documentName: 'Nutrition and Hydration Assessment',
+  blankFields: NUTRITION_BLANK_FIELDS,
+  groups: NUTRITION_GROUPS,
+  getFill: getNutritionFill,
+  demos: NUTRITION_DEMOS,
+};
+
+const PERSONAL_CARE_CONFIG: FillConfig = {
+  documentName: 'Personal Care / Moving and Handling',
+  blankFields: PERSONAL_CARE_BLANK_FIELDS,
+  groups: personalCareGroupsFor('Vera'),
+  // Only her recording has anything on this; none of her files covers personal care or moving and handling.
+  getFill: source => (source.type === 'recording' ? VERA_PERSONAL_CARE_FILL[source.id] ?? null : null),
+  fileExtracts: {},
+  demos: PERSONAL_CARE_DEMOS,
+  hideFieldSourceTag: true,
+};
 
 interface NutritionDocumentState {
+  config: FillConfig;
   customer: CustomerProfile;
   navigate: ReturnType<typeof useNavigate>;
   dirty: boolean;
@@ -44,6 +81,8 @@ interface NutritionDocumentState {
   /** What the draft was filled from; empty while the document is blank. */
   filledSources: UpdateSource[];
   filledCount: number;
+  /** New items the draft added to repeating groups (products, risks, equipment…). */
+  itemsAdded: number;
   filling: { sources: UpdateSource[]; step: number } | null;
   startFill: (sources: UpdateSource[]) => void;
   /** A ?demo= link asked for the source picker to open already showing something. */
@@ -67,13 +106,14 @@ function useNutritionDocument(): NutritionDocumentState {
   return ctx;
 }
 
-export function NutritionDocumentProvider({ children }: { children: React.ReactNode }) {
+function FillDocumentProvider({ config, children }: { config: FillConfig; children: React.ReactNode }) {
   const navigate = useNavigate();
   const customer = useCustomer();
   const [dirty, setDirty] = useState(false);
-  const [fields, setFields] = useState<FormField[]>(NUTRITION_BLANK_FIELDS);
+  const [fields, setFields] = useState<FormField[]>(config.blankFields);
   const [filledSources, setFilledSources] = useState<UpdateSource[]>([]);
   const [filledCount, setFilledCount] = useState(0);
+  const [itemsAdded, setItemsAdded] = useState(0);
   const [filling, setFilling] = useState<{ sources: UpdateSource[]; step: number } | null>(null);
   const [fileProblems, setFileProblems] = useState<{ problems: FileProblem[]; othersDrafted: boolean } | null>(null);
   const [noChangesFor, setNoChangesFor] = useState<string | null>(null);
@@ -91,10 +131,10 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
     const problems = sources.flatMap(s => getSourceProblem(customer.id, s) ?? []);
     const readable = sources.filter(s => !getSourceProblem(customer.id, s));
     const found = readable.flatMap(s => {
-      const patch = getNutritionFill(s);
+      const patch = config.getFill(s);
       return patch ? [{ source: s, patch }] : [];
     });
-    const result = found.length > 0 ? applyNutritionFill(NUTRITION_BLANK_FIELDS, found, customer.id) : null;
+    const result = found.length > 0 ? applyNutritionFill(config.blankFields, found, customer.id, config.fileExtracts) : null;
     const drafted = !!result && result.filled > 0;
     if (problems.length > 0) setFileProblems({ problems, othersDrafted: drafted });
     if (!result || !drafted) {
@@ -105,11 +145,12 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
     // Only the sources that actually had something are named as where the draft came from.
     setFilledSources(found.map(f => f.source));
     setFilledCount(result.filled);
+    setItemsAdded(result.items);
   };
 
   // ?demo=<name> (see demoLinks.ts): put the form in a named state on load, so a link can land on it without the clicks.
   const [searchParams] = useSearchParams();
-  const demo = NUTRITION_DEMOS[searchParams.get('demo') ?? ''];
+  const demo = config.demos[searchParams.get('demo') ?? ''];
   const demoRan = useRef(false);
   useEffect(() => {
     if (!demo?.sources || demoRan.current) return;
@@ -136,18 +177,19 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
   }, [filling]);
 
   const discardDraft = () => {
-    setFields(NUTRITION_BLANK_FIELDS);
+    setFields(config.blankFields);
     setFilledSources([]);
     setFilledCount(0);
+    setItemsAdded(0);
     setDirty(false);
   };
 
-  const pendingCount = fields.filter(f => (isFieldCaptured(f) || needsChoice(f.update?.conflict)) && f.reviewed === false).length;
+  const pendingCount = countPendingReview(fields);
 
   return (
     <NutritionDocumentContext.Provider
       value={{
-        customer, navigate, dirty, setDirty, fields, setFields, filledSources, filledCount, filling, startFill, pickerSeed: demo?.picker,
+        config, customer, navigate, dirty, setDirty, fields, setFields, filledSources, filledCount, itemsAdded, filling, startFill, pickerSeed: demo?.picker,
         fileProblems, dismissFileProblems: () => setFileProblems(null),
         discardDraft, noChangesFor, dismissNoChanges: () => setNoChangesFor(null),
         published, publish: () => setPublished(true), pendingCount,
@@ -156,6 +198,15 @@ export function NutritionDocumentProvider({ children }: { children: React.ReactN
       {children}
     </NutritionDocumentContext.Provider>
   );
+}
+
+export function NutritionDocumentProvider({ children }: { children: React.ReactNode }) {
+  return <FillDocumentProvider config={NUTRITION_CONFIG}>{children}</FillDocumentProvider>;
+}
+
+/** Vera's blank Personal Care / Moving and Handling assessment, filled from a recording. */
+export function PersonalCareFillProvider({ children }: { children: React.ReactNode }) {
+  return <FillDocumentProvider config={PERSONAL_CARE_CONFIG}>{children}</FillDocumentProvider>;
 }
 
 /** Pinned sub-nav — same sticky treatment as the other document click-throughs. */
@@ -196,7 +247,8 @@ export function NutritionDocumentSubnav() {
 
 /** Minimal prompt above a blank document: Assessment Hero offering to fill it from a recording or a file. */
 function FillBanner() {
-  const { customer, startFill, pickerSeed } = useNutritionDocument();
+  const { customer, startFill, pickerSeed, config } = useNutritionDocument();
+  const DOCUMENT_NAME = config.documentName;
   const limitReached = isAssessmentHeroLimitReached(customer.id);
 
   return (
@@ -238,9 +290,9 @@ function FillBanner() {
 
 /** The panel above a filled-in draft: what it was made from, what is left for the reviewer, Discard and Publish. */
 function FilledDraftBanner() {
-  const { filledSources, filledCount, pendingCount, discardDraft, publish } = useNutritionDocument();
+  const { config, filledSources, filledCount, itemsAdded, pendingCount, discardDraft, publish } = useNutritionDocument();
   const filledFrom = filledSources.length > 0 ? describeSources(filledSources) : '';
-  const total = NUTRITION_BLANK_FIELDS.length;
+  const total = config.blankFields.length;
   const left = total - filledCount;
 
   return (
@@ -260,7 +312,9 @@ function FilledDraftBanner() {
           </p>
           <p className="text-body text-purple-800 mt-0.5">
             Filled in from <strong className="break-words">{filledFrom}</strong> &mdash; it found answers for {filledCount} of
-            the {total} fields, so {left} {left === 1 ? 'is' : 'are'} still blank. Please review before accepting.
+            the {total} fields, so {left} {left === 1 ? 'is' : 'are'} still blank.
+            {itemsAdded > 0 && <> It also <strong>added {itemsAdded} {itemsAdded === 1 ? 'item' : 'items'}</strong> to the lists below, which were empty.</>}
+            {' '}Please review before accepting.
           </p>
         </div>
       </div>
@@ -304,11 +358,12 @@ function FilledDraftBanner() {
 /** Everything below the pinned sub-nav — the Assessment Hero panel, title bar, History and the form itself. */
 export function NutritionDocumentContent() {
   const {
-    customer, fields, setFields, setDirty, filledSources, filling, noChangesFor, dismissNoChanges, fileProblems, dismissFileProblems, published,
+    config, customer, fields, setFields, setDirty, filledSources, filling, noChangesFor, dismissNoChanges, fileProblems, dismissFileProblems, published,
   } = useNutritionDocument();
   // Filled from a recording, each field's Check transcript points into that recording; a file has no transcript.
   const onlySource = filledSources.length === 1 ? filledSources[0] : undefined;
   const citedRecording = onlySource?.type === 'recording' ? resolveRecording(customer.id, onlySource.id) : undefined;
+  const DOCUMENT_NAME = config.documentName;
   const scrolled = useScrolled();
   const infoBarBottom = useInfoBarBottom();
 
@@ -366,7 +421,7 @@ export function NutritionDocumentContent() {
       </div>
 
       <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm p-6" onChange={() => setDirty(true)}>
-        {NUTRITION_GROUPS.map((group, i) => {
+        {config.groups.map((group, i) => {
           const groupFields = fields.filter(f => group.fieldIds.includes(f.id));
           return (
             <div key={i} className={i > 0 ? 'mt-6' : undefined}>
@@ -378,6 +433,7 @@ export function NutritionDocumentContent() {
                   onChange={updated => setFields(fields.map(f => updated.find(u => u.id === f.id) ?? f))}
                   transcript={citedRecording?.transcript ?? []}
                   audioUrl={citedRecording?.audioUrl}
+                  hideSourceTag={config.hideFieldSourceTag}
                 />
               )}
             </div>

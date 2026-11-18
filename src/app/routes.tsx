@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, Navigate, useParams } from "react-router";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Header } from './components/layout/TopNavBarLegacy';
@@ -14,7 +14,7 @@ import { DocumentsPage } from './components/customer/documents/DocumentsPage';
 import { CarePlanDocumentProvider, CarePlanDocumentSubnav, CarePlanDocumentContent } from './components/customer/documents/CarePlanDocumentPage';
 import { RecordingDocumentPage } from './components/customer/documents/RecordingDocumentPage';
 import { WiitmDocumentProvider, WiitmDocumentSubnav, WiitmDocumentContent } from './components/customer/documents/WhatIsImportantToMeDocumentPage';
-import { NutritionDocumentProvider, NutritionDocumentSubnav, NutritionDocumentContent } from './components/customer/documents/NutritionHydrationDocumentPage';
+import { NutritionDocumentProvider, NutritionDocumentSubnav, NutritionDocumentContent, PersonalCareFillProvider } from './components/customer/documents/NutritionHydrationDocumentPage';
 import { PersonalCareDocumentProvider, PersonalCareDocumentSubnav, PersonalCareDocumentContent } from './components/customer/documents/PersonalCareMovingHandlingDocumentPage';
 import { CareManagementPage } from './components/customer/caremanagement/CareManagementPage';
 import { CareManagementProvider } from './components/customer/caremanagement/CareManagementContext';
@@ -265,7 +265,22 @@ function WhatIsImportantToMeDocumentLayout() {
   );
 }
 
+// Arthur's Personal Care / Moving and Handling is a ready-made Assessment Hero draft from his recording; every other
+// customer (Vera) starts with it blank and fills it from a recording they pick — the same blank-then-fill flow the
+// Nutrition and Hydration Assessment uses, whose subnav and content it shares.
 function PersonalCareDocumentLayout() {
+  const { customerId } = useParams();
+  if (customerId !== 'arthur-barrington') {
+    return (
+      <CustomerProvider>
+        <PersonalCareFillProvider>
+          <AppShell infoBar={<><CustomerInfo /><NutritionDocumentSubnav /></>}>
+            <NutritionDocumentContent />
+          </AppShell>
+        </PersonalCareFillProvider>
+      </CustomerProvider>
+    );
+  }
   return (
     <CustomerProvider>
       <PersonalCareDocumentProvider>

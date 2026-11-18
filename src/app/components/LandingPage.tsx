@@ -32,6 +32,8 @@ const SCREENS = [
       // what the Assessments list actually links to), so that's what this
       // shortcuts to.
       { label: 'Assessment Draft — Arthur Barrington (Personal Care)', to: '/customers/arthur-barrington/documents/personal-care' },
+      // Vera's is the same assessment left blank: add her recording on the page and the draft adds whole items (products, risks, equipment) — AIOP-25788.
+      { label: 'Assessment Hero adds items — Vera Bramwell (Personal Care, blank)', to: '/customers/vera-bramwell/documents/personal-care' },
         { label: 'Care Management — Create Draft from Assessments — Vera Bramwell', to: '/customers/vera-bramwell/caremanagement' },
       // The newer Care Management draft flow — Outcomes/Tasks drafted from
       // the same initial assessment, reviewed per-record with Accept/Discard,

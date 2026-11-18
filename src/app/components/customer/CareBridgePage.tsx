@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { Fragment, createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, CheckCircle2, Search, RefreshCw } from 'lucide-react';
+import { FileText, Target, ListChecks, Sparkles, Send, Mic, Upload, ArrowRight, Info, Pencil, ThumbsUp, ThumbsDown, Copy, ChevronDown, ChevronRight, Play, Pause, Download, X, Check, CheckCircle2, Search, RefreshCw, Plus, Undo2 } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 import {
@@ -206,6 +206,19 @@ export interface FormField {
   options?: string[]; // select/checkbox-group only
   columns?: string[]; // table only
   rows?: string[][]; // table only
+  /**
+   * Table only: when set, the rows are shown the way the live platform shows a repeating group — one bordered card
+   * per item with labelled, stacked controls (a dropdown where `options` is given, otherwise a text box), a remove
+   * button, and an "Add item" button — instead of a grid. `rows` still holds the values, one string per control, in
+   * this order. This is the shape Assessment Hero adds new items into.
+   */
+  itemColumns?: { label: string; options?: string[] }[];
+  /**
+   * Item groups only (`itemColumns`), parallel to `rows`: each item is reviewed on its own — its own Accept / Reject,
+   * its own "Check transcript" — and counts as one toward "fields to review". Items without an entry (e.g. added by
+   * hand) have nothing to review. The group itself has no Accept: the items are what Assessment Hero proposed.
+   */
+  itemReviews?: ItemReview[];
   /** Small standing note shown under the control (e.g. "If you have checked more than one box, explain why in the details") — unlike promptingQuestions, shown regardless of review state since it's guidance for filling the field in, not a source reference. */
   helpText?: string;
   /** Reference interview questions shown under the field, same idea as AssessmentSection.promptingQuestions but scoped to a single form field rather than a whole section. */
@@ -219,6 +232,21 @@ export interface FormField {
   sourceLines?: TranscriptReference[];
   /** Set while this field is a not-yet-published change from "Update document". */
   update?: ItemUpdate;
+}
+
+export interface ItemReview {
+  reviewed: boolean;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  sourceLines?: TranscriptReference[];
+}
+
+/** How many drafted things are still waiting on a reviewer: a plain field counts once; an item group counts each of its pending items. */
+export function countPendingReview(fields: FormField[]): number {
+  return fields.reduce((n, f) => {
+    if (f.itemColumns) return n + (f.itemReviews?.filter(r => r.reviewed === false).length ?? 0);
+    return n + ((isFieldCaptured(f) || needsChoice(f.update?.conflict)) && f.reviewed === false ? 1 : 0);
+  }, 0);
 }
 
 /** Puts a section changed by "Update document" back to what it was before — used by its Discard, and by Discard draft. */
@@ -958,6 +986,40 @@ export interface Recording {
   audioUrl?: string;
 }
 
+// ─── Vera Bramwell — Personal Care / Moving and Handling visit ──────────────
+// The recording her blank "Personal Care / Moving and Handling" assessment is filled from (see
+// personalCareMovingHandlingData.ts, VERA_PERSONAL_CARE_FILL). Written to be consistent with the rest of her story —
+// the fall and fractured hip, arthritis in her hands, the heel pressure area the district nurse is treating, and the
+// ramipril dizziness added at her 4-week review — and deliberately rich in the things that become repeating ITEMS on
+// the form (where her products are kept, hazards, equipment) rather than single answers. It says nothing about
+// continence, grooming, stairs, transfers or the toilet, so those fields stay honestly blank. sourceLines in the fill
+// data index into this array, so don't reorder it.
+const VERA_PERSONAL_CARE_TRANSCRIPT: TranscriptLine[] = [
+  /* 0 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:30', text: "Just for the recording, could you say your name for me, Vera?" },
+  /* 1 */ { speaker: 'Vera', role: 'customer', time: '10:30', text: "Vera Bramwell." },
+  /* 2 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:31', text: "Thank you. Today I'd like to go through your personal care and how you move around, so the carers know exactly how to help. Let's start with washing — how do you manage at the sink?" },
+  /* 3 */ { speaker: 'Vera', role: 'customer', time: '10:32', text: "I can do my face and hands myself, but my hands are stiff with the arthritis so I can't wring a flannel out. Someone needs to wash my back and my feet, I can't reach them since the fall." },
+  /* 4 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:33', text: "And do you prefer a bath or a shower?" },
+  /* 5 */ { speaker: 'Vera', role: 'customer', time: '10:34', text: "I can't get down into the bath any more, so it's a shower on Tuesdays and Fridays. I sit on the perching stool and I'd like someone with me the whole time, the floor gets so wet and I'm frightened of slipping." },
+  /* 6 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:35', text: "What about getting dressed?" },
+  /* 7 */ { speaker: 'Vera', role: 'customer', time: '10:36', text: "Buttons are no good with my fingers, so I wear cardigans with zips. I can't bend for my socks and shoes because of my hip, so someone needs to put those on for me." },
+  /* 8 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:37', text: "And your teeth?" },
+  /* 9 */ { speaker: 'Vera', role: 'customer', time: '10:37', text: "I've got my own teeth at the front and a partial denture at the back. I can brush them myself, but someone needs to clean the denture and put it in its pot at night, I can't manage the little clasps." },
+  /* 10 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:38', text: "I know the district nurse is looking after a sore on your heel. How does that affect your skin care?" },
+  /* 11 */ { speaker: 'Vera', role: 'customer', time: '10:39', text: "It's my left heel. They've told me to keep the weight off it and keep my feet well creamed, so someone needs to put cream on my feet and legs morning and night, I can't bend that far." },
+  /* 12 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:40', text: "It would help the carers to know where you keep your things." },
+  /* 13 */ { speaker: 'Vera', role: 'customer', time: '10:41', text: "My flannels and towels are in the airing cupboard on the landing, second shelf. Soap and shampoo are on the shelf above the bathroom sink, and my toothbrush lives in the glass on the sink. The barrier cream is in the top drawer of the cabinet by my bed." },
+  /* 14 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:42', text: "Is there anything about using those products that worries you?" },
+  /* 15 */ { speaker: 'Vera', role: 'customer', time: '10:43', text: "I can't grip a bar of soap, it shoots out of my hands. And the shampoo bottle's the same when it's wet, I've dropped it more than once in the shower and nearly slipped reaching for it." },
+  /* 16 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:44', text: "Now moving around. How are you getting about at the moment?" },
+  /* 17 */ { speaker: 'Vera', role: 'customer', time: '10:45', text: "I use my walking frame indoors. It lives beside my armchair in the lounge. My hip's stiff and I get dizzy sometimes when I stand up, it's the new blood pressure tablets." },
+  /* 18 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:46', text: "And standing up from your chair or the toilet?" },
+  /* 19 */ { speaker: 'Vera', role: 'customer', time: '10:47', text: "It takes me a while. Someone needs to stand beside me and let me get my balance before I set off with the frame. The toilet seat downstairs is a raised one, that makes it easier." },
+  /* 20 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:48', text: "Is there anything the carers should check on the equipment?" },
+  /* 21 */ { speaker: 'Vera', role: 'customer', time: '10:49', text: "The rubber feet on the perching stool get loose, so check they're on and the legs are locked before I sit. The frame's feet want a look too, they wear down." },
+  /* 22 */ { speaker: 'Bernadette (Assessor)', role: 'assessor', time: '10:50', text: "Thank you Vera, that's really helpful — I'll get this written up." },
+];
+
 // ─── Vera Bramwell — 4-week review: a separate, later recording ─────────────
 // Unlike her WIITM follow-up (excluded as a source — see the note on
 // RECORDINGS['vera-bramwell'] below), this one genuinely refines the plan:
@@ -1181,6 +1243,24 @@ const RECORDINGS: Record<string, Recording[]> = {
       secondary: [],
       chat: [{ from: 'ai', text: 'Confirmation of Instructions drafted — plan confirmed accurate, and a new postural dizziness check task added to the care plan. Consent to the plan captured.' }],
       edits: { focus: 1 },
+      isNew: true,
+    },
+    {
+      // Not linked to any document yet: her Personal Care / Moving and Handling assessment is blank, and picking this
+      // recording on that page is how the demo drafts it (and adds its items). Distinct id from Arthur's
+      // 'personal-care' so nothing keyed on that id (his care-plan update) can pick it up.
+      id: 'personal-care-visit',
+      label: 'Personal Care / Moving and Handling',
+      recordingMeta: '17 Nov 2026 · 10:30–10:52 · 22 min',
+      recordedBy: 'Bernadette Shaw',
+      transcript: VERA_PERSONAL_CARE_TRANSCRIPT,
+      focusDocumentName: 'Personal Care / Moving and Handling',
+      isCarePlanFocus: false,
+      focusDocumentPath: 'documents/personal-care',
+      focusSections: [],
+      secondary: [],
+      chat: [],
+      edits: { focus: 0 },
       isNew: true,
     },
   ],
@@ -1410,11 +1490,13 @@ function EditableFormField({
   onChange,
   transcript,
   audioUrl,
+  hideSourceTag,
 }: {
   field: FormField;
   onChange: (patch: Partial<FormField>) => void;
   transcript: TranscriptLine[];
   audioUrl?: string;
+  hideSourceTag?: boolean;
 }) {
   const customer = useCustomer();
   const captured = isFieldCaptured(field);
@@ -1438,11 +1520,11 @@ function EditableFormField({
       <div className="flex items-center justify-between gap-3 mb-1.5">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
           {labelEl}
-          {field.update && <UpdatedFromTag update={field.update} />}
+          {field.update && !hideSourceTag && <UpdatedFromTag update={field.update} />}
         </div>
         {/* Once accepted there's nothing left to action — Check transcript
             and Accept both drop away in favour of the confirmation banner below. */}
-        {(pending || field.update) && (
+        {!field.itemColumns && (pending || field.update) && (
           <div className="flex items-center gap-3 flex-shrink-0">
             {pending && !!field.sourceLines?.length && (
               <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={field.sourceLines} audioUrl={audioUrl}>
@@ -1562,9 +1644,9 @@ function EditableFormField({
         </fieldset>
       )}
 
-      {field.type === 'table' && (
-        <EditableTableField field={field} pending={pending} captured={captured} onChange={onChange} />
-      )}
+      {field.type === 'table' && (field.itemColumns
+        ? <EditableItemsField field={field} onChange={onChange} transcript={transcript} audioUrl={audioUrl} />
+        : <EditableTableField field={field} pending={pending} captured={captured} onChange={onChange} />)}
 
       {field.update?.conflict && (
         <ConflictPanel
@@ -1605,6 +1687,205 @@ function EditableFormField({
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * A repeating group, laid out like the live platform's: each item is its own bordered card with its controls stacked
+ * beneath it, labelled; "Add item" sits centred underneath. Each item Assessment Hero adds is reviewed on its own —
+ * Check transcript / Reject / Accept across the top of its card, amber until accepted — and editing it counts as
+ * accepting it. Reject removes the item. An accepted item, or one added by hand, shows a plain X to delete it.
+ */
+function EditableItemsField({
+  field,
+  onChange,
+  transcript,
+  audioUrl,
+}: {
+  field: FormField;
+  onChange: (patch: Partial<FormField>) => void;
+  transcript: TranscriptLine[];
+  audioUrl?: string;
+}) {
+  const cols = field.itemColumns!;
+  const rows = field.rows ?? [];
+  const reviews = field.itemReviews ?? [];
+  const stamp = () => ({ reviewed: true, reviewedBy: CURRENT_USER, reviewedAt: formatAcceptedAt(new Date()) });
+
+  /** Replaces item `i`'s review, keeping the item's own transcript references. */
+  const withReview = (i: number, patch: Partial<ItemReview>) =>
+    rows.map((_, k) => (k === i ? { ...reviews[k], ...patch } as ItemReview : reviews[k] ?? { reviewed: true }));
+
+  const updateCell = (rowIndex: number, colIndex: number, value: string) => {
+    const next = rows.map((row, i) => (i === rowIndex ? row.map((cell, j) => (j === colIndex ? value : cell)) : row));
+    onChange({ rows: next, itemReviews: withReview(rowIndex, stamp()) });
+  };
+  const acceptItem = (i: number) => onChange({ itemReviews: withReview(i, stamp()) });
+  const addItem = () => onChange({ rows: [...rows, cols.map(() => '')], itemReviews: [...rows.map((_, k) => reviews[k] ?? { reviewed: true }), { reviewed: true }] });
+  const normalisedReviews = rows.map((_, k) => reviews[k] ?? { reviewed: true });
+
+  // Rejected items are taken off the form straight away (so the count drops), but kept here so a mistake can be
+  // undone: each leaves a "Rejected — Undo" row in the gap it left. `at` is the item's index in the current list, so
+  // the gap follows the items around as others are removed or restored; `id` keeps rejections in the order made.
+  const [rejected, setRejected] = useState<{ id: number; at: number; row: string[]; review: ItemReview }[]>([]);
+  const nextId = useRef(0);
+
+  const removeItem = (i: number, asRejection = false) => {
+    const removed = { row: rows[i], review: normalisedReviews[i] };
+    onChange({ rows: rows.filter((_, k) => k !== i), itemReviews: normalisedReviews.filter((_, k) => k !== i) });
+    setRejected(prev => {
+      const shifted = prev.map(p => (p.at > i ? { ...p, at: p.at - 1 } : p));
+      return asRejection ? [...shifted, { id: nextId.current++, at: i, ...removed }] : shifted;
+    });
+  };
+
+  const undoReject = (p: (typeof rejected)[number]) => {
+    const at = Math.min(p.at, rows.length);
+    onChange({
+      rows: [...rows.slice(0, at), p.row, ...rows.slice(at)],
+      itemReviews: [...normalisedReviews.slice(0, at), p.review, ...normalisedReviews.slice(at)],
+    });
+    setRejected(prev => prev
+      .filter(x => x.id !== p.id)
+      .map(x => (x.at > p.at || (x.at === p.at && x.id > p.id) ? { ...x, at: x.at + 1 } : x)));
+  };
+  const dismissReject = (id: number) => setRejected(prev => prev.filter(x => x.id !== id));
+
+  /** The rejections that sit just before item `k` (or, for k === rows.length, at the end of the list). */
+  const rejectedAt = (k: number) =>
+    rejected.filter(p => (k < rows.length ? p.at === k : p.at >= rows.length)).sort((a, b) => a.id - b.id);
+
+  const summaryOf = (row: string[]) => {
+    const text = row.filter(Boolean).slice(0, 2).join(' — ') || 'Empty item';
+    return text.length > 90 ? `${text.slice(0, 87)}…` : text;
+  };
+
+  const renderRejected = (p: (typeof rejected)[number]) => (
+    <div
+      key={`rejected-${p.id}`}
+      role="status"
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-dashed border-gray-400 bg-gray-50 px-4 py-2.5"
+    >
+      <p className="text-body text-gray-700 min-w-0">
+        <span className="font-semibold">Rejected:</span> {summaryOf(p.row)}
+      </p>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Button variant="tertiary" size="sm" icon={<Undo2 className="w-4 h-4" />} onClick={() => undoReject(p)}>Undo</Button>
+        <button
+          type="button"
+          onClick={() => dismissReject(p.id)}
+          className="p-1.5 rounded text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+          aria-label="Dismiss"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
+  const controlClass = `w-full rounded-lg px-3 py-2 text-body text-gray-900 bg-white border border-gray-300 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[rgb(154,38,214)] focus:border-[rgb(154,38,214)] transition-colors`;
+
+  const renderCard = (i: number) => {
+    const row = rows[i];
+          const review = reviews[i];
+          const pending = review?.reviewed === false;
+          return (
+            <div
+              key={i}
+              className={`rounded-lg p-4 ${pending ? 'border-2 border-amber-300 bg-amber-50/40' : 'border border-gray-200 bg-white'}`}
+            >
+              <div className="flex items-center justify-end gap-3 mb-1 min-h-[2rem]">
+                {pending ? (
+                  <>
+                    {!!review.sourceLines?.length && (
+                      <TranscriptCheckPopover fieldLabel={field.label} transcript={transcript} references={review.sourceLines} audioUrl={audioUrl}>
+                        <button type="button" className="inline-flex items-center gap-1 text-body font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+                          <Search className="w-3.5 h-3.5" /> Check transcript
+                        </button>
+                      </TranscriptCheckPopover>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeItem(i, true)}
+                      className="inline-flex items-center gap-1 text-body font-medium text-amber-700 hover:text-amber-900 transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" /> Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => acceptItem(i)}
+                      className="inline-flex items-center gap-1 text-body font-medium text-green-700 hover:text-green-900 transition-colors cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Accept
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => removeItem(i)}
+                    className="p-1.5 rounded text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors cursor-pointer"
+                    aria-label={`Remove ${field.label.toLowerCase()} item ${i + 1}`}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-3">
+                {cols.map((col, j) => {
+                  const id = `${field.id}-${i}-${j}`;
+                  const cell = row[j] ?? '';
+                  return (
+                    <div key={j}>
+                      <label htmlFor={id} className="block text-body font-medium text-gray-700 mb-1">{col.label}</label>
+                      {col.options ? (
+                        <div className="relative">
+                          <select
+                            id={id}
+                            value={cell}
+                            onChange={e => updateCell(i, j, e.target.value)}
+                            className={`${controlClass} appearance-none pr-8 ${!cell ? 'text-gray-500' : ''}`}
+                          >
+                            <option value="" disabled>Select an option</option>
+                            {col.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-gray-600 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      ) : (
+                        <AutoResizeTextarea
+                          value={cell}
+                          onChange={value => updateCell(i, j, value)}
+                          className={`${controlClass} min-h-[2.75rem]`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {review?.reviewed && review.reviewedAt && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-[rgb(232,247,232)] border border-[rgb(178,224,178)] px-2.5 py-1">
+                  <Check className="w-3 h-3 text-[rgb(33,166,33)] flex-shrink-0" />
+                  <span className="text-xs text-[rgb(16,100,16)]">Accepted by {review.reviewedBy} on {review.reviewedAt}</span>
+                </div>
+              )}
+            </div>
+          );
+  };
+
+  return (
+    <div>
+      {rows.length === 0 && rejected.length === 0 && <p className="text-body text-gray-500 italic mb-3">No items yet</p>}
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: rows.length + 1 }, (_, i) => (
+          <Fragment key={i}>
+            {rejectedAt(i).map(renderRejected)}
+            {i < rows.length && renderCard(i)}
+          </Fragment>
+        ))}
+      </div>
+      <div className="flex justify-center mt-3">
+        <Button variant="tertiary" icon={<Plus className="w-4 h-4" />} onClick={addItem}>Add item</Button>
+      </div>
     </div>
   );
 }
@@ -2273,11 +2554,14 @@ export function FormFieldsView({
   onChange,
   transcript,
   audioUrl,
+  hideSourceTag,
 }: {
   fields: FormField[];
   onChange: (fields: FormField[]) => void;
   transcript: TranscriptLine[];
   audioUrl?: string;
+  /** Leave off the per-field "Filled from …" chip — for a page whose summary banner already names the source. */
+  hideSourceTag?: boolean;
 }) {
   const updateField = (id: string, patch: Partial<FormField>) => {
     onChange(fields.map(f => (f.id === id ? { ...f, ...patch } : f)));
@@ -2298,6 +2582,7 @@ export function FormFieldsView({
             onChange={patch => updateField(field.id, patch)}
             transcript={source?.transcript ?? transcript}
             audioUrl={source ? source.audioUrl : audioUrl}
+            hideSourceTag={hideSourceTag}
           />
         );
       })}

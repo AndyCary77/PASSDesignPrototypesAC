@@ -7,6 +7,7 @@ import type { PickerSeed, UpdateSource } from './UpdateDocumentBanner';
 //
 //   Arthur's plan   /customers/arthur-barrington/documents/care-plan?demo=<name>
 //   Vera's form     /customers/vera-bramwell/documents/nutrition?demo=<name>
+//   Vera's personal care  /customers/vera-bramwell/documents/personal-care?demo=<name>
 //
 // Each state is built the way the real flow would build it (same engine, same review UI), just without the clicks.
 // A link applies once, on load, to the page's fresh state — open it in a new tab rather than after other changes.
@@ -41,6 +42,13 @@ export const NUTRITION_DEMOS: Record<string, Demo> = {
   // Her Initial Assessment recording and three files: four fields where the newer file's answer wins over the recording's.
   conflicts: { sources: ['recording:initial', 'file:vb-1', 'file:vb-2', 'file:vb-3'] },
   failures: { sources: ['file:vb-2', 'file:vb-6', 'file:vb-7'] },
+};
+
+export const PERSONAL_CARE_DEMOS: Record<string, Demo> = {
+  // Her Personal Care / Moving and Handling visit already drafted in: the new items (products, risks, equipment) are on the form.
+  draft: { sources: ['recording:personal-care-visit'] },
+  // The source picker open with the recording ticked, ready to run.
+  picker: { picker: { open: true, kind: 'recording', recordingIds: ['personal-care-visit'], fileIds: [] } },
 };
 
 export const MEDICAL_HISTORY_DEMOS: Record<string, Demo> = {

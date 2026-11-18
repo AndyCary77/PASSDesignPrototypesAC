@@ -1,4 +1,4 @@
-import { resolveRecording, type FormField, type ItemUpdate } from '../CareBridgePage';
+import { resolveRecording, type FormField, type ItemUpdate, type TranscriptReference } from '../CareBridgePage';
 import type { UpdateSource } from './UpdateDocumentBanner';
 import { getSourceMeta } from './carePlanUpdate';
 import { resolveCandidates, sortOldestFirst, type ConflictValue, type SourceExtract, type SourceRef } from './sourceMerge';
@@ -65,7 +65,10 @@ export const NUTRITION_GROUPS: NutritionGroup[] = [
 ];
 
 /** What a source file contributes: new values for the fields it has an answer for, and nothing for the rest. */
-export type FillPatch = Record<string, Pick<FormField, 'value' | 'rows' | 'sourceLines'>>;
+export type FillPatch = Record<string, Pick<FormField, 'value' | 'rows' | 'sourceLines'> & {
+  /** Item groups: where each added item (parallel to `rows`) came from; falls back to `sourceLines`. */
+  itemSourceLines?: TranscriptReference[][];
+}>;
 
 /** Where in each file an answer came from — what Check source shows. Keyed `file:<id>` then by field id. */
 const FILE_EXTRACTS: Record<string, Record<string, { location: string; text: string }>> = {
@@ -189,7 +192,9 @@ export function applyNutritionFill(
   fields: FormField[],
   found: { source: UpdateSource; patch: FillPatch }[],
   customerId: string,
-): { fields: FormField[]; filled: number } {
+  /** Where in each file an answer came from (see FILE_EXTRACTS) — another assessment passes its own. */
+  fileExtracts: Record<string, Record<string, { location: string; text: string }>> = FILE_EXTRACTS,
+): { fields: FormField[]; filled: number; items: number } {
   const runId = `fill-${Date.now()}`;
   const ordered = sortOldestFirst(found.map(f => ({ ...f, ref: toRef(f.source), ...getSourceMeta(customerId, f.source) })));
 
@@ -207,7 +212,7 @@ export function applyNutritionFill(
       });
       const base = { source: run.ref, date: run.date, dateUncertain: run.dateUncertain };
       if (run.source.type === 'file') {
-        const x = FILE_EXTRACTS[keyOf(run.ref)]?.[f.id];
+        const x = fileExtracts[keyOf(run.ref)]?.[f.id];
         if (x) extracts.push({ ...base, ...x });
       } else {
         const first = answer.sourceLines?.[0];
@@ -231,16 +236,24 @@ export function applyNutritionFill(
       sources, extracts, conflict, fill: true,
       previous: { value: f.value, rows: f.rows, reviewed: f.reviewed },
     };
+    const rows = keep ? f.rows : chosen?.rows ?? f.rows;
+    const fromRecording = chosenRun?.source.type === 'recording' ? chosenRun.patch[f.id] : undefined;
     return {
       ...f,
       value: keep ? f.value : chosen?.value ?? f.value,
-      rows: keep ? f.rows : chosen?.rows ?? f.rows,
-      reviewed: false,
-      sourceLines: chosenRun?.source.type === 'recording' ? chosenRun.patch[f.id].sourceLines : undefined,
+      rows,
+      // An item group has no Accept of its own: every item Assessment Hero added is reviewed individually.
+      reviewed: f.itemColumns ? undefined : false,
+      itemReviews: f.itemColumns
+        ? (rows ?? []).map((_, i) => ({ reviewed: false, sourceLines: fromRecording?.itemSourceLines?.[i] ?? fromRecording?.sourceLines }))
+        : undefined,
+      sourceLines: fromRecording?.sourceLines,
       update,
     };
   });
-  return { fields: next, filled };
+  // Items Assessment Hero added to repeating groups: each row it drafted in becomes a new card on the form.
+  const items = next.reduce((n, f) => n + (f.itemColumns && f.update ? f.rows?.length ?? 0 : 0), 0);
+  return { fields: next, filled, items };
 }
 
 /** The same steps as the update's "thinking time", worded for filling in a blank document. */

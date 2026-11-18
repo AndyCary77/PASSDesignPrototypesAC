@@ -248,6 +248,16 @@ export const ASSESSMENT_TEMPLATES: Record<string, Document[]> = {
       category: 'Other',
       to: '/customers/vera-bramwell/documents/nutrition',
     },
+    // Also deliberately incomplete: the same assessment Arthur has as a ready-made draft, but blank here, so a recording
+    // can be added on its page and the draft shown adding whole items — see PersonalCareFillProvider.
+    {
+      id: 'd-personal-care',
+      status: 'danger',
+      title: 'Personal Care / Moving and Handling',
+      createdDate: '17/11/2026',
+      category: 'Other',
+      to: '/customers/vera-bramwell/documents/personal-care',
+    },
     ...STANDARD_ASSESSMENT_PACK.slice(1).map(doc => ({
       ...doc,
       status: (doc.title === 'Consent to Care' || doc.title === 'Privacy Policy' ? 'success' : 'danger') as const,

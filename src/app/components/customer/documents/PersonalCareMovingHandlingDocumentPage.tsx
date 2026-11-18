@@ -6,7 +6,7 @@ import { useCustomer } from '../../../data/CustomerContext';
 import type { CustomerProfile } from '../../../data/customers';
 import {
   FormFieldsView,
-  isFieldCaptured,
+  countPendingReview,
   resolveRecording,
   ChangeRecordingsButton,
   RecordingsLink,
@@ -102,9 +102,9 @@ export function PersonalCareDocumentProvider({ children }: { children: React.Rea
   // isFieldCaptured (not a plain `!!f.value` check) so the "Risks and control
   // measures" table field — captured via `rows`, not `value` — counts toward
   // the pending total too.
-  const pendingFields = fields.filter(f => isFieldCaptured(f) && f.reviewed === false);
-  const pendingReview = pendingFields.length > 0;
-  const pendingCount = pendingFields.length;
+  // Each pending item in an item group counts on its own, so the "Risks and control measures" row is one to review.
+  const pendingCount = countPendingReview(fields);
+  const pendingReview = pendingCount > 0;
 
   return (
     <PersonalCareDocumentContext.Provider
