@@ -10,6 +10,17 @@ interface FeatureToggle {
 
 const FEATURE_TOGGLES: FeatureToggle[] = [
   {
+    flag: 'canUseAssessmentHero',
+    label: 'Can use Assessment Hero',
+    description: (
+      <>
+        Simulates the signed-in user having been given access to Assessment Hero. When on, <strong>My account</strong> appears
+        in the avatar menu (top right) so they can monitor the office's shared document allowance. Switch this off to see the
+        menu without it.
+      </>
+    ),
+  },
+  {
     flag: 'canEditRosterSettings',
     label: 'Can change Roster settings',
     description: (

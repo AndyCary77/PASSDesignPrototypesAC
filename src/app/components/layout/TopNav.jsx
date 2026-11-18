@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import passgeniusUrl from '../icons/passgenius.svg'
 import { Crown } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { useFeatureFlag } from '../../data/FeatureFlagsContext'
 import { NavModeToggle } from './NavModeToggle'
 import { HeroTeaserDialog } from '../hero/HeroTeaserDialog'
 import heroIconUrl from '../icons/assessment-hero.svg'
@@ -45,6 +47,8 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
   const [menuOpen, setMenuOpen] = useState(false)
   const [heroOpen, setHeroOpen] = useState(false)
   const menuRef = useRef(null)
+  const navigate = useNavigate()
+  const canUseAssessmentHero = useFeatureFlag('canUseAssessmentHero')
 
   useEffect(() => {
     if (!menuOpen) return
@@ -130,6 +134,16 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
         </button>
         {menuOpen && (
           <div className="top-nav-profile-menu">
+            {/* Only for people who've been given Assessment Hero — it's where
+                the office's shared document allowance is monitored. */}
+            {canUseAssessmentHero && (
+              <button
+                className="top-nav-profile-item top-nav-profile-item--divided"
+                onClick={() => { setMenuOpen(false); navigate('/account') }}
+              >
+                My account
+              </button>
+            )}
             {/* Placeholder upgrade teaser — opens a preview of the Hero features. */}
             <button
               className="top-nav-profile-item top-nav-profile-item--feature"

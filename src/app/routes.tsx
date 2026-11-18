@@ -36,6 +36,7 @@ import { ReasonableAdjustmentsPage } from './components/customer/ReasonableAdjus
 import { CustomerFilePage } from './components/customer/CustomerFilePage';
 import { CareBridgePage, CareBridgeProvider, CareBridgeSubnav } from './components/customer/CareBridgePage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
+import { MyAccountPage } from './components/account/MyAccountPage';
 import { TagsManagementPage } from './components/office/TagsManagementPage';
 import { TagTypeDetailPage } from './components/office/TagTypeDetailPage';
 import { TagDetailPage } from './components/office/TagDetailPage';
@@ -426,6 +427,11 @@ export const router = createBrowserRouter([
   {
     path: "/admin",
     Component: () => <AppShell><AdminSettingsPage /></AppShell>,
+  },
+  {
+    // Reached from the avatar menu (top right) — Assessment Hero allowance usage.
+    path: "/account",
+    Component: () => <AppShell><MyAccountPage /></AppShell>,
   },
   {
     path: "/customers/:customerId",

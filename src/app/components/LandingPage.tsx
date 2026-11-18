@@ -8,6 +8,16 @@ const SCREENS = [
     ],
   },
   {
+    // Also reachable from the avatar menu (top right) in the new nav.
+    title: 'My Account',
+    items: [
+      { label: 'My account — Assessment Hero usage (AIOP-25747)', to: '/account' },
+      { label: 'My account — allowance nearly used', to: '/account?demo=near' },
+      { label: 'My account — allowance used up', to: '/account?demo=full' },
+      { label: 'My account — no allowance set', to: '/account?demo=none' },
+    ],
+  },
+  {
     title: 'Customer Profile',
     items: [
       { label: 'Customers List', to: '/customers/list' },

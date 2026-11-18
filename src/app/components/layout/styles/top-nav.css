@@ -218,6 +218,8 @@
   line-height: 1;
 }
 .top-nav-profile-item:hover { background: var(--ui-purple-7-lightest-lavendar); }
+/* Plain entry that sits above others — same divider as the feature entry below. */
+.top-nav-profile-item--divided { border-bottom: 1px solid var(--ui-purple-5-languid-lavendar); }
 /* Upgrade teaser entry: icon + label, set apart from Log out by a divider. */
 .top-nav-profile-item--feature {
   gap: 10px;
