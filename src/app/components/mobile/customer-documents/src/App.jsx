@@ -2178,8 +2178,17 @@ export default function App() {
   // scenario off again; turning either on replaces the other. The
   // exhausted one also closes the document picker if it's open, since
   // drafting is no longer possible.
-  const [allowanceScenario, setAllowanceScenario] = useState(null)
-  const [offline, setOffline] = useState(false)
+  // `?allowance=default|near|full` and `?offline=1` start on a state directly (for
+  // links from tickets); `?picker=1` also opens the document picker.
+  const startParams = new URLSearchParams(window.location.search)
+  const [allowanceScenario, setAllowanceScenario] = useState(
+    () => ({ default: 'neutral', near: 'low', full: 'exhausted' })[startParams.get('allowance')] ?? null,
+  )
+  const [offline, setOffline] = useState(() => startParams.get('offline') === '1')
+  useEffect(() => {
+    if (startParams.get('picker') === '1' && startParams.get('allowance') !== 'full') careBridgeSelect.open()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const allowance = allowanceScenario ? getDemoAllowance(allowanceScenario) : null
   const toggleAllowanceDemo = (scenario) => {
     if (allowanceScenario === scenario) { setAllowanceScenario(null); return }
