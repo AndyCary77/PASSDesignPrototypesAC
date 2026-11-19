@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { useAllowanceScenario } from '../../data/useAllowanceScenario';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
 import {
   CURRENT_USER_NAME,
@@ -7,9 +8,8 @@ import {
   OFFICE_NAME,
   OFFICE_TYPE,
   getAssessmentHeroUsage,
-  parseScenario,
 } from '../../data/assessmentHeroUsage';
-import { initials } from '../office/AssessmentHeroUsageTab';
+import { LevelBanner, initials, levelFor } from '../office/AssessmentHeroUsageTab';
 import { officeTabPath } from '../office/OfficeContext';
 import assessmentHeroIconUrl from '../icons/assessment-hero.svg';
 
@@ -25,7 +25,8 @@ export function MyAccountPage() {
   const canUseAssessmentHero = useFeatureFlag('canUseAssessmentHero');
   const [params] = useSearchParams();
   const demo = params.get('demo');
-  const usage = useMemo(() => getAssessmentHeroUsage(parseScenario(demo)), [demo]);
+  const scenario = useAllowanceScenario();
+  const usage = useMemo(() => getAssessmentHeroUsage(scenario), [scenario]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -62,6 +63,9 @@ function ProfileCard() {
 function MyUsageCard({ usage, demo }: { usage: ReturnType<typeof getAssessmentHeroUsage>; demo: string | null }) {
   const canViewOffice = useFeatureFlag('canViewOfficeAssessmentHero');
   const mine = usage.byEmployee.find(r => r.isYou)?.count ?? 0;
+  // The same warning managers get on Office → Assessment Hero (amber from 80%, red once used up). It's on
+  // this card, which only people with Assessment Hero ever see, so it never reaches anyone it doesn't concern.
+  const level = levelFor(usage);
   const officePath = officeTabPath('hero') + (demo ? `?demo=${encodeURIComponent(demo)}` : '');
 
   return (
@@ -74,6 +78,8 @@ function MyUsageCard({ usage, demo }: { usage: ReturnType<typeof getAssessmentHe
       </div>
 
       <div className="px-5 py-5 space-y-3">
+        {level !== 'ok' && <LevelBanner usage={usage} level={level} />}
+
         <p className="text-body text-gray-700">
           <span className="text-3xl font-bold text-gray-900 align-middle">{mine}</span>{' '}
           <span className="align-middle">{mine === 1 ? 'document' : 'documents'} drafted by you this month</span>

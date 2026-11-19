@@ -19,7 +19,7 @@ import { useScrolled } from '../../../hooks/useScrolled';
 import { useInfoBarBottom } from '../../../hooks/useInfoBarBottom';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 import { getAssessmentHeroAllowance, type AssessmentHeroAllowance } from '../../../data/assessmentHeroAllowance';
-import { AssessmentHeroLimitBanner } from './AssessmentHeroLimitBanner';
+import { AssessmentHeroLimitBanner, LIMIT_REACHED_TITLE, shouldShowAllowanceBanner } from './AssessmentHeroLimitBanner';
 
 // Same "what's currently feeding this draft" shape as CarePlanDocumentPage,
 // except this document starts with nothing linked at all — an incomplete,
@@ -66,7 +66,7 @@ interface WiitmDocumentState {
   linkedSource: LinkedSource;
   linkedRecording: Recording | null;
   otherRecordings: Recording[];
-  /** This customer's Assessment Hero drafting allowance, or null when not limited in this prototype. */
+  /** The office's Assessment Hero document allowance, or null when none is configured. */
   allowance: AssessmentHeroAllowance | null;
   /** True once the allowance is used up — every action that would draft a document is blocked. */
   limitReached: boolean;
@@ -129,8 +129,8 @@ export function WiitmDocumentProvider({ children }: { children: React.ReactNode 
   const pendingCount = pendingFields.length;
   const [published, setPublished] = useState(false);
 
-  // Drafting limit (rolling 30 days, per customer) — see assessmentHeroAllowance.ts.
-  const allowance = getAssessmentHeroAllowance(customer.id);
+  // Drafting limit (the office's monthly pool, shared across customers) — see assessmentHeroAllowance.ts.
+  const allowance = getAssessmentHeroAllowance();
   const limitReached = !!allowance && allowance.remaining <= 0;
 
   // Null = idle. 0..PROCESSING_STEPS.length-1 = that step's spinner is
@@ -274,7 +274,7 @@ function RelinkDropdown() {
       <button
         type="button"
         disabled
-        title="Assessment Hero's drafting limit has been reached for this customer"
+        title={LIMIT_REACHED_TITLE}
         className="flex items-center gap-1 text-sm font-medium text-gray-500 cursor-not-allowed"
       >
         Replace recording
@@ -350,11 +350,11 @@ export function WiitmDocumentContent() {
     <div className="flex flex-col gap-4 max-w-[1280px] mx-auto">
       <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
 
-      {/* Allowance used up — sits above whatever Assessment Hero state the
+      {/* Allowance nearly used or used up — sits above whatever Assessment Hero state the
           document is in (blank, mid-processing, draft or published) since
-          the limit is about the customer, not this document. */}
-      {limitReached && allowance && (
-        <AssessmentHeroLimitBanner customerFullName={customer.fullName} allowance={allowance} />
+          the limit is about the office's allowance, not this document. */}
+      {shouldShowAllowanceBanner(allowance) && (
+        <AssessmentHeroLimitBanner allowance={allowance} />
       )}
 
       {isCompletedDocument ? null : published ? (

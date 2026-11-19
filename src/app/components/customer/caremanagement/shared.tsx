@@ -409,7 +409,7 @@ interface CarePlanDraftBannerProps {
  * the Publish step that actually makes it one.
  */
 export function CarePlanDraftBanner(props: CarePlanDraftBannerProps) {
-  // The drafting limit is about the customer, so its banner leads whichever
+  // The office's allowance banner leads whichever
   // draft/published state follows.
   return (
     <>
@@ -730,10 +730,10 @@ export function CarePlanDraftFlow() {
     );
   }
 
-  // Nothing drafted yet and the customer's drafting limit is used up — the
+  // Nothing drafted yet and the office's document allowance is used up — the
   // limit banner stands in for the "Draft care plan" offer, same as WIITM's
   // invitation banner.
-  if (isAssessmentHeroLimitReached(customer.id)) return <AssessmentHeroLimitNotice />;
+  if (isAssessmentHeroLimitReached()) return <AssessmentHeroLimitNotice />;
 
   return (
     <>
@@ -888,8 +888,8 @@ function ChangeDocumentsButton() {
   const { draftSourceDocuments, setDraftSourceDocuments } = useCareManagement();
   const [open, setOpen] = useState(false);
   // Re-picking sources is the document-sourced equivalent of changing a
-  // recording — kept visible but unusable while the drafting limit applies.
-  if (isAssessmentHeroLimitReached(customer.id)) {
+  // recording — kept visible but unusable while the office's allowance is used up.
+  if (isAssessmentHeroLimitReached()) {
     return (
       <button
         type="button"

@@ -2,9 +2,11 @@
 // "My account"): one pool of documents per office per 30-day period, shared by
 // every user who has been given access to Assessment Hero.
 //
-// Deliberately separate from assessmentHeroAllowance.ts, which models the
-// older per-customer rolling-30-day limit — the two haven't been reconciled
-// yet (see the notes handed back with this prototype).
+// This is now the only allowance model: the old per-customer rolling-30-day
+// limit (12 per customer) is gone. Every warning and blocked state in the
+// prototype (customer document pages, mobile Documents) reads from the same
+// office-wide figures via assessmentHeroAllowance.ts, using the scenario
+// below so they all agree.
 //
 // What counts: each document Assessment Hero drafts counts once. Usage
 // resets to zero when the period renews, and the renewal date moves on 30
@@ -97,6 +99,47 @@ const USED_BY_SCENARIO: Record<Exclude<UsageScenario, 'none'>, number> = {
 
 export function parseScenario(value: string | null): UsageScenario {
   return value === 'near' || value === 'full' || value === 'none' ? value : 'default';
+}
+
+export const USAGE_SCENARIOS: { value: UsageScenario; label: string; description: string }[] = [
+  { value: 'default', label: 'In use', description: `${USED_BY_SCENARIO.default} of ${ASSESSMENT_HERO_OFFICE_ALLOWANCE} used. No warnings.` },
+  { value: 'near', label: 'Nearly used', description: `${USED_BY_SCENARIO.near} of ${ASSESSMENT_HERO_OFFICE_ALLOWANCE} used (80% or more).` },
+  { value: 'full', label: 'Used up', description: 'Every document used. Drafting is blocked for everyone until the allowance renews.' },
+  { value: 'none', label: 'No allowance set', description: 'Assessment Hero is on, but no allowance has been configured.' },
+];
+
+// The office's allowance state is one fact, so it's one setting for the whole
+// prototype: remembered for this browser tab (sessionStorage, so a new visit
+// starts from "in use" again) and read by every screen that warns about it.
+// `?demo=` on Office/My account and `?allowance=` on any other page set it, so a
+// link can land straight on a state.
+const SCENARIO_KEY = 'pass-ah-allowance-scenario';
+const SCENARIO_CHANGED = 'pass-ah-allowance-scenario-changed';
+
+export function getActiveScenario(): UsageScenario {
+  if (typeof window === 'undefined') return 'default';
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get('allowance');
+    if (fromUrl !== null) setActiveScenario(parseScenario(fromUrl));
+    return parseScenario(window.sessionStorage.getItem(SCENARIO_KEY));
+  } catch {
+    return 'default';
+  }
+}
+
+export function setActiveScenario(scenario: UsageScenario) {
+  try {
+    if (window.sessionStorage.getItem(SCENARIO_KEY) === scenario) return;
+    window.sessionStorage.setItem(SCENARIO_KEY, scenario);
+    window.dispatchEvent(new Event(SCENARIO_CHANGED));
+  } catch {
+    /* storage unavailable: the scenario just stays at its default */
+  }
+}
+
+export function onScenarioChanged(listener: () => void) {
+  window.addEventListener(SCENARIO_CHANGED, listener);
+  return () => window.removeEventListener(SCENARIO_CHANGED, listener);
 }
 
 export function getAssessmentHeroUsage(scenario: UsageScenario): AssessmentHeroUsage {

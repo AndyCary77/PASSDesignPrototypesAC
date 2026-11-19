@@ -249,7 +249,7 @@ export function NutritionDocumentSubnav() {
 function FillBanner() {
   const { customer, startFill, pickerSeed, config } = useNutritionDocument();
   const DOCUMENT_NAME = config.documentName;
-  const limitReached = isAssessmentHeroLimitReached(customer.id);
+  const limitReached = isAssessmentHeroLimitReached();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3">

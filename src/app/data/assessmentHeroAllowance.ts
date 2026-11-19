@@ -1,40 +1,51 @@
-// Mocked response of the Assessment Hero allowance API (AIOP-24762 sibling
-// ticket for desktop): how many documents have been drafted for a customer
-// in the rolling last 30 days, against the office's limit.
+// The allowance as the drafting screens see it (AIOP-25747): one monthly pool
+// of documents for the whole office, shared by everyone who has been given
+// Assessment Hero. It replaces the earlier per-customer rolling-30-day limit
+// (12 per customer), so being out of documents is no longer something that
+// happens to one customer — it blocks drafting for every customer until the
+// pool renews.
 //
 // What counts: every document Assessment Hero drafts (assessments, other
-// documents, each care plan section) — one recording drafting 3 documents
-// uses 3. Per customer, shared across everyone in the office; drafts that
-// are later discarded still count; a draft frees up again 30 days after it
-// was generated (so there's no single "renewal date" — `nextAvailableAt` is
-// when the oldest counted draft ages out). The limit is a per-office,
-// server-driven setting (default 12).
+// documents, each care plan section) uses 1 — one recording drafting 3
+// documents uses 3, and drafts that are later discarded still count. The
+// pool renews every 30 days, on a fixed date, and usage goes back to 0.
+//
+// Numbers come from assessmentHeroUsage.ts so Office → Assessment Hero, My
+// account and every warning here always agree.
 
-export const ASSESSMENT_HERO_DEFAULT_LIMIT = 12;
+import { ASSESSMENT_HERO_PERIOD_DAYS, getActiveScenario, getAssessmentHeroUsage } from './assessmentHeroUsage';
 
 export interface AssessmentHeroAllowance {
   used: number;
   limit: number;
   remaining: number;
-  /** When the next draft(s) become available again; null while allowance remains. */
-  nextAvailableAt: Date | null;
-  /** How many drafts free up at `nextAvailableAt` (drafts generated together age out together). */
-  nextAvailableCount: number;
+  /** When the pool renews and usage goes back to 0. */
+  renewsAt: Date;
+  daysUntilRenewal: number;
+  periodDays: number;
 }
 
-// Only Edith has used up her allowance in this prototype; every other
-// customer is treated as having plenty left, so no limit UI shows for them.
-export function getAssessmentHeroAllowance(customerId: string): AssessmentHeroAllowance | null {
-  if (customerId !== 'edith-caldwell') return null;
-  // Relative to "now" so the demo never shows a date in the past.
-  const next = new Date();
-  next.setDate(next.getDate() + 4);
-  next.setHours(14, 15, 0, 0);
+// Warn from this share of the pool used. Matches Office → Assessment Hero.
+export const NEAR_ALLOWANCE_THRESHOLD = 0.8;
+
+/**
+ * The office's allowance, or null when there's nothing to warn about for
+ * drafting: no allowance has been configured (the "No allowance set" state is
+ * for managers to act on, it doesn't block anyone).
+ */
+export function getAssessmentHeroAllowance(): AssessmentHeroAllowance | null {
+  const usage = getAssessmentHeroUsage(getActiveScenario());
+  if (usage.limit === null) return null;
   return {
-    used: ASSESSMENT_HERO_DEFAULT_LIMIT,
-    limit: ASSESSMENT_HERO_DEFAULT_LIMIT,
-    remaining: 0,
-    nextAvailableAt: next,
-    nextAvailableCount: 2,
+    used: usage.used,
+    limit: usage.limit,
+    remaining: usage.remaining,
+    renewsAt: usage.renewsAt,
+    daysUntilRenewal: usage.daysUntilRenewal,
+    periodDays: ASSESSMENT_HERO_PERIOD_DAYS,
   };
 }
+
+export const isAllowanceUsedUp = (a: AssessmentHeroAllowance | null) => !!a && a.remaining <= 0;
+export const isAllowanceNearlyUsed = (a: AssessmentHeroAllowance | null) =>
+  !!a && a.remaining > 0 && a.used / a.limit >= NEAR_ALLOWANCE_THRESHOLD;

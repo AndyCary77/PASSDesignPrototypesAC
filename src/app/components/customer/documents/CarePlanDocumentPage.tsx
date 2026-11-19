@@ -363,8 +363,8 @@ export function CarePlanDocumentSubnav() {
 function RelinkDropdown() {
   const { customer, linkedSource, otherRecordings, fileInputRef, relinkRecording, handleUnlink } = useCarePlanDocument();
   // Same as WIITM's RelinkDropdown: picking or uploading a recording would
-  // re-draft the plan, which the customer's drafting limit blocks.
-  if (isAssessmentHeroLimitReached(customer.id)) {
+  // re-draft the plan, which the office's used-up allowance blocks.
+  if (isAssessmentHeroLimitReached()) {
     return (
       <button
         type="button"
@@ -452,7 +452,7 @@ export function CarePlanDocumentContent() {
       <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
 
       {/* Sits above whatever Assessment Hero state the document is in —
-          the limit is about the customer, not this document. */}
+          the allowance is the office's, not this document's. */}
       <AssessmentHeroLimitNotice />
 
       {isCompletedDocument ? (

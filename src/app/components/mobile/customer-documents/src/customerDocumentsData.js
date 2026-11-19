@@ -137,21 +137,24 @@ export function nextOtherDocId() { return _nextOtherDocId++ }
 let _nextFolderId = ASSESSMENT_FOLDERS.length + OTHER_DOCUMENT_FOLDERS.length + 1
 export function nextFolderId() { return `f${_nextFolderId++}` }
 
-// ─── Assessment Hero drafting allowance ─────────────────────────
+// ─── Assessment Hero document allowance ─────────────────────────
 // Mocked response of the allowance API (same shape as the desktop
-// prototype's src/app/data/assessmentHeroAllowance.ts): documents drafted for
-// this customer in the rolling last 30 days vs the office's limit (default
-// 12, server-driven). Every document Assessment Hero drafts counts — even
-// ones later discarded — and each frees up again 30 days after it was
-// generated, so there's no single renewal date: `nextAvailableAt` is when the
-// oldest counted drafts age out. Only used by the demo toggle ("limit
-// reached" / "10 of 12 used" / "6 of 12 used" scenarios); otherwise no
-// allowance UI shows.
+// prototype's src/app/data/assessmentHeroAllowance.ts, AIOP-25747): one
+// monthly pool of documents for the whole office, shared by everyone with
+// Assessment Hero — not a limit per customer. Every document Assessment Hero
+// drafts counts once, even ones later discarded. The pool renews every 30
+// days on a fixed date (`renewsAt`), when usage goes back to 0. Only used by
+// the demo toggles ("limit reached" / "292 of 300" / "187 of 300"
+// scenarios); otherwise no allowance UI shows. `low` is 292 rather than the
+// desktop's 276 so that fewer than 12 documents are left, which is what makes
+// the document picker stop the selection short.
+export const OFFICE_ALLOWANCE = 300
+
 export function getDemoAllowance(kind) {
   // Relative to "now" so the demo never shows a date in the past.
-  const next = new Date()
-  next.setDate(next.getDate() + 4)
-  next.setHours(14, 15, 0, 0)
-  const used = { neutral: 6, low: 10, exhausted: 12 }[kind]
-  return { used, limit: 12, remaining: 12 - used, nextAvailableAt: next, nextAvailableCount: 2 }
+  const renewsAt = new Date()
+  renewsAt.setDate(renewsAt.getDate() + 14)
+  renewsAt.setHours(0, 0, 0, 0)
+  const used = { neutral: 187, low: 292, exhausted: OFFICE_ALLOWANCE }[kind]
+  return { used, limit: OFFICE_ALLOWANCE, remaining: OFFICE_ALLOWANCE - used, renewsAt, daysUntilRenewal: 14 }
 }

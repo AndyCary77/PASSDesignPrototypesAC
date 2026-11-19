@@ -685,7 +685,7 @@
   border-bottom: 1px solid var(--ui-purple-6-lavendar-grey);
   flex-shrink: 0;
 }
-/* Selection-limit banner (max 12 documents for Assessment Hero). iOS: an
+/* Selection-limit banner (max 12 documents per recording, or fewer if the office has fewer left). iOS: an
    inset, rounded, tinted card. Android overrides to a full-bleed Material
    banner (see assets/android.css). Text is 15px/500 — over the 14px floor —
    on a pale warm background, with a gold border + icon so the state isn't
@@ -997,9 +997,9 @@
   font-size: 15px;
 }
 
-/* ── Assessment Hero drafting limit (Documents root) ────────────────
+/* ── Assessment Hero document allowance used up (Documents root) ────────────────
    Slim amber replacement for the "Record and Draft with Assessment Hero"
-   banner once the customer's allowance is used up. Text is 15px; the info
+   banner once the office's allowance is used up. Text is 15px; the info
    button is a 44px tap target. */
 .docs-cb-limit {
   display: flex;
@@ -1101,7 +1101,7 @@
   cursor: pointer;
 }
 
-/* "N of 12 drafts used in the last 30 days" — on the Assessment Hero banner
+/* "N of 300 documents used by your office this month" — on the Assessment Hero banner
    and (as a full-width bar under the intro) the document picker. 14px;
    amber-brown + bold once few drafts are left (#8a5a00 on white ≈ 6:1). */
 .docs-cb-allowance {

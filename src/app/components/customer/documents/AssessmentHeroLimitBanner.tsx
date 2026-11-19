@@ -1,35 +1,31 @@
 import { useId } from 'react';
+import { Link } from 'react-router';
 import { Info } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../../ui/hover-card';
-import { useCustomer } from '../../../data/CustomerContext';
-import { getAssessmentHeroAllowance, type AssessmentHeroAllowance } from '../../../data/assessmentHeroAllowance';
+import { useFeatureFlag } from '../../../data/FeatureFlagsContext';
+import { getAssessmentHeroAllowance, isAllowanceNearlyUsed, isAllowanceUsedUp, type AssessmentHeroAllowance } from '../../../data/assessmentHeroAllowance';
+import { officeTabPath } from '../../office/OfficeContext';
 import assessmentHeroIconUrl from '../../icons/assessment-hero.svg';
 
-// "Mrs Edith Caldwell" -> "Edith". Titles are dropped so the copy reads like a
-// person talking about a customer rather than a form letter.
-const TITLES = new Set(['mr', 'mrs', 'ms', 'miss', 'mx', 'dr']);
-function firstNameOf(fullName: string) {
-  const parts = fullName.split(' ').filter(p => !TITLES.has(p.toLowerCase().replace('.', '')));
-  return parts[0] ?? fullName;
-}
-
-function formatWhen(date: Date) {
-  const day = date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const time = date.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: false });
-  return `${day} at ${time}`;
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 /**
- * Shown on a customer's Assessment Hero document pages once their drafting
- * allowance for the rolling 30 days is used up. Deliberately the same slim
- * single-line shape as the "Assessment Hero - AI-powered document drafts…"
- * invitation banner it replaces, in amber (blocked for now, clears by
- * itself) rather than red (an error); the detail lives behind the info icon.
- * role="status" so it's announced when the page loads without interrupting.
+ * Shown on Assessment Hero document pages once the office's monthly document
+ * allowance is nearly used (80% or more) and again once it's used up
+ * (AIOP-25747). The allowance belongs to the whole office, so this appears for
+ * every customer, not one. Deliberately the same slim single-line shape as the
+ * "Assessment Hero - AI-powered document drafts…" invitation banner, in amber
+ * either way: nearly used is a heads-up, used up is blocked for now but clears
+ * by itself on the renewal date — neither is an error, so neither is red. The
+ * detail lives behind the info icon. role="status" so it's announced when the
+ * page loads without interrupting.
  */
-export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { customerFullName: string; allowance: AssessmentHeroAllowance }) {
-  const first = firstNameOf(customerFullName);
+export function AssessmentHeroLimitBanner({ allowance }: { allowance: AssessmentHeroAllowance }) {
   const meterId = useId();
+  const usedUp = allowance.remaining <= 0;
+  const canViewOfficeUsage = useFeatureFlag('canViewOfficeAssessmentHero');
   return (
     <div
       className="flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 shadow"
@@ -38,8 +34,19 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
       <div className="flex items-center gap-2.5 min-w-0">
         <img src={assessmentHeroIconUrl} className="w-6 h-6 flex-shrink-0" alt="" />
         <p className="text-body font-medium text-gray-900">
-          Assessment Hero limit reached for {first}
-          {allowance.nextAvailableAt && <> — available again from <strong>{formatWhen(allowance.nextAvailableAt)}</strong></>}
+          {usedUp ? (
+            <>
+              Your office has used all its Assessment Hero documents for this month — available again from{' '}
+              <strong>{formatDate(allowance.renewsAt)}</strong>
+            </>
+          ) : (
+            <>
+              <strong>
+                Only {allowance.remaining} Assessment Hero {allowance.remaining === 1 ? 'document' : 'documents'} left
+              </strong>{' '}
+              for your office this month — the allowance renews on <strong>{formatDate(allowance.renewsAt)}</strong>
+            </>
+          )}
         </p>
       </div>
 
@@ -49,22 +56,31 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
         <HoverCardTrigger asChild>
           <button
             type="button"
-            aria-label="About the Assessment Hero drafting limit"
+            aria-label="About the Assessment Hero document allowance"
             className="flex-shrink-0 rounded-full p-1 text-amber-800 hover:bg-amber-100 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[rgb(154,38,214)]/50"
           >
             <Info className="w-5 h-5" />
           </button>
         </HoverCardTrigger>
         <HoverCardContent align="end" className="w-96 p-5">
-          <p className="text-base font-semibold text-gray-900">Assessment Hero drafting limit</p>
+          <p className="text-base font-semibold text-gray-900">Assessment Hero document allowance</p>
           <p className="text-body text-gray-800 mt-1.5">
-            {first} has reached the limit of {allowance.limit} Assessment Hero drafts in the last 30 days, so no new
-            documents can be drafted for {first} right now.
+            {usedUp ? (
+              <>
+                Your office has used all {allowance.limit} of its Assessment Hero documents for this month, so no new documents can
+                be drafted for any customer right now.
+              </>
+            ) : (
+              <>
+                Your office has used {allowance.used} of its {allowance.limit} Assessment Hero documents for this month. Once they
+                are used up, no new documents can be drafted for any customer until the allowance renews.
+              </>
+            )}
           </p>
 
           <div className="mt-3">
             <p id={meterId} className="text-body font-semibold text-gray-900">
-              {allowance.used} of {allowance.limit} drafts used · rolling 30 days
+              {allowance.used} of {allowance.limit} documents used · renews every {allowance.periodDays} days
             </p>
             <div
               role="progressbar"
@@ -78,19 +94,27 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
             </div>
           </div>
 
-          {allowance.nextAvailableAt && (
-            <p className="text-body text-gray-800 mt-3">
-              Next available: <strong>{formatWhen(allowance.nextAvailableAt)}</strong>
-              {allowance.nextAvailableCount > 0 && <> ({allowance.nextAvailableCount === 1 ? '1 draft' : `${allowance.nextAvailableCount} drafts`})</>}
-            </p>
-          )}
+          <p className="text-body text-gray-800 mt-3">
+            Renews on <strong>{formatDate(allowance.renewsAt)}</strong>
+            {' '}(in {allowance.daysUntilRenewal} {allowance.daysUntilRenewal === 1 ? 'day' : 'days'}). Usage goes back to 0 then.
+          </p>
 
           <ul className="mt-3 list-disc pl-5 space-y-1 text-body text-gray-700">
-            <li>The limit is per customer and shared across everyone in your office.</li>
-            <li>Every document Assessment Hero drafts counts, including drafts that are later discarded.</li>
-            <li>Each draft frees up again 30 days after it was generated.</li>
-            <li>Recordings and transcripts are still saved, and documents can still be completed by hand.</li>
+            <li>The allowance is shared across your whole office, not set per customer.</li>
+            <li>Every document Assessment Hero drafts counts once, including drafts that are later discarded.</li>
+            <li>
+              {usedUp ? 'Recordings' : 'If the allowance runs out, recordings'} and transcripts are still saved, and documents can
+              still be completed by hand.
+            </li>
           </ul>
+
+          {canViewOfficeUsage && (
+            <p className="text-body mt-3">
+              <Link to={officeTabPath('hero')} className="font-semibold text-[rgb(154,38,214)] hover:underline focus-visible:underline outline-none">
+                See where the documents went
+              </Link>
+            </p>
+          )}
         </HoverCardContent>
       </HoverCard>
     </div>
@@ -98,21 +122,24 @@ export function AssessmentHeroLimitBanner({ customerFullName, allowance }: { cus
 }
 
 /**
- * Whether the customer's Assessment Hero drafting allowance is used up —
- * what every drafting control (Change recording(s), Replace recording,
- * Update documents…) checks so it can disable itself in step with the banner.
+ * Whether the office's Assessment Hero allowance is used up — what every
+ * drafting control (Change recording(s), Replace recording, Update
+ * documents…) checks so it can disable itself in step with the banner.
  */
-export function isAssessmentHeroLimitReached(customerId: string) {
-  const allowance = getAssessmentHeroAllowance(customerId);
-  return !!allowance && allowance.remaining <= 0;
+export function isAssessmentHeroLimitReached() {
+  return isAllowanceUsedUp(getAssessmentHeroAllowance());
 }
 
-/** The banner for the current customer, or nothing when they still have drafts left. */
+/** Whether the banner is due: the allowance is nearly used or used up. Drafting is only blocked once it's used up. */
+export function shouldShowAllowanceBanner(allowance: AssessmentHeroAllowance | null): allowance is AssessmentHeroAllowance {
+  return isAllowanceUsedUp(allowance) || isAllowanceNearlyUsed(allowance);
+}
+
+/** The banner, or nothing while the office has plenty of documents left. */
 export function AssessmentHeroLimitNotice() {
-  const customer = useCustomer();
-  const allowance = getAssessmentHeroAllowance(customer.id);
-  if (!allowance || allowance.remaining > 0) return null;
-  return <AssessmentHeroLimitBanner customerFullName={customer.fullName} allowance={allowance} />;
+  const allowance = getAssessmentHeroAllowance();
+  if (!shouldShowAllowanceBanner(allowance)) return null;
+  return <AssessmentHeroLimitBanner allowance={allowance} />;
 }
 
-export const LIMIT_REACHED_TITLE = "Assessment Hero's drafting limit has been reached for this customer";
+export const LIMIT_REACHED_TITLE = "Your office has used all its Assessment Hero documents for this month";

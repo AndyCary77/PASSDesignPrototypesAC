@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from 'react-router';
 import { CalendarClock, TriangleAlert, Info } from 'lucide-react';
 import { SegmentedControl } from '../buttons/SegmentedControl';
 import { useFeatureFlag } from '../../data/FeatureFlagsContext';
+import { useAllowanceScenario } from '../../data/useAllowanceScenario';
 import {
   getAssessmentHeroUsage,
-  parseScenario,
   type AssessmentHeroUsage,
   type UsageRow,
 } from '../../data/assessmentHeroUsage';
@@ -24,7 +24,7 @@ function formatDate(d: Date, withYear = true) {
 type Level = 'ok' | 'near' | 'full';
 const NEAR_THRESHOLD = 0.8;
 
-function levelFor(usage: AssessmentHeroUsage): Level {
+export function levelFor(usage: AssessmentHeroUsage): Level {
   if (usage.limit === null) return 'ok';
   if (usage.used >= usage.limit) return 'full';
   return usage.used / usage.limit >= NEAR_THRESHOLD ? 'near' : 'ok';
@@ -48,8 +48,8 @@ const BAR_COLOUR: Record<Level, string> = {
  */
 export function AssessmentHeroUsageTab() {
   const canView = useFeatureFlag('canViewOfficeAssessmentHero');
-  const [params] = useSearchParams();
-  const usage = useMemo(() => getAssessmentHeroUsage(parseScenario(params.get('demo'))), [params]);
+  const scenario = useAllowanceScenario();
+  const usage = useMemo(() => getAssessmentHeroUsage(scenario), [scenario]);
 
   // Normally the tab itself is hidden without this permission; this covers
   // someone arriving on the URL directly.
@@ -208,7 +208,7 @@ function Stat({ label, value, note, emphasis }: { label: string; value: number; 
   );
 }
 
-function LevelBanner({ usage, level }: { usage: AssessmentHeroUsage; level: Exclude<Level, 'ok'> }) {
+export function LevelBanner({ usage, level }: { usage: AssessmentHeroUsage; level: Exclude<Level, 'ok'> }) {
   const renews = formatDate(usage.renewsAt);
   const isFull = level === 'full';
   return (

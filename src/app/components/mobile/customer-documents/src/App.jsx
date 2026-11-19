@@ -181,7 +181,7 @@ function OfflineBanner() {
 // The warning that goes with any last-known allowance figure. "May be out of
 // date" always shows; the "server's decision is final" half only matters
 // while a recording can still be made against a nearly-used allowance
-// (`low`: 10–11 of 12 used), so it's held back in the comfortable state and
+// (`low`: 80% or more of the office's pool used), so it's held back in the comfortable state and
 // dropped once the limit is reached — nothing can be recorded or uploaded
 // then. `className` lets each surface set its own spacing.
 function OfflineAllowanceNote({ low = false, className = '' }) {
@@ -962,7 +962,7 @@ function DocumentsRootScreen({ onOpenSection, onOpenCareBridge, allowance }) {
       </div>
 
       {allowance && allowance.remaining <= 0
-        ? <AssessmentHeroLimitBanner customerName={CUSTOMER.name} allowance={allowance} />
+        ? <AssessmentHeroLimitBanner allowance={allowance} />
         : <CareBridgeBanner onSelect={onOpenCareBridge} allowance={allowance} />}
 
       <RecordingsSection recordings={recordings} initialExpanded={showRecordings} customerId="arthur" />
@@ -1039,28 +1039,25 @@ function AssessmentRow({ item, selecting, selected, onToggle, folderName }) {
 // slide-up (see AddAssessmentScreen) is the pattern that actually works as
 // a native gesture on iOS, where a centred modal dialog doesn't.
 
-// "Thu 18 Oct, 14:15"
+// "Thu 3 Dec"
 function formatAllowanceDate(date) {
-  const day = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-  const time = date.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: false })
-  return `${day}, ${time}`
+  return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
-// Bottom-sheet explanation of the drafting allowance — the phone equivalent
+// Bottom-sheet explanation of the document allowance — the phone equivalent
 // of the desktop popover. Shared by the "limit reached" banner and the usage
 // indicator on the Assessment Hero banner, since it's the same rules either
 // way; only the opening sentence changes. Stresses that the allowance belongs
-// to this one customer, not the office as a whole.
-function DraftAllowanceSheet({ customerName, allowance, onClose }) {
+// to the whole office and is shared across every customer.
+function DraftAllowanceSheet({ allowance, onClose }) {
   const offline = useOffline()
-  const first = customerName.split(' ')[0]
   const exhausted = allowance.remaining <= 0
   return (
     <div className="docs-sheet-overlay" onClick={onClose}>
-      <div className="docs-sheet-panel" role="dialog" aria-label="Assessment Hero drafting limit" onClick={e => e.stopPropagation()}>
+      <div className="docs-sheet-panel" role="dialog" aria-label="Assessment Hero document allowance" onClick={e => e.stopPropagation()}>
         <div className="docs-sheet-handle" />
         <div className="docs-sheet-header">
-          <h2>Drafting limit</h2>
+          <h2>Document allowance</h2>
           <button className="docs-sheet-close-btn" onClick={onClose} aria-label="Close"><CloseIcon /></button>
         </div>
         <div className="docs-cb-limit-sheet-body">
@@ -1074,15 +1071,15 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
           )}
           <p className="docs-sheet-message docs-cb-limit-sheet-intro">
             {exhausted
-              ? <>{first} has reached the limit of {allowance.limit} Assessment Hero drafts in the last 30 days, so no new documents can be drafted for {first} right now.</>
-              : <>{first} has used {allowance.used} of {allowance.limit} Assessment Hero drafts in the last 30 days. This is {first}’s own allowance — other customers each have their own.</>}
+              ? <>Your office has used all {allowance.limit} of its Assessment Hero documents this month, so no new documents can be drafted for any customer right now.</>
+              : <>Your office has used {allowance.used} of its {allowance.limit} Assessment Hero documents this month. The allowance is shared by everyone in your office, across all customers.</>}
           </p>
           <div className="docs-cb-limit-meter">
-            <p className="docs-cb-limit-meter-label">{offline && 'Last known: '}{allowance.used} of {allowance.limit} drafts used · rolling 30 days</p>
+            <p className="docs-cb-limit-meter-label">{offline && 'Last known: '}{allowance.used} of {allowance.limit} documents used this month</p>
             <div
-              className={`docs-cb-limit-meter-bar${allowance.remaining <= LOW_DRAFTS_THRESHOLD ? ' docs-cb-limit-meter-bar--low' : ''}${offline ? ' docs-cb-limit-meter-bar--stale' : ''}`}
+              className={`docs-cb-limit-meter-bar${isLowAllowance(allowance) ? ' docs-cb-limit-meter-bar--low' : ''}${offline ? ' docs-cb-limit-meter-bar--stale' : ''}`}
               role="progressbar"
-              aria-label={`Drafts used for ${first}`}
+              aria-label="Documents used by your office this month"
               aria-valuemin={0}
               aria-valuemax={allowance.limit}
               aria-valuenow={allowance.used}
@@ -1091,14 +1088,14 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
             </div>
           </div>
           <p className="docs-cb-limit-next">
-            {exhausted ? 'Next available' : 'Next draft frees up'}{offline && ' (last known)'}: <strong>{formatAllowanceDate(allowance.nextAvailableAt)}</strong>
-            {allowance.nextAvailableCount > 0 && ` (${allowance.nextAvailableCount === 1 ? '1 draft' : `${allowance.nextAvailableCount} drafts`})`}
+            Renews{offline && ' (last known)'}: <strong>{formatAllowanceDate(allowance.renewsAt)}</strong>
+            {` (in ${allowance.daysUntilRenewal} days) — usage goes back to 0`}
           </p>
           <ul className="docs-cb-limit-rules">
-            <li>The limit is per customer: each customer has their own {allowance.limit}, shared across everyone in your office.</li>
-            <li>Every document Assessment Hero drafts counts, including drafts that are later discarded.</li>
-            <li>Each draft frees up again 30 days after it was generated.</li>
-            <li>If a recording would go over the limit, no drafts beyond it are made — the recording and transcript are still saved.</li>
+            <li>The allowance is for your whole office: everyone with Assessment Hero draws from the same {allowance.limit} documents each month, whichever customer they are for.</li>
+            <li>Every document Assessment Hero drafts counts once, including drafts that are later discarded.</li>
+            <li>It renews every 30 days, and your office manager can see where the documents went.</li>
+            <li>If a recording would go over the allowance, no documents beyond it are drafted — the recording and transcript are still saved.</li>
           </ul>
         </div>
         <div className="docs-sheet-footer">
@@ -1110,11 +1107,12 @@ function DraftAllowanceSheet({ customerName, allowance, onClose }) {
 }
 
 // Replaces the "Record and Draft with Assessment Hero" banner (and so its
-// Select documents button) once the customer's drafting allowance is used
-// up. Same slim single-row shape, in amber (blocked for now, clears by
-// itself) rather than red; the detail is behind the info button, as a
-// bottom sheet — the phone equivalent of the desktop popover.
-function AssessmentHeroLimitBanner({ customerName, allowance }) {
+// Select documents button) once the office's document allowance is used
+// up — for every customer, since the pool is shared. Same slim single-row
+// shape, in amber (blocked for now, clears by itself on the renewal date)
+// rather than red; the detail is behind the info button, as a bottom sheet
+// — the phone equivalent of the desktop popover.
+function AssessmentHeroLimitBanner({ allowance }) {
   const offline = useOffline()
   const [open, setOpen] = useState(false)
   useBackHandler(open, () => setOpen(false))
@@ -1124,44 +1122,43 @@ function AssessmentHeroLimitBanner({ customerName, allowance }) {
         <span className="docs-cb-limit-icon"><AssessmentHeroIcon size={20} /></span>
         <div className="docs-cb-limit-text">
           <strong>{offline ? 'Last known: Assessment Hero limit reached.' : 'Assessment Hero limit reached.'}</strong>{' '}
-          Available again from {formatAllowanceDate(allowance.nextAvailableAt)}
+          Your office has used all its documents this month. Available again from {formatAllowanceDate(allowance.renewsAt)}
           {offline && <OfflineAllowanceNote className="docs-offline-note--in-limit" />}
         </div>
         <button
           type="button"
           className="docs-cb-limit-info"
-          aria-label="About the Assessment Hero drafting limit"
+          aria-label="About the Assessment Hero document allowance"
           onClick={() => setOpen(true)}
         >
           <InfoIcon size={22} />
         </button>
       </div>
 
-      {open && <DraftAllowanceSheet customerName={customerName} allowance={allowance} onClose={() => setOpen(false)} />}
+      {open && <DraftAllowanceSheet allowance={allowance} onClose={() => setOpen(false)} />}
     </>
   )
 }
 
-// Amber from this many drafts left or fewer (i.e. 10+ of 12 used). One
-// recording typically drafts about 3 documents, so at 2 left a normal
-// recording would already be cut short — that's the point to start
-// flagging it. Anything more specific (this particular selection being too
-// big) is caught separately on the document picker.
-const LOW_DRAFTS_THRESHOLD = 2
+// Amber once 80% or more of the office's pool is used — the same threshold as
+// Office → Assessment Hero on desktop, so a manager and a carer are warned at
+// the same point. Anything more specific (this particular selection being too
+// big for what's left) is caught separately on the document picker.
+const LOW_ALLOWANCE_THRESHOLD = 0.8
+const isLowAllowance = ({ used, limit }) => used / limit >= LOW_ALLOWANCE_THRESHOLD
 
-// "10 of 12 drafts used in the last 30 days" — how much of the customer's
-// rolling-30-day drafting allowance is gone, so the limit never comes as a
-// surprise. Plain text (no extra chrome) that turns amber and bold once few
-// drafts are left. (The document picker doesn't just warn about picking too
-// many — it stops the selection at what's left, see maxSelectable.)
-function DraftAllowanceNote({ allowance, customerName, showCostHint = false, className = '' }) {
-  const { used, limit, remaining } = allowance
-  const first = customerName.split(' ')[0]
-  const low = remaining <= LOW_DRAFTS_THRESHOLD
+// "187 of 300 documents used by your office this month" — how much of the
+// office's monthly pool is gone, so the limit never comes as a surprise.
+// Plain text (no extra chrome) that turns amber and bold once it's nearly
+// used. (The document picker doesn't just warn about picking too many — it
+// stops the selection at what's left, see maxSelectable.)
+function DraftAllowanceNote({ allowance, showCostHint = false, className = '' }) {
+  const { used, limit } = allowance
+  const low = isLowAllowance(allowance)
   const offline = useOffline()
   const text = (
     <p className={`docs-cb-allowance${low ? ' docs-cb-allowance--low' : ''}${className ? ` ${className}` : ''}`}>
-      {offline && 'Last known: '}{used} of {limit} drafts used for {first} in the last 30 days{showCostHint && ' · each document uses 1'}
+      {offline && 'Last known: '}{used} of {limit} documents used by your office this month{showCostHint && ' · each document uses 1'}
     </p>
   )
   if (!offline) return text
@@ -1176,25 +1173,24 @@ function DraftAllowanceNote({ allowance, customerName, showCostHint = false, cla
 }
 
 // Usage indicator on the Assessment Hero banner: a thin completion bar with
-// an info button beside it, plus a one-line label naming the customer so it's
-// clear the allowance is theirs alone, not the office's. The info button opens
-// the same sheet as the limit-reached banner for the full rules.
-function DraftAllowanceMeter({ allowance, customerName }) {
+// an info button beside it, plus a one-line label saying it's the office's
+// shared pool, not the customer's own. The info button opens the same sheet as
+// the limit-reached banner for the full rules.
+function DraftAllowanceMeter({ allowance }) {
   const offline = useOffline()
   const [open, setOpen] = useState(false)
   useBackHandler(open, () => setOpen(false))
-  const first = customerName.split(' ')[0]
-  const low = allowance.remaining <= LOW_DRAFTS_THRESHOLD
+  const low = isLowAllowance(allowance)
   return (
     <>
       <p className={`docs-cb-allowance${low ? ' docs-cb-allowance--low' : ''}`}>
-        {offline && 'Last known: '}{allowance.used} of {allowance.limit} drafts used for {first}
+        {offline && 'Last known: '}Office: {allowance.used} of {allowance.limit} documents used
       </p>
       <div className="docs-cb-meter-row">
         <div
           className={`docs-cb-meter${low ? ' docs-cb-meter--low' : ''}${offline ? ' docs-cb-meter--stale' : ''}`}
           role="progressbar"
-          aria-label={`Drafts used for ${first} in the last 30 days`}
+          aria-label="Documents used by your office this month"
           aria-valuemin={0}
           aria-valuemax={allowance.limit}
           aria-valuenow={allowance.used}
@@ -1204,14 +1200,14 @@ function DraftAllowanceMeter({ allowance, customerName }) {
         <button
           type="button"
           className="docs-cb-meter-info"
-          aria-label="About the Assessment Hero drafting limit"
+          aria-label="About the Assessment Hero document allowance"
           onClick={() => setOpen(true)}
         >
           <InfoIcon size={20} />
         </button>
       </div>
       {offline && <OfflineAllowanceNote low={low} />}
-      {open && <DraftAllowanceSheet customerName={customerName} allowance={allowance} onClose={() => setOpen(false)} />}
+      {open && <DraftAllowanceSheet allowance={allowance} onClose={() => setOpen(false)} />}
     </>
   )
 }
@@ -1223,7 +1219,7 @@ function CareBridgeBanner({ onSelect, allowance }) {
         <span className="docs-cb-banner-icon"><AssessmentHeroIcon size={18} /></span>
         <div className="docs-cb-banner-body">
           <p className="docs-cb-banner-title">Record and Draft with Assessment Hero</p>
-          {allowance && <DraftAllowanceMeter allowance={allowance} customerName={CUSTOMER.name} />}
+          {allowance && <DraftAllowanceMeter allowance={allowance} />}
         </div>
       </div>
       <div className="docs-cb-banner-cta-row">
@@ -1354,15 +1350,14 @@ const MAX_ASSESSMENT_HERO_DOCUMENTS = 12
 // scrolls). Not a toast/snackbar — it has to stay up for as long as the
 // limit is what's stopping the user, and it's announced politely to screen
 // readers (role="status") rather than interrupting like an alert.
-function SelectionLimitBanner({ maxSelectable, limitedByAllowance, customerName, remaining }) {
+function SelectionLimitBanner({ maxSelectable, limitedByAllowance, remaining }) {
   const offline = useOffline()
-  const first = customerName.split(' ')[0]
   return (
     <div className="docs-cb-limit-banner" role="status">
       <span className="docs-cb-limit-banner-icon"><InfoIcon size={20} /></span>
       <p className="docs-cb-limit-banner-text">
         {limitedByAllowance
-          ? <><strong>Only {remaining} {remaining === 1 ? 'draft' : 'drafts'} left for {first}{offline && ' (last known)'}.</strong> You can select up to {maxSelectable}. Untick one to choose another.</>
+          ? <><strong>Only {remaining} {remaining === 1 ? 'document' : 'documents'} left for your office this month{offline && ' (last known)'}.</strong> You can select up to {maxSelectable}. Untick one to choose another.</>
           : <><strong>Maximum of {MAX_ASSESSMENT_HERO_DOCUMENTS} documents can be selected.</strong> Untick one to choose another.</>}
       </p>
     </div>
@@ -1372,8 +1367,8 @@ function SelectionLimitBanner({ maxSelectable, limitedByAllowance, customerName,
 function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, onAddAssessment, onAddDocument, onContinue, onClose }) {
   const [selected, setSelected] = useState(new Set())
   // The most that can be ticked: the per-recording cap of 12, or fewer if
-  // this customer's rolling-30-day allowance has fewer drafts left than that
-  // — ticking more than the allowance would just mean some of them silently
+  // the office's monthly allowance has fewer documents left than that —
+  // ticking more than the allowance would just mean some of them silently
   // don't get drafted.
   const maxSelectable = allowance ? Math.max(0, Math.min(MAX_ASSESSMENT_HERO_DOCUMENTS, allowance.remaining)) : MAX_ASSESSMENT_HERO_DOCUMENTS
   const limitedByAllowance = maxSelectable < MAX_ASSESSMENT_HERO_DOCUMENTS
@@ -1507,8 +1502,8 @@ function CareBridgeSelectScreen({ assessments, documents, allowance, justAdded, 
         </div>
         <OfflineBanner />
         <p className="docs-cb-select-intro">Choose which documents this recording is for — Assessment Hero drafts each one from the conversation.</p>
-        {allowance && <DraftAllowanceNote allowance={allowance} customerName={CUSTOMER.name} showCostHint className="docs-cb-allowance--bar" />}
-        {atLimit && <SelectionLimitBanner maxSelectable={maxSelectable} limitedByAllowance={limitedByAllowance} customerName={CUSTOMER.name} remaining={allowance?.remaining ?? 0} />}
+        {allowance && <DraftAllowanceNote allowance={allowance} showCostHint className="docs-cb-allowance--bar" />}
+        {atLimit && <SelectionLimitBanner maxSelectable={maxSelectable} limitedByAllowance={limitedByAllowance} remaining={allowance?.remaining ?? 0} />}
         <div className="docs-screen-body">
           {renderSectionHeader('Assessments', assessmentKeys, allAssessmentsSelected)}
           {SHOW_ADD_OPTIONAL_ASSESSMENT && renderAddRow('Add optional assessment', onAddAssessment)}
@@ -2175,10 +2170,10 @@ export default function App() {
   // Documents.
   const careBridgeSelect = useSlideUpScreen()
 
-  // Demo-only: simulates this customer's Assessment Hero drafting allowance
-  // (rolling 30 days, see getDemoAllowance) — 'neutral' (6 of 12 used: the
-  // usage indicator in its normal colours), 'low' (10 of 12: amber, few
-  // drafts left) or 'exhausted' (12 of 12: drafting blocked) — driven by
+  // Demo-only: simulates the office's Assessment Hero document allowance
+  // (one monthly pool, see getDemoAllowance) — 'neutral' (187 of 300 used: the
+  // usage indicator in its normal colours), 'low' (292 of 300: amber, few
+  // documents left) or 'exhausted' (300 of 300: drafting blocked) — driven by
   // the faint buttons outside the phone. Each toggles its own
   // scenario off again; turning either on replaces the other. The
   // exhausted one also closes the document picker if it's open, since
@@ -2267,17 +2262,17 @@ export default function App() {
   return (
     <OfflineContext.Provider value={offline}>
       <a href="/" className="back-link"><ChevronLeftIcon size={16} /> Prototypes</a>
-      {/* Demo-only, outside the phone: toggles the "Assessment Hero drafting
-          limit reached" scenario on the Documents screen. */}
+      {/* Demo-only, outside the phone: toggles the "Assessment Hero allowance
+          used up" scenario on the Documents screen. */}
       <div className="docs-demo-controls">
         <button type="button" onClick={() => toggleAllowanceDemo('neutral')} aria-pressed={allowanceScenario === 'neutral'}>
-          {allowanceScenario === 'neutral' ? 'Demo: reset drafts used' : 'Demo: 6 of 12 drafts used'}
+          {allowanceScenario === 'neutral' ? 'Demo: reset documents used' : 'Demo: 187 of 300 documents used'}
         </button>
         <button type="button" onClick={() => toggleAllowanceDemo('low')} aria-pressed={allowanceScenario === 'low'}>
-          {allowanceScenario === 'low' ? 'Demo: reset drafts used' : 'Demo: 10 of 12 drafts used'}
+          {allowanceScenario === 'low' ? 'Demo: reset documents used' : 'Demo: 292 of 300 documents used'}
         </button>
         <button type="button" onClick={() => toggleAllowanceDemo('exhausted')} aria-pressed={allowanceScenario === 'exhausted'}>
-          {allowanceScenario === 'exhausted' ? 'Demo: reset drafting limit' : 'Demo: drafting limit reached'}
+          {allowanceScenario === 'exhausted' ? 'Demo: reset allowance' : 'Demo: allowance used up'}
         </button>
       </div>
       {/* Demo-only: the one switch for offline mode, bottom-right. Sits

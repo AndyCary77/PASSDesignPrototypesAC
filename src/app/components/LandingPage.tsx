@@ -11,11 +11,18 @@ const SCREENS = [
     // My account is also reachable from the avatar menu (top right) in the new nav.
     title: 'Assessment Hero usage',
     items: [
-      { label: 'Office → Assessment Hero — usage (AIOP-25747)', to: '/office/assessment-hero' },
+      { label: 'Office → Assessment Hero — usage (AIOP-25747)', to: '/office/assessment-hero?demo=default' },
       { label: 'Office → Assessment Hero — allowance nearly used', to: '/office/assessment-hero?demo=near' },
       { label: 'Office → Assessment Hero — allowance used up', to: '/office/assessment-hero?demo=full' },
       { label: 'Office → Assessment Hero — no allowance set', to: '/office/assessment-hero?demo=none' },
-      { label: 'My account — your own usage', to: '/account' },
+      { label: 'My account — your own usage', to: '/account?demo=default' },
+      { label: 'My account — allowance nearly used (amber warning)', to: '/account?demo=near' },
+      { label: 'Allowance nearly used — What Is Important To Me — Edith Caldwell', to: '/customers/edith-caldwell/documents/wiitm?allowance=near' },
+      { label: 'Allowance nearly used — Care Management — Edith Caldwell', to: '/customers/edith-caldwell/caremanagement?allowance=near' },
+      { label: 'Allowance used up — What Is Important To Me — Edith Caldwell', to: '/customers/edith-caldwell/documents/wiitm?allowance=full' },
+      { label: 'Allowance used up — Care Management — Edith Caldwell', to: '/customers/edith-caldwell/caremanagement?allowance=full' },
+      { label: 'Allowance used up — Care and Support Plan — Arthur Barrington', to: '/customers/arthur-barrington/documents/care-plan?allowance=full' },
+      { label: 'Allowance used up — Nutrition & Hydration — Vera Bramwell', to: '/customers/vera-bramwell/documents/nutrition?allowance=full' },
     ],
   },
   {

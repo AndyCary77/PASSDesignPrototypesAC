@@ -2251,12 +2251,12 @@ export function ChangeRecordingsButton({
   const [selected, setSelected] = useState<string[]>(linkedRecordingIds);
   const [mode, setMode] = useState<RecordingSelectionMode>('merge');
 
-  const limitReached = isAssessmentHeroLimitReached(customerId);
+  const limitReached = isAssessmentHeroLimitReached();
 
   if (recordings.length < 2) return null; // nothing else to switch to
 
   // Changing the source would re-draft the document, which the customer's
-  // drafting limit blocks — the control stays put (it's where you'd look
+  // used-up allowance blocks — the control stays put (it's where you'd look
   // for it) but can't be used; the limit banner on the page says why.
   if (limitReached) {
     return (

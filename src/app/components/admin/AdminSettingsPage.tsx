@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { useFeatureFlags, type FeatureFlag } from '../../data/FeatureFlagsContext';
 import { SettingSwitch } from '../buttons/SettingSwitch';
+import { SegmentedControl } from '../buttons/SegmentedControl';
+import { USAGE_SCENARIOS, getActiveScenario, setActiveScenario, type UsageScenario } from '../../data/assessmentHeroUsage';
 
 interface FeatureToggle {
   flag: FeatureFlag;
@@ -65,6 +68,11 @@ const FEATURE_TOGGLES: FeatureToggle[] = [
  */
 export function AdminSettingsPage() {
   const { flags, setFlag } = useFeatureFlags();
+  const [scenario, setScenario] = useState<UsageScenario>(getActiveScenario);
+  const changeScenario = (value: UsageScenario) => {
+    setActiveScenario(value);
+    setScenario(value);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -101,6 +109,26 @@ export function AdminSettingsPage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[10px] border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-base font-semibold text-gray-900">Assessment Hero allowance</h2>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <p className="text-body text-gray-600 leading-relaxed">
+            The office's monthly document allowance is one shared pool, so this one setting drives every warning in the prototype:
+            Office → Assessment Hero, My account, the banners and disabled controls on customer documents and Care Management, and
+            the avatar-menu links. It lasts for this browser tab only, and starts at <strong>In use</strong> on a new visit.
+          </p>
+          <SegmentedControl
+            ariaLabel="Assessment Hero allowance state"
+            value={scenario}
+            onChange={changeScenario}
+            options={USAGE_SCENARIOS.map(({ value, label }) => ({ value, label }))}
+          />
+          <p className="text-body text-gray-700">{USAGE_SCENARIOS.find(s => s.value === scenario)?.description}</p>
         </div>
       </div>
     </div>

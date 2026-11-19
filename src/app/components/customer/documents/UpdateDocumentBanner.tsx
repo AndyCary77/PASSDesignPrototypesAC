@@ -161,13 +161,13 @@ export function AssessmentHeroUpdateBanner({ customerId, documentName, onSelect,
   sources?: UpdateSource[];
   pickerSeed?: PickerSeed;
 }) {
-  const limitReached = isAssessmentHeroLimitReached(customerId);
+  const limitReached = isAssessmentHeroLimitReached();
 
   return (
     <AssessmentHeroSourceIndicator customerId={customerId} sources={sources}>
       {(
         limitReached ? (
-          // Updating re-drafts the document, which the customer's drafting limit blocks — the link stays where
+          // Updating re-drafts the document, which the office's used-up allowance blocks — the link stays where
           // you'd look for it but can't be used; the limit notice on the page says why.
           <button
             type="button"
