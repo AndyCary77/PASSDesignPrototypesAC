@@ -5,7 +5,7 @@ import { Crown } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useFeatureFlag } from '../../data/FeatureFlagsContext'
 import { NavModeToggle } from './NavModeToggle'
-import { HeroTeaserDialog } from '../hero/HeroTeaserDialog'
+import { HeroTeaserDialog, useOpenHeroTeaser } from '../hero/HeroTeaserDialog'
 import heroIconUrl from '../icons/assessment-hero.svg'
 import { useEdgeAwareTooltip } from '../../hooks/useEdgeAwareTooltip'
 import './styles/top-nav.css'
@@ -45,7 +45,7 @@ const MessagesIcon = () => (
 
 export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userName = 'Alex Morgan', userAvatar, appName = 'Office Name' }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [heroOpen, setHeroOpen] = useState(false)
+  const openHeroFeatures = useOpenHeroTeaser('explore')
   const menuRef = useRef(null)
   const navigate = useNavigate()
   const canUseAssessmentHero = useFeatureFlag('canUseAssessmentHero')
@@ -147,7 +147,7 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
             {/* Placeholder upgrade teaser — opens a preview of the Hero features. */}
             <button
               className="top-nav-profile-item top-nav-profile-item--feature"
-              onClick={() => { setMenuOpen(false); setHeroOpen(true) }}
+              onClick={() => { setMenuOpen(false); openHeroFeatures() }}
             >
               <img src={heroIconUrl} alt="" />
               Explore Hero features
@@ -172,7 +172,7 @@ export default function TopNav({ activeItem, unreadMessages = 0, onLogout, userN
           this one. */}
       <NavModeToggle variant="light" current="new" />
 
-      <HeroTeaserDialog mode="explore" open={heroOpen} onOpenChange={setHeroOpen} />
+      <HeroTeaserDialog mode="explore" />
 
       {tip && createPortal(
         <div

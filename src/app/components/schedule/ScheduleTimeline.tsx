@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import scheduleHeroIconUrl from '../icons/schedule-hero.svg';
-import { HeroTeaserDialog } from '../hero/HeroTeaserDialog';
+import { HeroTeaserDialog, useOpenHeroTeaser } from '../hero/HeroTeaserDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
@@ -344,7 +344,7 @@ export function ScheduleTimeline() {
 }
 
 function PageHeader({ metricsOpen, onToggleMetrics }: { metricsOpen: boolean; onToggleMetrics: () => void }) {
-  const [heroTeaserOpen, setHeroTeaserOpen] = useState(false);
+  const openHeroTeaser = useOpenHeroTeaser('schedule-hero');
   return (
     <div className="relative flex items-center justify-between h-9">
       <h1 className="flex items-baseline">
@@ -383,7 +383,7 @@ function PageHeader({ metricsOpen, onToggleMetrics }: { metricsOpen: boolean; on
             </DropdownMenuItem>
             {/* Schedule Hero is the highlighted (AI) entry: tinted fill and outline in the brand purple. */}
             <DropdownMenuItem
-              onSelect={() => setHeroTeaserOpen(true)}
+              onSelect={openHeroTeaser}
               className="my-0.5 gap-3 rounded-lg border border-purple-300 bg-[#f3e8fb] px-3 py-2 text-body font-medium text-[rgb(154,38,214)] cursor-pointer focus:bg-[#ead7f7] focus:text-[rgb(154,38,214)]"
             >
               <img src={scheduleHeroIconUrl} alt="" className="size-5" />
@@ -405,7 +405,7 @@ function PageHeader({ metricsOpen, onToggleMetrics }: { metricsOpen: boolean; on
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <HeroTeaserDialog mode="schedule-hero" open={heroTeaserOpen} onOpenChange={setHeroTeaserOpen} />
+        <HeroTeaserDialog mode="schedule-hero" />
         <div className="relative">
           <Button variant="primary" icon={<Send className="w-4 h-4" />}>Publish</Button>
           <span className="absolute -top-3 -right-2 min-w-6 h-6 px-[5px] rounded-full border-2 border-white bg-[#d4183d] text-white text-sm font-medium leading-none flex items-center justify-center pointer-events-none">
@@ -560,8 +560,8 @@ function Segmented({ items, showLabels }: { items: Array<{ icon?: ReactNode; lab
 
 function Scheduler() {
   const scroller = useRef<HTMLDivElement>(null);
-  // One Schedule Hero teaser for the whole grid, opened from any carer row's menu (the same dialog the Actions menu opens).
-  const [heroTeaserOpen, setHeroTeaserOpen] = useState(false);
+  // Any carer row's menu opens the same Schedule Hero teaser as the Actions menu (the dialog is mounted once, in PageHeader).
+  const openHeroTeaser = useOpenHeroTeaser('schedule-hero');
 
   // Scroll so the 07:00 window is in view; the full 24h axis stays rendered either side of it.
   useLayoutEffect(() => {
@@ -596,11 +596,10 @@ function Scheduler() {
           </div>
           <CarersHeader />
           {CARERS.map((carer, i) => (
-            <CarerRow key={carer.name} carer={carer} first={i === 0} onScheduleHero={() => setHeroTeaserOpen(true)} />
+            <CarerRow key={carer.name} carer={carer} first={i === 0} onScheduleHero={openHeroTeaser} />
           ))}
         </div>
       </div>
-      <HeroTeaserDialog mode="schedule-hero" open={heroTeaserOpen} onOpenChange={setHeroTeaserOpen} />
     </div>
   );
 }

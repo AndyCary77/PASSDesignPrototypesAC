@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -85,6 +86,34 @@ const ASSESSMENT_HERO: HeroFeature = {
 
 export type HeroTeaserMode = 'schedule-hero' | 'explore';
 
+// Deep links. The dialog's state lives in the URL so any view can be shared:
+//   ?hero=schedule-hero                       Schedule Hero overview (on /schedule/timeline)
+//   ?hero=explore                             Both Hero features (works on any page with the top nav)
+//   ?hero=<mode>&heroVideo=schedule-hero      the Schedule Hero explainer video
+//   ?hero=explore&heroVideo=assessment-hero   the Assessment Hero explainer video
+// Changes replace the history entry rather than pushing one, so Back leaves the page instead of stepping
+// through dialog states, and other query params on the page are left alone.
+const HERO_PARAM = 'hero';
+const HERO_VIDEO_PARAM = 'heroVideo';
+const FEATURE_KEYS = { 'schedule-hero': SCHEDULE_HERO, 'assessment-hero': ASSESSMENT_HERO } as const;
+type HeroFeatureKey = keyof typeof FEATURE_KEYS;
+
+/** Opens the teaser dialog for a mode by writing it into the URL. Use this from anything that should launch it. */
+export function useOpenHeroTeaser(mode: HeroTeaserMode) {
+  const [, setSearchParams] = useSearchParams();
+  return useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set(HERO_PARAM, mode);
+        next.delete(HERO_VIDEO_PARAM);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [mode, setSearchParams]);
+}
+
 function UpgradePill() {
   // A static status label, deliberately lighter than the See more button beside it (thin border, no arrow, smaller)
   // so the two read as "what this is" and "what to do", not as two competing buttons.
@@ -155,22 +184,30 @@ function FeatureCard({ feature, showImage = true, onSeeMore }: { feature: HeroFe
   );
 }
 
-export function HeroTeaserDialog({
-  mode,
-  open,
-  onOpenChange,
-}: {
-  mode: HeroTeaserMode;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+/** Mount once per mode. It is open whenever the URL says so (see the deep-link notes above). */
+export function HeroTeaserDialog({ mode }: { mode: HeroTeaserMode }) {
   const single = mode === 'schedule-hero';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const open = searchParams.get(HERO_PARAM) === mode;
   // null shows the overview (the feature cards); a feature shows its explainer video, reached from its See more button.
-  const [videoOf, setVideoOf] = useState<HeroFeature | null>(null);
-  useEffect(() => {
-    if (!open) setVideoOf(null);
-  }, [open]);
+  const videoKey = searchParams.get(HERO_VIDEO_PARAM);
+  const videoOf = open && videoKey && videoKey in FEATURE_KEYS ? FEATURE_KEYS[videoKey as HeroFeatureKey] : null;
   const video = videoOf !== null;
+
+  const update = (change: (params: URLSearchParams) => void) =>
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        change(next);
+        return next;
+      },
+      { replace: true },
+    );
+  const setVideoOf = (key: HeroFeatureKey | null) =>
+    update((p) => (key ? p.set(HERO_VIDEO_PARAM, key) : p.delete(HERO_VIDEO_PARAM)));
+  const onOpenChange = (next: boolean) => {
+    if (!next) update((p) => { p.delete(HERO_PARAM); p.delete(HERO_VIDEO_PARAM); });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -226,12 +263,12 @@ export function HeroTeaserDialog({
             </DialogHeader>
 
             {single ? (
-              <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setVideoOf(SCHEDULE_HERO)} />
+              <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setVideoOf('schedule-hero')} />
             ) : (
               // Two columns side by side (stacked on narrow screens); the cards stretch to the same height.
               <div className="grid gap-4 md:grid-cols-2">
-                <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setVideoOf(SCHEDULE_HERO)} />
-                <FeatureCard feature={ASSESSMENT_HERO} onSeeMore={() => setVideoOf(ASSESSMENT_HERO)} />
+                <FeatureCard feature={SCHEDULE_HERO} onSeeMore={() => setVideoOf('schedule-hero')} />
+                <FeatureCard feature={ASSESSMENT_HERO} onSeeMore={() => setVideoOf('assessment-hero')} />
               </div>
             )}
 
