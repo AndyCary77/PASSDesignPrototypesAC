@@ -15,8 +15,19 @@ const FEATURE_TOGGLES: FeatureToggle[] = [
     description: (
       <>
         Simulates the signed-in user having been given access to Assessment Hero. When on, <strong>My account</strong> appears
-        in the avatar menu (top right) so they can monitor the office's shared document allowance. Switch this off to see the
-        menu without it.
+        in the avatar menu (top right), showing their own usage and how much of the office's allowance is left. Switch this off
+        to see the menu without it.
+      </>
+    ),
+  },
+  {
+    flag: 'canViewOfficeAssessmentHero',
+    label: 'Can see office Assessment Hero usage',
+    description: (
+      <>
+        Simulates a manager or administrator's permission to see the whole office's usage (by customer and by employee) under{' '}
+        <strong>Office → Assessment Hero</strong>. Switch this off to see an everyday user, or an office without Assessment Hero:
+        the tab disappears.
       </>
     ),
   },

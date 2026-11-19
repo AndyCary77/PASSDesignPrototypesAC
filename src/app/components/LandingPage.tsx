@@ -8,13 +8,14 @@ const SCREENS = [
     ],
   },
   {
-    // Also reachable from the avatar menu (top right) in the new nav.
-    title: 'My Account',
+    // My account is also reachable from the avatar menu (top right) in the new nav.
+    title: 'Assessment Hero usage',
     items: [
-      { label: 'My account — Assessment Hero usage (AIOP-25747)', to: '/account' },
-      { label: 'My account — allowance nearly used', to: '/account?demo=near' },
-      { label: 'My account — allowance used up', to: '/account?demo=full' },
-      { label: 'My account — no allowance set', to: '/account?demo=none' },
+      { label: 'Office → Assessment Hero — usage (AIOP-25747)', to: '/office/assessment-hero' },
+      { label: 'Office → Assessment Hero — allowance nearly used', to: '/office/assessment-hero?demo=near' },
+      { label: 'Office → Assessment Hero — allowance used up', to: '/office/assessment-hero?demo=full' },
+      { label: 'Office → Assessment Hero — no allowance set', to: '/office/assessment-hero?demo=none' },
+      { label: 'My account — your own usage', to: '/account' },
     ],
   },
   {

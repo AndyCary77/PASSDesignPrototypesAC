@@ -9,6 +9,7 @@ import { TagTypeListItem } from './TagTypeListItem';
 import { OfficeDetailsPage } from './OfficeDetailsPage';
 import { RosterSettingsPage } from '../settings/RosterSettingsPage';
 import { OfficeSettingsPage } from './OfficeSettingsPage';
+import { AssessmentHeroUsageTab } from './AssessmentHeroUsageTab';
 import { useOffice, OFFICE_TABS } from './OfficeContext';
 import { ReviewAllocationsView } from './ReviewAllocationsView';
 import { MissingTagsView } from './MissingTagsView';
@@ -99,6 +100,8 @@ export function TagsManagementPage() {
         <RosterSettingsPage />
       ) : activeTab === 'settings' ? (
         <OfficeSettingsPage />
+      ) : activeTab === 'hero' ? (
+        <AssessmentHeroUsageTab />
       ) : activeTab !== 'tags' ? (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-400 text-sm">
           {OFFICE_TABS.find(t => t.id === activeTab)?.label} — coming soon

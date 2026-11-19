@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
  * than deleted outright. Toggled from the Admin page (see
  * components/admin/AdminSettingsPage.tsx).
  */
-export type FeatureFlag = 'customerCareBridgeTab' | 'canEditRosterSettings' | 'canUseAssessmentHero';
+export type FeatureFlag = 'customerCareBridgeTab' | 'canEditRosterSettings' | 'canUseAssessmentHero' | 'canViewOfficeAssessmentHero';
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlag, boolean> = {
   // Deprecated: CareBridge is no longer a customer tab of its own. Recordings
@@ -19,8 +19,12 @@ export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlag, boolean> = {
   // so the prototype is editable; switch it off to review the read-only view.
   canEditRosterSettings: true,
   // Stands in for the signed-in user having been given access to Assessment Hero.
-  // Controls whether "My account" (the shared-allowance usage page) appears in the avatar menu.
+  // Controls whether "My account" (their own usage) appears in the avatar menu.
   canUseAssessmentHero: true,
+  // Stands in for a manager/admin permission to see the office-wide Assessment Hero
+  // usage (Office → Assessment Hero). Off also stands in for an office without
+  // Assessment Hero at all — either way the tab isn't there.
+  canViewOfficeAssessmentHero: true,
 };
 
 const STORAGE_KEY = 'pass-feature-flags';

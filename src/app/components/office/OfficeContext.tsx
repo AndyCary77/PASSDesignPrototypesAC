@@ -14,6 +14,7 @@ export const OFFICE_TABS = [
   { id: 'checklists', label: 'Checklists', slug: 'checklists' },
   { id: 'documents', label: 'Documents', slug: 'documents' },
   { id: 'files', label: 'Files', slug: 'files' },
+  { id: 'hero', label: 'Assessment Hero', slug: 'assessment-hero' },
   { id: 'groups', label: 'Care Groups', slug: 'care-groups' },
   { id: 'tags', label: 'Tags', slug: 'tags' },
   { id: 'roster', label: 'Roster Settings', slug: 'roster-settings' },
