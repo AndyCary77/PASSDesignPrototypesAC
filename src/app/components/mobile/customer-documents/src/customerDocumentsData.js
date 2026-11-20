@@ -142,8 +142,9 @@ export function nextFolderId() { return `f${_nextFolderId++}` }
 // prototype's src/app/data/assessmentHeroAllowance.ts, AIOP-25747): one
 // monthly pool of documents for the whole office, shared by everyone with
 // Assessment Hero — not a limit per customer. Every document Assessment Hero
-// drafts counts once, even ones later discarded. The pool renews every 30
-// days on a fixed date (`renewsAt`), when usage goes back to 0. Only used by
+// drafts counts once, even ones later discarded. The pool resets on the 1st of
+// every month (`renewsAt`), when usage goes back to 0; an office that joins
+// part-way through a month gets the full allowance for the rest of it. Only used by
 // the demo toggles ("limit reached" / "292 of 300" / "187 of 300"
 // scenarios); otherwise no allowance UI shows. `low` is 292 rather than the
 // desktop's 276 so that fewer than 12 documents are left, which is what makes
@@ -152,9 +153,10 @@ export const OFFICE_ALLOWANCE = 300
 
 export function getDemoAllowance(kind) {
   // Relative to "now" so the demo never shows a date in the past.
-  const renewsAt = new Date()
-  renewsAt.setDate(renewsAt.getDate() + 14)
-  renewsAt.setHours(0, 0, 0, 0)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const renewsAt = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  const daysUntilRenewal = Math.round((renewsAt - today) / 86400000)
   const used = { neutral: 187, low: 292, exhausted: OFFICE_ALLOWANCE }[kind]
-  return { used, limit: OFFICE_ALLOWANCE, remaining: OFFICE_ALLOWANCE - used, renewsAt, daysUntilRenewal: 14 }
+  return { used, limit: OFFICE_ALLOWANCE, remaining: OFFICE_ALLOWANCE - used, renewsAt, daysUntilRenewal }
 }

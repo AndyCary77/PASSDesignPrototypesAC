@@ -3,26 +3,25 @@
 // Assessment Hero. It replaces the earlier per-customer rolling-30-day limit
 // (12 per customer), so being out of documents is no longer something that
 // happens to one customer — it blocks drafting for every customer until the
-// pool renews.
+// pool resets.
 //
 // What counts: every document Assessment Hero drafts (assessments, other
 // documents, each care plan section) uses 1 — one recording drafting 3
 // documents uses 3, and drafts that are later discarded still count. The
-// pool renews every 30 days, on a fixed date, and usage goes back to 0.
+// pool resets on the 1st of every month and usage goes back to 0.
 //
 // Numbers come from assessmentHeroUsage.ts so Office → Assessment Hero, My
 // account and every warning here always agree.
 
-import { ASSESSMENT_HERO_PERIOD_DAYS, getActiveScenario, getAssessmentHeroUsage } from './assessmentHeroUsage';
+import { getActiveScenario, getAssessmentHeroUsage } from './assessmentHeroUsage';
 
 export interface AssessmentHeroAllowance {
   used: number;
   limit: number;
   remaining: number;
-  /** When the pool renews and usage goes back to 0. */
+  /** The 1st of next month, when the pool resets and usage goes back to 0. */
   renewsAt: Date;
   daysUntilRenewal: number;
-  periodDays: number;
 }
 
 // Warn from this share of the pool used. Matches Office → Assessment Hero.
@@ -42,7 +41,6 @@ export function getAssessmentHeroAllowance(): AssessmentHeroAllowance | null {
     remaining: usage.remaining,
     renewsAt: usage.renewsAt,
     daysUntilRenewal: usage.daysUntilRenewal,
-    periodDays: ASSESSMENT_HERO_PERIOD_DAYS,
   };
 }
 

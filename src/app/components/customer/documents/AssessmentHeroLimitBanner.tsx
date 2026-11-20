@@ -18,7 +18,7 @@ function formatDate(date: Date) {
  * every customer, not one. Deliberately the same slim single-line shape as the
  * "Assessment Hero - AI-powered document drafts…" invitation banner, in amber
  * either way: nearly used is a heads-up, used up is blocked for now but clears
- * by itself on the renewal date — neither is an error, so neither is red. The
+ * by itself on the 1st of the month — neither is an error, so neither is red. The
  * detail lives behind the info icon. role="status" so it's announced when the
  * page loads without interrupting.
  */
@@ -73,14 +73,14 @@ export function AssessmentHeroLimitBanner({ allowance }: { allowance: Assessment
             ) : (
               <>
                 Your office has used {allowance.used} of its {allowance.limit} Assessment Hero documents for this month. Once they
-                are used up, no new documents can be drafted for any customer until the allowance renews.
+                are used up, no new documents can be drafted for any customer until the allowance resets.
               </>
             )}
           </p>
 
           <div className="mt-3">
             <p id={meterId} className="text-body font-semibold text-gray-900">
-              {allowance.used} of {allowance.limit} documents used · renews every {allowance.periodDays} days
+              {allowance.used} of {allowance.limit} documents used · resets on the 1st of every month
             </p>
             <div
               role="progressbar"
@@ -96,7 +96,7 @@ export function AssessmentHeroLimitBanner({ allowance }: { allowance: Assessment
 
           <p className="text-body text-gray-800 mt-3">
             Renews on <strong>{formatDate(allowance.renewsAt)}</strong>
-            {' '}(in {allowance.daysUntilRenewal} {allowance.daysUntilRenewal === 1 ? 'day' : 'days'}). Usage goes back to 0 then.
+            {' '}(in {allowance.daysUntilRenewal} {allowance.daysUntilRenewal === 1 ? 'day' : 'days'}). Usage goes back to 0 then, for the whole office.
           </p>
 
           <ul className="mt-3 list-disc pl-5 space-y-1 text-body text-gray-700">

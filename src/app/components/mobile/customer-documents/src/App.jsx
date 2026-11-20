@@ -1089,12 +1089,12 @@ function DraftAllowanceSheet({ allowance, onClose }) {
           </div>
           <p className="docs-cb-limit-next">
             Renews{offline && ' (last known)'}: <strong>{formatAllowanceDate(allowance.renewsAt)}</strong>
-            {` (in ${allowance.daysUntilRenewal} days) — usage goes back to 0`}
+            {` (in ${allowance.daysUntilRenewal} ${allowance.daysUntilRenewal === 1 ? 'day' : 'days'}) — usage goes back to 0`}
           </p>
           <ul className="docs-cb-limit-rules">
             <li>The allowance is for your whole office: everyone with Assessment Hero draws from the same {allowance.limit} documents each month, whichever customer they are for.</li>
             <li>Every document Assessment Hero drafts counts once, including drafts that are later discarded.</li>
-            <li>It renews every 30 days, and your office manager can see where the documents went.</li>
+            <li>It resets on the 1st of every month, and your office manager can see where the documents went.</li>
             <li>If a recording would go over the allowance, no documents beyond it are drafted — the recording and transcript are still saved.</li>
           </ul>
         </div>
@@ -1109,7 +1109,7 @@ function DraftAllowanceSheet({ allowance, onClose }) {
 // Replaces the "Record and Draft with Assessment Hero" banner (and so its
 // Select documents button) once the office's document allowance is used
 // up — for every customer, since the pool is shared. Same slim single-row
-// shape, in amber (blocked for now, clears by itself on the renewal date)
+// shape, in amber (blocked for now, clears by itself on the 1st of the month)
 // rather than red; the detail is behind the info button, as a bottom sheet
 // — the phone equivalent of the desktop popover.
 function AssessmentHeroLimitBanner({ allowance }) {

@@ -159,8 +159,8 @@ function UsageBody({ usage }: { usage: AllowedUsage }) {
             </span>
           </p>
           <p className="text-body text-gray-600">
-            Current period: {formatDate(usage.periodStart, false)} – {formatDate(usage.renewsAt)}. Usage goes back to 0 when it
-            renews.
+            Current period: {formatDate(usage.periodStart, false)} – {formatDate(usage.periodEnd)}. Usage goes back to 0 on the 1st
+            of every month. An office that joins part-way through a month gets the full allowance for the rest of that month.
           </p>
         </div>
       </div>

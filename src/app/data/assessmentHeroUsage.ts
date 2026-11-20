@@ -1,18 +1,19 @@
 // Mocked response for the office-level Assessment Hero allowance (AIOP-25747,
-// "My account"): one pool of documents per office per 30-day period, shared by
+// "My account"): one pool of documents per office per calendar month, shared by
 // every user who has been given access to Assessment Hero.
 //
 // This is now the only allowance model: the old per-customer rolling-30-day
-// limit (12 per customer) is gone. Every warning and blocked state in the
+// limit (12 per customer) is gone, and so is the idea of a rolling window for
+// the office: usage resets on the 1st of every month (fixed reset, decided
+// Nov 2026), and an office that joins part-way through a month gets the full
+// monthly allowance for the rest of that month. Every warning and blocked state in the
 // prototype (customer document pages, mobile Documents) reads from the same
 // office-wide figures via assessmentHeroAllowance.ts, using the scenario
 // below so they all agree.
 //
 // What counts: each document Assessment Hero drafts counts once. Usage
-// resets to zero when the period renews, and the renewal date moves on 30
-// days.
+// resets to zero on the 1st of the next month.
 
-export const ASSESSMENT_HERO_PERIOD_DAYS = 30;
 export const ASSESSMENT_HERO_OFFICE_ALLOWANCE = 300;
 
 /** Who is "signed in" on My account — matches the TopNav's default user. */
@@ -38,7 +39,11 @@ export interface AssessmentHeroUsage {
   limit: number | null;
   used: number;
   remaining: number;
+  /** First day of the current calendar month. */
   periodStart: Date;
+  /** Last day of the current calendar month. */
+  periodEnd: Date;
+  /** The 1st of next month, when usage goes back to 0. */
   renewsAt: Date;
   daysUntilRenewal: number;
   byCustomer: UsageRow[];
@@ -104,7 +109,7 @@ export function parseScenario(value: string | null): UsageScenario {
 export const USAGE_SCENARIOS: { value: UsageScenario; label: string; description: string }[] = [
   { value: 'default', label: 'In use', description: `${USED_BY_SCENARIO.default} of ${ASSESSMENT_HERO_OFFICE_ALLOWANCE} used. No warnings.` },
   { value: 'near', label: 'Nearly used', description: `${USED_BY_SCENARIO.near} of ${ASSESSMENT_HERO_OFFICE_ALLOWANCE} used (80% or more).` },
-  { value: 'full', label: 'Used up', description: 'Every document used. Drafting is blocked for everyone until the allowance renews.' },
+  { value: 'full', label: 'Used up', description: 'Every document used. Drafting is blocked for everyone until the allowance resets on the 1st.' },
   { value: 'none', label: 'No allowance set', description: 'Assessment Hero is on, but no allowance has been configured.' },
 ];
 
@@ -143,16 +148,17 @@ export function onScenarioChanged(listener: () => void) {
 }
 
 export function getAssessmentHeroUsage(scenario: UsageScenario): AssessmentHeroUsage {
-  // Relative to "now" so the demo never shows a renewal date in the past.
-  const renewsAt = new Date();
-  renewsAt.setDate(renewsAt.getDate() + 14);
-  renewsAt.setHours(0, 0, 0, 0);
-  const periodStart = new Date(renewsAt);
-  periodStart.setDate(periodStart.getDate() - ASSESSMENT_HERO_PERIOD_DAYS);
-  const daysUntilRenewal = 14;
+  // Fixed monthly reset: usage goes back to 0 on the 1st. Relative to "now" so
+  // the demo is always mid-way through a real month.
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const renewsAt = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const daysUntilRenewal = Math.round((renewsAt.getTime() - today.getTime()) / 86_400_000);
 
   if (scenario === 'none') {
-    return { limit: null, used: 0, remaining: 0, periodStart, renewsAt, daysUntilRenewal, byCustomer: [], byEmployee: [] };
+    return { limit: null, used: 0, remaining: 0, periodStart, periodEnd, renewsAt, daysUntilRenewal, byCustomer: [], byEmployee: [] };
   }
 
   const used = USED_BY_SCENARIO[scenario];
@@ -161,6 +167,7 @@ export function getAssessmentHeroUsage(scenario: UsageScenario): AssessmentHeroU
     used,
     remaining: ASSESSMENT_HERO_OFFICE_ALLOWANCE - used,
     periodStart,
+    periodEnd,
     renewsAt,
     daysUntilRenewal,
     byCustomer: apportion(used, CUSTOMERS),
