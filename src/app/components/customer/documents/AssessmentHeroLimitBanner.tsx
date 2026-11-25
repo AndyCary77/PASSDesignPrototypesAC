@@ -68,12 +68,12 @@ export function AssessmentHeroLimitBanner({ allowance }: { allowance: Assessment
             {usedUp ? (
               <>
                 Your office has used all {allowance.limit} of its Assessment Hero documents for this month, so no new documents can
-                be drafted for any customer right now.
+                be drafted for any customer or careworker right now.
               </>
             ) : (
               <>
                 Your office has used {allowance.used} of its {allowance.limit} Assessment Hero documents for this month. Once they
-                are used up, no new documents can be drafted for any customer until the allowance resets.
+                are used up, no new documents can be drafted for any customer or careworker until the allowance resets.
               </>
             )}
           </p>
@@ -100,7 +100,7 @@ export function AssessmentHeroLimitBanner({ allowance }: { allowance: Assessment
           </p>
 
           <ul className="mt-3 list-disc pl-5 space-y-1 text-body text-gray-700">
-            <li>The allowance is shared across your whole office, not set per customer.</li>
+            <li>The allowance is shared across your whole office and all customers and careworkers, not set per customer or careworker.</li>
             <li>Every document Assessment Hero drafts counts once, including drafts that are later discarded.</li>
             <li>
               {usedUp ? 'Recordings' : 'If the allowance runs out, recordings'} and transcripts are still saved, and documents can

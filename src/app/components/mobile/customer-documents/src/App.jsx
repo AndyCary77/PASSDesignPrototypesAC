@@ -1048,7 +1048,7 @@ function formatAllowanceDate(date) {
 // of the desktop popover. Shared by the "limit reached" banner and the usage
 // indicator on the Assessment Hero banner, since it's the same rules either
 // way; only the opening sentence changes. Stresses that the allowance belongs
-// to the whole office and is shared across every customer.
+// to the whole office and is shared across every customer and careworker.
 function DraftAllowanceSheet({ allowance, onClose }) {
   const offline = useOffline()
   const exhausted = allowance.remaining <= 0
@@ -1071,8 +1071,8 @@ function DraftAllowanceSheet({ allowance, onClose }) {
           )}
           <p className="docs-sheet-message docs-cb-limit-sheet-intro">
             {exhausted
-              ? <>Your office has used all {allowance.limit} of its Assessment Hero documents this month, so no new documents can be drafted for any customer right now.</>
-              : <>Your office has used {allowance.used} of its {allowance.limit} Assessment Hero documents this month. The allowance is shared by everyone in your office, across all customers.</>}
+              ? <>Your office has used all {allowance.limit} of its Assessment Hero documents this month, so no new documents can be drafted for any customer or careworker right now.</>
+              : <>Your office has used {allowance.used} of its {allowance.limit} Assessment Hero documents this month. The allowance is shared by everyone in your office, across all customers and careworkers.</>}
           </p>
           <div className="docs-cb-limit-meter">
             <p className="docs-cb-limit-meter-label">{offline && 'Last known: '}{allowance.used} of {allowance.limit} documents used this month</p>
@@ -1092,7 +1092,7 @@ function DraftAllowanceSheet({ allowance, onClose }) {
             {` (in ${allowance.daysUntilRenewal} ${allowance.daysUntilRenewal === 1 ? 'day' : 'days'}) — usage goes back to 0`}
           </p>
           <ul className="docs-cb-limit-rules">
-            <li>The allowance is for your whole office: everyone with Assessment Hero draws from the same {allowance.limit} documents each month, whichever customer they are for.</li>
+            <li>The allowance is for your whole office: everyone with Assessment Hero draws from the same {allowance.limit} documents each month, whichever customer and/or careworker they are for.</li>
             <li>Every document Assessment Hero drafts counts once, including drafts that are later discarded.</li>
             <li>It resets on the 1st of every month, and your office manager can see where the documents went.</li>
             <li>If a recording would go over the allowance, no documents beyond it are drafted — the recording and transcript are still saved.</li>
